@@ -1,0 +1,571 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    .resumen-page {
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    .resumen-title {
+        font-weight: 700;
+        letter-spacing: -0.3px;
+    }
+
+    .resumen-subtitle {
+        color: #6c757d;
+        font-size: 0.95rem;
+    }
+
+    .resumen-card {
+        border: 0;
+        border-radius: 18px;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+    }
+
+    .resumen-card .card-header {
+        background: #ffffff;
+        border-bottom: 1px solid #e9ecef;
+        padding: 0.9rem 1rem;
+    }
+
+    .resumen-card .card-body {
+        background: #ffffff;
+    }
+
+    .filtros-card {
+        position: sticky;
+        top: 80px;
+    }
+
+    .table-resumen th {
+        font-size: 0.82rem;
+        color: #495057;
+        white-space: nowrap;
+    }
+
+    .table-resumen td {
+        font-size: 0.86rem;
+        vertical-align: middle;
+    }
+
+    .badge-operatividad {
+        min-width: 68px;
+        display: inline-block;
+        font-size: 0.78rem;
+    }
+
+    .barra-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 145px;
+    }
+
+    .barra-mini {
+        height: 9px;
+        min-width: 80px;
+        background: #e9ecef;
+        border-radius: 999px;
+        overflow: hidden;
+        flex: 1;
+    }
+
+    .barra-mini-fill {
+        height: 100%;
+        width: 0%;
+        border-radius: 999px;
+    }
+
+    .estado-texto {
+        font-size: 0.78rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .fila-secundaria {
+        background: #fafafa;
+    }
+
+    .objeto-nombre {
+        font-weight: 700;
+    }
+
+    .objeto-detalle {
+        color: #6c757d;
+        font-size: 0.8rem;
+    }
+
+    .resumen-chip {
+        border-radius: 999px;
+        padding: 0.35rem 0.65rem;
+        font-size: 0.76rem;
+        font-weight: 600;
+        background: #f1f3f5;
+        border: 1px solid #dee2e6;
+        color: #343a40;
+    }
+
+    @media (max-width: 991px) {
+        .filtros-card {
+            position: static;
+        }
+    }
+</style>
+
+<div class="container-fluid py-4 resumen-page">
+
+    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+        <div>
+            <h2 class="resumen-title mb-1">Resumen general</h2>
+            <div class="resumen-subtitle">
+                Vista ejecutiva de operatividad por sector, ubicación y objetos registrados.
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <span class="resumen-chip">Verde: operativo</span>
+            <span class="resumen-chip">Amarillo: observación</span>
+            <span class="resumen-chip">Rojo: crítico</span>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-12 col-xl-3 col-xxl-2">
+            <div class="card resumen-card filtros-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="fw-bold">Filtros</span>
+                    <a href="{% url 'resumen_general' %}" class="small text-decoration-none">
+                        Limpiar
+                    </a>
+                </div>
+
+                <div class="card-body">
+                    <form method="get" class="vstack gap-3">
+
+                        <div>
+                            <label for="id_filtro_sector" class="form-label mb-1">Sector</label>
+                            <select id="id_filtro_sector" name="sector" class="form-select form-select-sm">
+                                <option value="">Todos los sectores</option>
+                                {% for s in sectores %}
+                                    <option value="{{ s.id }}" {% if sector_actual == s.id|stringformat:'s' %}selected{% endif %}>
+                                        {{ s.sector }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="id_filtro_ubicacion" class="form-label mb-1">Ubicación</label>
+                            <select id="id_filtro_ubicacion" name="ubicacion" class="form-select form-select-sm">
+                                <option value="">Todas las ubicaciones</option>
+                                {% for u in ubicaciones %}
+                                    <option value="{{ u.id }}" {% if ubicacion_actual == u.id|stringformat:'s' %}selected{% endif %}>
+                                        {{ u.ubicacion }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="id_filtro_piso" class="form-label mb-1">Piso</label>
+                            <select id="id_filtro_piso" name="piso" class="form-select form-select-sm">
+                                <option value="">Todos los pisos</option>
+                                {% for p in pisos %}
+                                    <option value="{{ p.id }}" {% if piso_actual == p.id|stringformat:'s' %}selected{% endif %}>
+                                        Piso {{ p.piso }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="id_filtro_tipo_lugar" class="form-label mb-1">Tipo de lugar</label>
+                            <select id="id_filtro_tipo_lugar" name="tipo_lugar" class="form-select form-select-sm">
+                                <option value="">Todos los tipos</option>
+                                {% for tl in tipos_lugar %}
+                                    <option value="{{ tl.id }}" {% if tipo_lugar_actual == tl.id|stringformat:'s' %}selected{% endif %}>
+                                        {{ tl.tipo_de_lugar }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <hr class="my-1">
+
+                        <div>
+                            <label for="id_filtro_categoria" class="form-label mb-1">Categoría</label>
+                            <select id="id_filtro_categoria" name="categoria" class="form-select form-select-sm">
+                                <option value="">Todas las categorías</option>
+                                {% for c in categorias %}
+                                    <option value="{{ c.id }}" {% if categoria_actual == c.id|stringformat:'s' %}selected{% endif %}>
+                                        {{ c.nombre_de_categoria }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="id_filtro_objeto" class="form-label mb-1">Objeto</label>
+                            <select id="id_filtro_objeto" name="objeto" class="form-select form-select-sm">
+                                <option value="">Todos los objetos</option>
+                                {% for o in objetos_catalogo %}
+                                    <option value="{{ o.id }}" {% if objeto_actual == o.id|stringformat:'s' %}selected{% endif %}>
+                                        {{ o.nombre_del_objeto }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="id_filtro_tipo_objeto" class="form-label mb-1">Tipo de objeto</label>
+                            <select id="id_filtro_tipo_objeto" name="tipo_objeto" class="form-select form-select-sm">
+                                <option value="">Todos los tipos</option>
+                                {% for t in tipos_objeto %}
+                                    <option value="{{ t.id }}" {% if tipo_objeto_actual == t.id|stringformat:'s' %}selected{% endif %}>
+                                        {{ t.objeto.nombre_del_objeto }} - {{ t.marca }} {{ t.material }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="id_filtro_estado" class="form-label mb-1">Estado</label>
+                            <select id="id_filtro_estado" name="estado" class="form-select form-select-sm">
+                                <option value="">Todos los estados</option>
+                                {% for value, label in estados %}
+                                    <option value="{{ value }}" {% if estado_actual == value|stringformat:'s' %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="id_filtro_marca" class="form-label mb-1">Marca</label>
+                            <select id="id_filtro_marca" name="marca" class="form-select form-select-sm">
+                                <option value="">Todas las marcas</option>
+                                {% for m in marcas %}
+                                    {% if m %}
+                                        <option value="{{ m }}" {% if marca_actual == m %}selected{% endif %}>
+                                            {{ m }}
+                                        </option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="id_filtro_material" class="form-label mb-1">Material</label>
+                            <select id="id_filtro_material" name="material" class="form-select form-select-sm">
+                                <option value="">Todos los materiales</option>
+                                {% for mat in materiales %}
+                                    {% if mat %}
+                                        <option value="{{ mat }}" {% if material_actual == mat %}selected{% endif %}>
+                                            {{ mat }}
+                                        </option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-sm mt-2 w-100">
+                            Aplicar filtros
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-9 col-xxl-10">
+
+            <div class="card resumen-card mb-4">
+                <div class="card-header">
+                    <div class="fw-bold">Operatividad por sector</div>
+                    <div class="small text-muted">Resumen principal para revisar el estado general por zona.</div>
+                </div>
+
+                <div class="card-body p-0">
+                    {% if resumen_sector %}
+                        <div class="table-responsive">
+                            <table class="table table-hover table-resumen align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Sector</th>
+                                        <th class="text-end">Cantidad</th>
+                                        <th style="width: 230px;">Operatividad</th>
+                                        <th class="text-end">Buenas</th>
+                                        <th class="text-end">Observación</th>
+                                        <th class="text-end">Malas</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {% for r in resumen_sector %}
+                                        <tr>
+                                            <td class="fw-semibold">
+                                                {{ r.lugar__piso__ubicacion__sector__sector }}
+                                            </td>
+
+                                            <td class="text-end">
+                                                {{ r.total|default:0 }}
+                                            </td>
+
+                                            <td>
+                                                <div class="barra-wrap">
+                                                    <div class="barra-mini">
+                                                        <div class="barra-mini-fill barra-operatividad" data-operatividad="{{ r.operatividad }}"></div>
+                                                    </div>
+                                                    <span class="badge badge-operatividad rounded-pill bg-primary">
+                                                        {{ r.operatividad }}%
+                                                    </span>
+                                                </div>
+                                            </td>
+
+                                            <td class="text-end">{{ r.pct_buenas }}%</td>
+                                            <td class="text-end">{{ r.pct_pendientes }}%</td>
+                                            <td class="text-end">{{ r.pct_malas }}%</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="p-4 text-muted">
+                            No hay datos para calcular el resumen por sector.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card resumen-card mb-4">
+                <div class="card-header">
+                    <div class="fw-bold">Operatividad por ubicación</div>
+                    <div class="small text-muted">Permite detectar rápidamente qué ubicación necesita revisión.</div>
+                </div>
+
+                <div class="card-body p-0">
+                    {% if resumen_ubic %}
+                        <div class="table-responsive">
+                            <table class="table table-hover table-resumen align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Sector</th>
+                                        <th>Ubicación</th>
+                                        <th class="text-end">Cantidad</th>
+                                        <th style="width: 230px;">Operatividad</th>
+                                        <th class="text-end">Malas</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {% for r in resumen_ubic %}
+                                        <tr>
+                                            <td>{{ r.lugar__piso__ubicacion__sector__sector }}</td>
+                                            <td class="fw-semibold">{{ r.lugar__piso__ubicacion__ubicacion }}</td>
+                                            <td class="text-end">{{ r.total|default:0 }}</td>
+
+                                            <td>
+                                                <div class="barra-wrap">
+                                                    <div class="barra-mini">
+                                                        <div class="barra-mini-fill barra-operatividad" data-operatividad="{{ r.operatividad }}"></div>
+                                                    </div>
+                                                    <span class="badge badge-operatividad rounded-pill bg-primary">
+                                                        {{ r.operatividad }}%
+                                                    </span>
+                                                </div>
+                                            </td>
+
+                                            <td class="text-end">
+                                                {% if r.malas > 0 %}
+                                                    <span class="text-danger fw-semibold">{{ r.malas }}</span>
+                                                {% else %}
+                                                    <span class="text-muted">0</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="p-4 text-muted">
+                            No hay datos para calcular el resumen por ubicación.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card resumen-card mb-4">
+                <div class="card-header">
+                    <div class="fw-bold">Objetos con mayor atención</div>
+                    <div class="small text-muted">Listado resumido por objeto, mostrando solo datos útiles para decidir.</div>
+                </div>
+
+                <div class="card-body p-0">
+                    {% if resumen_objetos %}
+                        <div class="table-responsive">
+                            <table class="table table-hover table-resumen align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Objeto</th>
+                                        <th class="text-end">Cantidad</th>
+                                        <th style="width: 230px;">Operatividad</th>
+                                        <th class="text-end">Malas</th>
+                                        <th class="text-end">Pendientes</th>
+                                        <th class="text-end">Lugares afectados</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {% for obj in resumen_objetos %}
+                                        <tr>
+                                            <td>
+                                                <div class="objeto-nombre">{{ obj.nombre }}</div>
+
+                                                {% if obj.malos %}
+                                                    <div class="objeto-detalle">
+                                                        Tiene unidades en mal estado.
+                                                    </div>
+                                                {% else %}
+                                                    <div class="objeto-detalle">
+                                                        Sin fallas críticas registradas.
+                                                    </div>
+                                                {% endif %}
+                                            </td>
+
+                                            <td class="text-end">
+                                                {{ obj.total }}
+                                            </td>
+
+                                            <td>
+                                                <div class="barra-wrap">
+                                                    <div class="barra-mini">
+                                                        <div class="barra-mini-fill barra-operatividad" data-operatividad="{{ obj.operatividad }}"></div>
+                                                    </div>
+                                                    <span class="badge badge-operatividad rounded-pill bg-primary">
+                                                        {{ obj.operatividad }}%
+                                                    </span>
+                                                </div>
+                                            </td>
+
+                                            <td class="text-end">
+                                                {% if obj.malas > 0 %}
+                                                    <span class="text-danger fw-semibold">{{ obj.malas }}</span>
+                                                {% else %}
+                                                    <span class="text-muted">0</span>
+                                                {% endif %}
+                                            </td>
+
+                                            <td class="text-end">
+                                                {% if obj.pendientes > 0 %}
+                                                    <span class="text-warning fw-semibold">{{ obj.pendientes }}</span>
+                                                {% else %}
+                                                    <span class="text-muted">0</span>
+                                                {% endif %}
+                                            </td>
+
+                                            <td class="text-end">
+                                                {% if obj.malos %}
+                                                    <span class="badge rounded-pill bg-danger">
+                                                        {{ obj.malos|length }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge rounded-pill bg-success">
+                                                        0
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+
+                                        {% if obj.malos %}
+                                            <tr class="fila-secundaria">
+                                                <td colspan="6">
+                                                    <div class="small text-muted mb-2">
+                                                        Lugares afectados:
+                                                    </div>
+
+                                                    <div class="d-flex flex-column gap-1">
+                                                        {% for ol in obj.malos %}
+                                                            <div class="small">
+                                                                <strong>{{ ol.lugar.nombre_del_lugar }}</strong>
+                                                                · {{ ol.lugar.piso.ubicacion.sector.sector }}
+                                                                · {{ ol.lugar.piso.ubicacion.ubicacion }}
+                                                                · Piso {{ ol.lugar.piso.piso }}
+                                                                · Malas: <span class="text-danger fw-semibold">{{ ol.cantidad_mala }}</span>
+                                                                · Operatividad: <span class="fw-semibold">{{ ol.operatividad_objeto }}%</span>
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="p-4 text-muted">
+                            No hay datos para calcular el resumen por objeto.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    function pintarBarra(elemento) {
+        let valor = elemento.getAttribute("data-operatividad") || "0";
+        valor = String(valor).replace(",", ".");
+        valor = parseFloat(valor);
+
+        if (isNaN(valor)) {
+            valor = 0;
+        }
+
+        if (valor < 0) {
+            valor = 0;
+        }
+
+        if (valor > 100) {
+            valor = 100;
+        }
+
+        elemento.style.width = valor + "%";
+
+        if (valor < 50) {
+            elemento.classList.add("bg-danger");
+        } else if (valor < 80) {
+            elemento.classList.add("bg-warning");
+        } else {
+            elemento.classList.add("bg-success");
+        }
+
+        const badge = elemento.closest(".barra-wrap")?.querySelector(".badge-operatividad");
+
+        if (badge) {
+            badge.classList.remove("bg-primary", "bg-success", "bg-warning", "bg-danger");
+
+            if (valor < 50) {
+                badge.classList.add("bg-danger");
+            } else if (valor < 80) {
+                badge.classList.add("bg-warning");
+                badge.classList.add("text-dark");
+            } else {
+                badge.classList.add("bg-success");
+            }
+        }
+    }
+
+    document.querySelectorAll(".barra-operatividad").forEach(function (elemento) {
+        pintarBarra(elemento);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5" style="max-width: 720px;">
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-4">
+      <h3 class="mb-3">{{ titulo }}</h3>
+
+      <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <div class="d-flex gap-2">
+          <button class="btn btn-primary" type="submit">Guardar</button>
+          <a class="btn btn-outline-secondary" href="{{ cancel_url }}">Cancelar</a>
+
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

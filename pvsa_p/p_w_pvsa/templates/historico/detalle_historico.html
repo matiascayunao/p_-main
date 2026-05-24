@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-xxl py-4" style="max-width: 980px;">
+
+  <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
+    <div>
+      <nav aria-label="breadcrumb" class="small">
+        <ol class="breadcrumb mb-2">
+          <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'lista_historicos' %}">Históricos</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Detalle</li>
+        </ol>
+      </nav>
+      <h2 class="h4 fw-bold mb-1">Detalle histórico</h2>
+      <div class="text-muted">Registro del estado anterior asociado a un objeto del lugar.</div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary" href="{% url 'lista_historicos' %}">Volver</a>
+      <a class="btn btn-outline-primary" href="{% url 'editar_historico' historico_id=historico.id %}">Editar</a>
+      <a class="btn btn-outline-danger" href="{% url 'borrar_historico' historico_id=historico.id %}">Borrar</a>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-3 p-md-4">
+
+      <div class="row g-3">
+        <div class="col-12 col-lg-7">
+          <div class="fw-semibold mb-1">Objeto asociado</div>
+          <div class="text-muted small mb-2">
+            {{ historico.objeto_del_lugar.lugar.nombre_del_lugar }} ·
+            Piso {{ historico.objeto_del_lugar.lugar.piso.piso }} ·
+            {{ historico.objeto_del_lugar.lugar.piso.ubicacion.ubicacion }} ·
+            {{ historico.objeto_del_lugar.lugar.piso.ubicacion.sector.sector }}
+          </div>
+
+          <div class="p-3 bg-light rounded-4">
+            <div class="fw-semibold">
+              {{ historico.objeto_del_lugar.tipo_de_objeto.objeto.nombre_del_objeto }}
+            </div>
+            <div class="text-muted small">
+              Tipo: {{ historico.objeto_del_lugar.tipo_de_objeto.marca|default:"—" }}
+              {{ historico.objeto_del_lugar.tipo_de_objeto.material|default:"" }}
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-lg-5">
+          <div class="fw-semibold mb-2">Datos del histórico</div>
+          <ul class="list-group rounded-4 overflow-hidden">
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Cantidad anterior</span>
+              <strong>{{ historico.cantidad_anterior }}</strong>
+            </li>
+
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span class="text-muted">Estado anterior</span>
+              {% if historico.estado_anterior == "B" %}
+                <span class="badge bg-success">Bueno</span>
+              {% elif historico.estado_anterior == "P" %}
+                <span class="badge bg-warning text-dark">Pendiente</span>
+              {% else %}
+                <span class="badge bg-danger">Malo</span>
+              {% endif %}
+            </li>
+
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Detalle anterior</span>
+              <strong class="text-end">
+                {% if historico.detalle_anterior %}{{ historico.detalle_anterior }}{% else %}—{% endif %}
+              </strong>
+            </li>
+
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Fecha anterior</span>
+              <strong>{{ historico.fecha_anterior|date:"d/m/Y" }}</strong>
+            </li>
+          </ul>
+
+          <div class="mt-3">
+            <a class="btn btn-sm btn-outline-primary"
+               href="{% url 'detalle_objeto_lugar' historico.objeto_del_lugar.id %}">
+              Ir al objeto del lugar
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

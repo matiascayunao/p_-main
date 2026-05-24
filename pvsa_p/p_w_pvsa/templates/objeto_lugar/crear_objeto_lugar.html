@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 760px;">
+
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-4">
+
+      <div class="mb-4">
+        <h2 class="mb-1">Agregar objeto al lugar</h2>
+
+        {% if lugar %}
+          <div class="text-muted small">
+            Lugar:
+            <strong>{{ lugar.nombre_del_lugar }}</strong>
+            · Piso {{ lugar.piso.piso }}
+            · {{ lugar.piso.ubicacion.ubicacion }}
+            · {{ lugar.piso.ubicacion.sector.sector }}
+          </div>
+        {% endif %}
+      </div>
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
+
+        <div class="mb-3">
+          <label class="form-label" for="{{ form.tipo_de_objeto.id_for_label }}">
+            Tipo de objeto:
+          </label>
+          {{ form.tipo_de_objeto }}
+          {% if form.tipo_de_objeto.errors %}
+            <div class="text-danger small mt-1">{{ form.tipo_de_objeto.errors|striptags }}</div>
+          {% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="{{ form.cantidad.id_for_label }}">
+            Cantidad total:
+          </label>
+          {{ form.cantidad }}
+          {% if form.cantidad.help_text %}
+            <div class="form-text">{{ form.cantidad.help_text }}</div>
+          {% endif %}
+          {% if form.cantidad.errors %}
+            <div class="text-danger small mt-1">{{ form.cantidad.errors|striptags }}</div>
+          {% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="{{ form.detalle.id_for_label }}">
+            Detalle:
+          </label>
+          {{ form.detalle }}
+          {% if form.detalle.errors %}
+            <div class="text-danger small mt-1">{{ form.detalle.errors|striptags }}</div>
+          {% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="{{ form.importancia.id_for_label }}">
+            Importancia:
+          </label>
+          {{ form.importancia }}
+          {% if form.importancia.help_text %}
+            <div class="form-text">{{ form.importancia.help_text }}</div>
+          {% endif %}
+          {% if form.importancia.errors %}
+            <div class="text-danger small mt-1">{{ form.importancia.errors|striptags }}</div>
+          {% endif %}
+        </div>
+
+        <div class="row g-3">
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="{{ form.cantidad_mala.id_for_label }}">
+              Cantidad mala:
+            </label>
+            {{ form.cantidad_mala }}
+            {% if form.cantidad_mala.help_text %}
+              <div class="form-text">{{ form.cantidad_mala.help_text }}</div>
+            {% endif %}
+            {% if form.cantidad_mala.errors %}
+              <div class="text-danger small mt-1">{{ form.cantidad_mala.errors|striptags }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="{{ form.cantidad_pendiente.id_for_label }}">
+              Cantidad pendiente:
+            </label>
+            {{ form.cantidad_pendiente }}
+            {% if form.cantidad_pendiente.help_text %}
+              <div class="form-text">{{ form.cantidad_pendiente.help_text }}</div>
+            {% endif %}
+            {% if form.cantidad_pendiente.errors %}
+              <div class="text-danger small mt-1">{{ form.cantidad_pendiente.errors|striptags }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="mb-3 mt-3">
+          <label class="form-label" for="{{ form.minimo_operativo.id_for_label }}">
+            Mínimo operativo:
+          </label>
+          {{ form.minimo_operativo }}
+          {% if form.minimo_operativo.help_text %}
+            <div class="form-text">{{ form.minimo_operativo.help_text }}</div>
+          {% endif %}
+          {% if form.minimo_operativo.errors %}
+            <div class="text-danger small mt-1">{{ form.minimo_operativo.errors|striptags }}</div>
+          {% endif %}
+        </div>
+
+        <div class="alert alert-light border rounded-4 small mt-4">
+          El estado del objeto se calcula automáticamente según la cantidad mala y pendiente.
+          La operatividad se calcula usando la importancia y el mínimo operativo.
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+          <button type="submit" class="btn btn-primary">
+            Guardar
+          </button>
+
+          {% if lugar %}
+            <a href="{% url 'detalle_lugar' lugar_id=lugar.id %}" class="btn btn-outline-secondary">
+              Cancelar
+            </a>
+          {% else %}
+            <a href="{% url 'lista_objetos_lugar' %}" class="btn btn-outline-secondary">
+              Cancelar
+            </a>
+          {% endif %}
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

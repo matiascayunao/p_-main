@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_link %}
+<link href="https://unpkg.com/maplibre-gl@^5.15.0/dist/maplibre-gl.css" rel="stylesheet" />
+<style>
+  .maplibregl-popup-content{
+    border-radius: 14px !important;
+    padding: 12px 12px 10px !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,.20) !important;
+    border: 1px solid rgba(15,23,42,.10);
+    max-width: 320px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h3 class="mb-0">Detalle mapa · Ubicación</h3>
+    <div class="text-muted small">{{ ubicacion.ubicacion }} · Sector {{ ubicacion.sector.sector }}</div>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{% url 'mapa_admin' %}">Volver</a>
+    <a class="btn btn-primary" href="{% url 'mapa_ubicacion_editar_geom' ubicacion.id %}">Editar polígono</a>
+    <form method="post" action="{% url 'mapa_ubicacion_quitar_geom' ubicacion.id %}">
+      {% csrf_token %}
+      <button class="btn btn-outline-danger" type="submit">Quitar del mapa</button>
+    </form>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- INFO -->
+  <div class="col-12 col-lg-4">
+    <div class="card shadow-sm border-0 mb-3">
+      <div class="card-header bg-white border-0">
+        <strong>Resumen de la ubicación</strong>
+      </div>
+      <div class="card-body">
+        <div class="d-flex justify-content-between"><span class="text-muted">Total cant.</span><span class="fw-semibold">{{ resumen.total }}</span></div>
+        <div class="d-flex justify-content-between"><span class="text-muted">Buenas</span><span class="fw-semibold">{{ resumen.buenas }}</span></div>
+        <div class="d-flex justify-content-between"><span class="text-muted">Pendientes</span><span class="fwm-semibold">{{ resumen.pendientes }}</span></div>
+        <div class="d-flex justify-content-between"><span class="text-muted">Malas</span><span class="fw-semibold">{{ resumen.malas }}</span></div>
+
+        <hr>
+
+        <div class="d-flex justify-content-between"><span class="text-muted">% Bueno</span><span class="fw-semibold">{{ resumen.pct_buenas }}%</span></div>
+        <div class="d-flex justify-content-between"><span class="text-muted">% Pendiente</span><span class="fw-semibold">{{ resumen.pct_pendientes }}%</span></div>
+        <div class="d-flex justify-content-between"><span class="text-muted">% Malo</span><span class="fw-semibold">{{ resumen.pct_malas }}%</span></div>
+
+        <hr>
+
+        <div class="d-grid gap-2">
+          <a class="btn btn-outline-primary" href="{{ url_detalle_ubicacion }}">Ver detalle (mantenedor)</a>
+          <a class="btn btn-outline-secondary" href="{{ url_lista_pisos }}">Ver pisos (lista)</a>
+          <a class="btn btn-outline-secondary" href="{{ url_lista_lugares }}">Ver lugares (lista)</a>
+          <a class="btn btn-outline-secondary" href="{{ url_lista_objetos_lugar }}">Ver objetos del lugar (lista)</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white border-0">
+        <strong>Pisos y lugares</strong>
+        <div class="small text-muted">Con links a tus páginas</div>
+      </div>
+      <div class="card-body">
+        {% if pisos_info %}
+          <div class="accordion" id="accPisos">
+            {% for pi in pisos_info %}
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="h{{ pi.piso.id }}">
+                  <button class="accordion-button collapsed" type="button"
+                          data-bs-toggle="collapse" data-bs-target="#c{{ pi.piso.id }}">
+                    <div class="w-100 d-flex justify-content-between align-items-center gap-2">
+                      <div class="fw-semibold">Piso {{ pi.piso.piso }}</div>
+                      <div class="small text-muted text-end">
+                        Total: <b>{{ pi.stats.total }}</b> · {{ pi.stats.pct_buenas }}% B
+                      </div>
+                    </div>
+                  </button>
+                </h2>
+
+                <div id="c{{ pi.piso.id }}" class="accordion-collapse collapse" data-bs-parent="#accPisos">
+                  <div class="accordion-body">
+                    <div class="d-flex gap-2 mb-2">
+                      <a class="btn btn-sm btn-outline-primary" href="{{ pi.url_detalle }}">Detalle piso</a>
+                      <a class="btn btn-sm btn-outline-secondary" href="{{ pi.url_lista_lugares }}">Lugares de este piso</a>
+                    </div>
+
+                    {% if pi.lugares %}
+                      <div class="list-group">
+                        {% for li in pi.lugares %}
+                          <a class="list-group-item list-group-item-action" href="{{ li.url_detalle }}">
+                            <div class="d-flex justify-content-between align-items-center gap-2">
+                              <div>
+                                <div class="fw-semibold">{{ li.lugar.nombre_del_lugar }}</div>
+                                <div class="small text-muted">Tipo: {{ li.lugar.lugar_tipo_lugar.tipo_de_lugar }}</div>
+                              </div>
+                              <div class="text-end small">
+                                <div><b>{{ li.stats.total }}</b> total</div>
+                                <div class="text-muted">{{ li.stats.pct_buenas }}% B · {{ li.stats.pct_pendientes }}% P · {{ li.stats.pct_malas }}% M</div>
+                              </div>
+                            </div>
+                          </a>
+                          <a class="btn btn-sm btn-outline-secondary mt-1 w-100" href="{{ li.url_lista_objetos }}">Ver objetos de este lugar</a>
+                        {% endfor %}
+                      </div>
+                    {% else %}
+                      <div class="text-muted small">No hay lugares en este piso.</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-muted small">No hay pisos en esta ubicación.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- MAPA -->
+  <div class="col-12 col-lg-8">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white border-0">
+        <strong>Mapa (SATELITAL)</strong>
+      </div>
+      <div class="card-body">
+        <div id="mapDetalle" style="height:70vh;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if geom %}{{ geom|json_script:"geom-detalle" }}{% endif %}
+{% if lugares_fc %}{{ lugares_fc|json_script:"lugares-fc" }}{% endif %}
+{% endblock %}
+
+{% block extra_script %}
+<script src="https://unpkg.com/maplibre-gl@^5.15.0/dist/maplibre-gl.js"></script>
+<script>
+  const MAX_ZOOM = 19;
+
+  const STYLE = {
+    version: 8,
+    sources: {
+      sat: {
+        type: "raster",
+        tiles: ["https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+        tileSize: 256,
+        maxzoom: MAX_ZOOM,
+        attribution: "Esri"
+      }
+    },
+    layers: [{ id: "sat", type: "raster", source: "sat" }]
+  };
+
+  const map = new maplibregl.Map({
+    container: "mapDetalle",
+    style: STYLE,
+    center: [-71.484847, -32.752389],
+    zoom: 18,
+    maxZoom: MAX_ZOOM
+  });
+  map.addControl(new maplibregl.NavigationControl(), "top-right");
+
+  const el = document.getElementById("geom-detalle");
+  const geom = el ? JSON.parse(el.textContent) : null;
+
+  const lugaresEl = document.getElementById("lugares-fc");
+  const lugaresFC = lugaresEl ? JSON.parse(lugaresEl.textContent) : { type:"FeatureCollection", features:[] };
+
+  function coordsFromGeom(geom){
+    if (!geom) return [];
+    if (geom.type === "Polygon") return geom.coordinates?.[0] || [];
+    if (geom.type === "MultiPolygon") {
+      const out = [];
+      (geom.coordinates || []).forEach(poly => (poly?.[0] || []).forEach(c => out.push(c)));
+      return out;
+    }
+    return [];
+  }
+
+  function fitAll(){
+    let coords = [];
+    coords = coords.concat(coordsFromGeom(geom));
+    (lugaresFC.features || []).forEach(f => { coords = coords.concat(coordsFromGeom(f.geometry)); });
+
+    let minX=999, minY=999, maxX=-999, maxY=-999;
+    coords.forEach(([x,y]) => {
+      minX=Math.min(minX,x); minY=Math.min(minY,y);
+      maxX=Math.max(maxX,x); maxY=Math.max(maxY,y);
+    });
+    if (minX < 999) map.fitBounds([[minX,minY],[maxX,maxY]], { padding: 40, maxZoom: MAX_ZOOM });
+  }
+
+  map.on("load", () => {
+    // UBICACIÓN (base)
+    if (geom){
+      map.addSource("pol", { type:"geojson", data:{ type:"Feature", geometry: geom, properties:{} } });
+      map.addLayer({ id:"fill", type:"fill", source:"pol", paint:{ "fill-color":"#0d6efd", "fill-opacity":0.15 } });
+      map.addLayer({ id:"line", type:"line", source:"pol", paint:{ "line-color":"#0d6efd", "line-width":3 } });
+    }
+
+    // LUGARES (con color por % bueno)
+    if ((lugaresFC.features || []).length){
+      map.addSource("lugares", { type:"geojson", data: lugaresFC });
+
+      map.addLayer({
+        id:"lugares-fill",
+        type:"fill",
+        source:"lugares",
+        paint:{
+          "fill-color":[
+            "case",
+            ["==", ["get","hasPct"], true],
+            [
+              "case",
+              [">=", ["get","pct_buenas"], 65],
+              ["interpolate", ["linear"], ["get","pct_buenas"], 65, "#86efac", 100, "#16a34a"],
+              [">=", ["get","pct_buenas"], 50],
+              "#facc15",
+              ["interpolate", ["linear"], ["get","pct_buenas"], 0, "#7f1d1d", 49, "#f87171"]
+            ],
+            "#94a3b8"
+          ],
+          "fill-opacity": 0.35
+        }
+      });
+
+      map.addLayer({
+        id:"lugares-line",
+        type:"line",
+        source:"lugares",
+        paint:{
+          "line-color":[
+            "case",
+            ["==", ["get","hasPct"], true],
+            [
+              "case",
+              [">=", ["get","pct_buenas"], 65], "#15803d",
+              [">=", ["get","pct_buenas"], 50], "#a16207",
+              "#991b1b"
+            ],
+            "#334155"
+          ],
+          "line-width": 3
+        }
+      });
+
+      map.addLayer({
+        id:"lugares-label",
+        type:"symbol",
+        source:"lugares",
+        layout:{ "text-field":["get","name"], "text-size":12 }
+      });
+
+      let pop = null;
+      map.on("click", "lugares-fill", (e) => {
+        const f = e.features && e.features[0];
+        if (!f) return;
+        const p = f.properties || {};
+
+        const hasPct = (p.hasPct === true || p.hasPct === "true");
+        const pct = Number(p.pct_buenas || 0);
+
+        const badgeColor = !hasPct ? "#64748b" : (pct >= 65 ? "#16a34a" : (pct >= 50 ? "#f59e0b" : "#ef4444"));
+        const badgeLabel = !hasPct ? "Sin datos" : `${pct}% Bueno`;
+
+        const html = `
+          <div style="min-width:240px">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <div>
+                <div class="fw-semibold mb-1">${p.name || "-"}</div>
+                <div class="small text-muted">Piso ${p.piso || "-"}</div>
+              </div>
+              <span style="font-size:12px;color:white;background:${badgeColor};padding:4px 8px;border-radius:999px;white-space:nowrap;">
+                ${badgeLabel}
+              </span>
+            </div>
+
+            <div class="small text-muted mt-2">
+              Total: <b>${p.total || 0}</b> · Buenas: <b>${p.buenas || 0}</b> · Pend: <b>${p.pendientes || 0}</b> · Malas: <b>${p.malas || 0}</b>
+            </div>
+
+            <div class="d-grid gap-1 mt-3">
+              <a class="btn btn-sm btn-outline-primary" href="${p.detail_url}">Detalle lugar</a>
+              <a class="btn btn-sm btn-primary" href="${p.edit_geom_url}">Editar polígono</a>
+            </div>
+          </div>
+        `;
+
+        if (pop) pop.remove();
+        pop = new maplibregl.Popup({ closeOnClick:true })
+          .setLngLat(e.lngLat)
+          .setHTML(html)
+          .addTo(map);
+      });
+    }
+
+    fitAll();
+  });
+</script>
+{% endblock %}

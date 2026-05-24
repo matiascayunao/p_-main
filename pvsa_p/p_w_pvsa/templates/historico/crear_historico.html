@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-xxl py-4" style="max-width: 980px;">
+
+  <!-- Breadcrumb + Header -->
+  <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
+    <div>
+      <nav aria-label="breadcrumb" class="small">
+        <ol class="breadcrumb mb-2">
+          <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'lista_historicos' %}">Históricos</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Crear</li>
+        </ol>
+      </nav>
+      <h2 class="h4 fw-bold mb-1">Crear histórico</h2>
+      <div class="text-muted">Registra el estado anterior de un objeto para mantener trazabilidad.</div>
+    </div>
+
+    <a class="btn btn-outline-secondary"
+       href="{% url 'detalle_objeto_lugar' objeto_lugar.id %}">
+      Volver al objeto
+    </a>
+  </div>
+
+  <div class="row g-3">
+    <!-- Resumen -->
+    <div class="col-12 col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-3 p-md-4">
+          <div class="fw-semibold mb-1">Objeto del lugar</div>
+          <div class="text-muted small mb-3">
+            Este registro queda asociado al objeto seleccionado.
+          </div>
+
+          <div class="p-3 bg-light rounded-4">
+            <div class="fw-semibold">{{ objeto_lugar.tipo_de_objeto.objeto.nombre_del_objeto }}</div>
+            <div class="text-muted small">
+              Tipo: {{ objeto_lugar.tipo_de_objeto.marca|default:"—" }} {{ objeto_lugar.tipo_de_objeto.material|default:"" }}
+            </div>
+            <hr class="my-2">
+            <div class="small">
+              <div><span class="text-muted">Lugar:</span> {{ objeto_lugar.lugar.nombre_del_lugar }}</div>
+              <div><span class="text-muted">Piso:</span> {{ objeto_lugar.lugar.piso.piso }}</div>
+              <div><span class="text-muted">Ubicación:</span> {{ objeto_lugar.lugar.piso.ubicacion.ubicacion }}</div>
+              <div><span class="text-muted">Sector:</span> {{ objeto_lugar.lugar.piso.ubicacion.sector.sector }}</div>
+            </div>
+          </div>
+
+          <div class="alert alert-info mt-3 mb-0 rounded-4 small">
+            Tip: si el cambio fue por inspección, registra el estado anterior tal como estaba antes del ajuste.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div class="col-12 col-lg-8">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-3 p-md-4">
+
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            <!-- IMPORTANTE: si el select está disabled, no se envía.
+                 Esto asegura el valor en POST sin tocar tu form/view. -->
+            <input type="hidden" name="objeto_del_lugar" value="{{ objeto_lugar.id }}">
+
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label small text-muted mb-1">Objeto del lugar</label>
+                {{ form.objeto_del_lugar }}
+                <div class="form-text">Este campo está bloqueado para evitar asociar el histórico al objeto incorrecto.</div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label class="form-label small text-muted mb-1">Cantidad anterior</label>
+                {{ form.cantidad_anterior }}
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label class="form-label small text-muted mb-1">Estado anterior</label>
+                {{ form.estado_anterior }}
+              </div>
+
+              <div class="col-12">
+                <label class="form-label small text-muted mb-1">Detalle anterior</label>
+                {{ form.detalle_anterior }}
+                <div class="form-text">Opcional. Ej: “Faltaban tapas”, “Cable suelto”, “Sin señal”.</div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label class="form-label small text-muted mb-1">Fecha anterior</label>
+                {{ form.fecha_anterior }}
+              </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-primary" type="submit">Guardar histórico</button>
+              <a class="btn btn-outline-secondary" href="{% url 'detalle_objeto_lugar' objeto_lugar.id %}">
+                Cancelar
+              </a>
+            </div>
+
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

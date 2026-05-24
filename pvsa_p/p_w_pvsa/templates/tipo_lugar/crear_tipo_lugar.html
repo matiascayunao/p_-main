@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-xxl py-4" style="max-width: 980px;">
+
+  <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
+    <div>
+      <nav aria-label="breadcrumb" class="small">
+        <ol class="breadcrumb mb-2">
+          <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'lista_tipos_lugar' %}">Tipos de lugar</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Crear</li>
+        </ol>
+      </nav>
+      <h2 class="h4 fw-bold mb-1">Crear tipo de lugar</h2>
+      <div class="text-muted">Ejemplos: Sala, Bodega, Oficina, Patio.</div>
+    </div>
+
+    <a class="btn btn-outline-secondary" href="{% url 'lista_tipos_lugar' %}">Volver</a>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-12 col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-3 p-md-4">
+          <div class="fw-semibold mb-1">Recomendación</div>
+          <div class="text-muted small">
+            Define tipos claros porque luego podrás asignar “objetos típicos” para acelerar cargas en cada lugar.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-8">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-3 p-md-4">
+
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger rounded-4">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="mb-3">
+              <label class="form-label small text-muted mb-1" for="{{ form.tipo_de_lugar.id_for_label }}">
+                Nombre del tipo de lugar
+              </label>
+              <input
+                type="text"
+                name="{{ form.tipo_de_lugar.name }}"
+                id="{{ form.tipo_de_lugar.id_for_label }}"
+                value="{{ form.tipo_de_lugar.value|default_if_none:'' }}"
+                class="form-control {% if form.tipo_de_lugar.errors %}is-invalid{% endif %}"
+                placeholder="Ej: Bodega"
+                required
+              >
+              {% if form.tipo_de_lugar.errors %}
+                <div class="invalid-feedback">{{ form.tipo_de_lugar.errors|striptags }}</div>
+              {% endif %}
+            </div>
+
+            <hr class="my-4">
+
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-primary" type="submit">Guardar</button>
+              <a class="btn btn-outline-secondary" href="{% url 'lista_tipos_lugar' %}">Cancelar</a>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

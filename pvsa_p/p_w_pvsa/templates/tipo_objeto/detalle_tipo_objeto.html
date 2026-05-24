@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-xxl py-4" style="max-width:1280px;">
+
+  <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
+    <div>
+      <nav aria-label="breadcrumb" class="small">
+        <ol class="breadcrumb mb-2">
+          <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'lista_tipos_objeto' %}">Tipos de objeto</a></li>
+          <li class="breadcrumb-item active" aria-current="page">{{ tipo.objeto.nombre_del_objeto }}</li>
+        </ol>
+      </nav>
+      <h1 class="h4 fw-bold mb-1">{{ tipo.objeto.nombre_del_objeto }}</h1>
+      <div class="text-muted">
+        Categoría: <strong>{{ tipo.objeto.objeto_categoria.nombre_de_categoria }}</strong>
+        · Marca: <strong>{{ tipo.marca|default:"—" }}</strong>
+        · Material: <strong>{{ tipo.material|default:"—" }}</strong>
+      </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-secondary" href="{% url 'lista_tipos_objeto' %}">Volver</a>
+      <a class="btn btn-outline-primary" href="{% url 'editar_tipo_objeto' tipo_objeto_id=tipo.id %}">Editar</a>
+      <a class="btn btn-outline-danger" href="{% url 'borrar_tipo_objeto' tipo_objeto_id=tipo.id %}">Borrar</a>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-header bg-white border-0 p-3 p-md-4">
+      <div class="fw-bold">Lugares donde se usa</div>
+      <div class="text-muted small">Registros “Objeto en lugar” que apuntan a este tipo.</div>
+    </div>
+
+    <div class="card-body p-0">
+      {% if usados %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="min-width:240px;">Lugar</th>
+                <th style="min-width:220px;">Ubicación</th>
+                <th style="width:120px;">Piso</th>
+                <th class="text-end" style="width:90px;">Cant.</th>
+                <th style="width:140px;">Estado</th>
+                <th class="text-end" style="width:120px;">Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for u in usados %}
+                <tr>
+                  <td class="fw-semibold">{{ u.lugar.nombre_del_lugar }}</td>
+                  <td class="text-muted">{{ u.lugar.piso.ubicacion.ubicacion }}</td>
+                  <td>Piso {{ u.lugar.piso.piso }}</td>
+                  <td class="text-end fw-semibold">{{ u.cantidad }}</td>
+                  <td>{{ u.get_estado_display }}</td>
+                  <td class="text-end">
+                    <a class="btn btn-outline-primary btn-sm"
+                       href="{% url 'detalle_objeto_lugar' objeto_lugar_id=u.id %}">
+                      Ver
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="p-4">
+          <div class="alert alert-secondary mb-0 rounded-4">
+            Este tipo no está usado en ningún lugar.
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

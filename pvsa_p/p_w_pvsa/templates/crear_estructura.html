@@ -1,0 +1,1003 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3>Carga completa</h3>
+    <p class="text-muted">
+        Selecciona datos existentes o crea nuevos, y agrega los objetos del lugar en una sola operación.
+    </p>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- ================= DATOS BASE ================= -->
+        <div class="card mb-3">
+            <div class="card-header">Datos base</div>
+            <div class="card-body">
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger py-1">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <!-- Sector -->
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label">{{ form.sector_existente.label }}</label>
+                        {{ form.sector_existente }}
+                        {{ form.sector_existente.errors }}
+                        <small class="text-muted d-block">
+                            Elige un sector que ya exista.
+                        </small>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label">{{ form.sector_nuevo.label }}</label>
+                        {{ form.sector_nuevo }}
+                        {{ form.sector_nuevo.errors }}
+                        <small class="text-muted d-block">
+                            O escribe un nuevo sector.
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Ubicación -->
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label">{{ form.ubicacion_existente.label }}</label>
+                        {{ form.ubicacion_existente }}
+                        {{ form.ubicacion_existente.errors }}
+                        <small class="text-muted d-block">
+                            Elige una ubicación ya creada ligada al sector.
+                        </small>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label">{{ form.ubicacion_nueva.label }}</label>
+                        {{ form.ubicacion_nueva }}
+                        {{ form.ubicacion_nueva.errors }}
+                        <small class="text-muted d-block">
+                            O escribe una nueva ubicación.
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Piso -->
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label">{{ form.piso_existente.label }}</label>
+                        {{ form.piso_existente }}
+                        {{ form.piso_existente.errors }}
+                        <small class="text-muted d-block">
+                            Elige un piso ya registrado para esa ubicación.
+                        </small>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label">{{ form.piso_nuevo.label }}</label>
+                        {{ form.piso_nuevo }}
+                        {{ form.piso_nuevo.errors }}
+                        <small class="text-muted d-block">
+                            O indica un nuevo número de piso.
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Tipo de lugar -->
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label">{{ form.tipo_lugar_existente.label }}</label>
+                        {{ form.tipo_lugar_existente }}
+                        {{ form.tipo_lugar_existente.errors }}
+                        <small class="text-muted d-block">
+                            Elige un tipo de lugar ya existente.
+                        </small>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label">{{ form.tipo_lugar_nuevo.label }}</label>
+                        {{ form.tipo_lugar_nuevo }}
+                        {{ form.tipo_lugar_nuevo.errors }}
+                        <small class="text-muted d-block">
+                            O escribe un nuevo tipo de lugar.
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Nombre del lugar -->
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label">{{ form.lugar_existente.label }}</label>
+                        {{ form.lugar_existente }}
+                        {{ form.lugar_existente.errors }}
+                        <small class="text-muted d-block">
+                            Elige un lugar existente según sector, ubicación, piso y tipo de lugar.
+                        </small>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label class="form-label">{{ form.lugar_nuevo.label }}</label>
+                        {{ form.lugar_nuevo }}
+                        {{ form.lugar_nuevo.errors }}
+                        <small class="text-muted d-block">
+                            O escribe un nuevo lugar.
+                        </small>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ================= OBJETOS DEL LUGAR ================= -->
+        <div class="card mb-3">
+            <div class="card-header">Objetos del lugar</div>
+            <div class="card-body">
+
+                <p class="small text-muted mb-3">
+                    En cada bloque sigue estos pasos:
+                    <br>1) Elige o crea la <strong>categoría</strong>.
+                    <br>2) Elige o crea el <strong>objeto</strong> dentro de esa categoría.
+                    <br>3) Elige un <strong>tipo de objeto</strong> existente, o crea uno nuevo escribiendo marca y material.
+                    <br>4) Indica <strong>cantidad total</strong>, <strong>cantidad mala</strong>, <strong>cantidad pendiente</strong>,
+                    <strong>importancia</strong>, <strong>mínimo operativo</strong> y <strong>detalle</strong>.
+                    <br><br>
+                    El estado se calcula automáticamente. Si no necesitas un bloque, puedes dejarlo completamente en blanco.
+                </p>
+
+                {{ objetos_formset.management_form }}
+
+                <div id="objetos-container">
+                    {% for f in objetos_formset %}
+                        <div class="border rounded p-3 mb-3 objeto-form">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0 objeto-title">Objeto {{ forloop.counter }}</h6>
+                                <button type="button" class="btn btn-outline-danger btn-sm remove-obj-btn">
+                                    Quitar
+                                </button>
+                            </div>
+
+                            <!-- Paso 1: Categoría -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small d-block">
+                                    1. Categoría
+                                </label>
+                                <div class="row">
+                                    <div class="col-md-6 mb-2">
+                                        <small class="text-muted d-block mb-1">
+                                            Categoría existente
+                                        </small>
+                                        {{ f.categoria_existente }}
+                                        {{ f.categoria_existente.errors }}
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <small class="text-muted d-block mb-1">
+                                            O escribe una nueva categoría
+                                        </small>
+                                        {{ f.categoria_nueva }}
+                                        {{ f.categoria_nueva.errors }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Paso 2: Objeto -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small d-block">
+                                    2. Objeto
+                                </label>
+                                <div class="row">
+                                    <div class="col-md-6 mb-2">
+                                        <small class="text-muted d-block mb-1">
+                                            Objeto existente ligado a la categoría
+                                        </small>
+                                        {{ f.objeto_existente }}
+                                        {{ f.objeto_existente.errors }}
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <small class="text-muted d-block mb-1">
+                                            O escribe el nombre del nuevo objeto
+                                        </small>
+                                        {{ f.objeto_nuevo }}
+                                        {{ f.objeto_nuevo.errors }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Paso 3: Tipo de objeto -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small d-block">
+                                    3. Tipo de objeto
+                                </label>
+                                <div class="row">
+                                    <div class="col-md-6 mb-2">
+                                        <small class="text-muted d-block mb-1">
+                                            Tipo de objeto existente
+                                        </small>
+                                        {{ f.tipo_objeto_existente }}
+                                        {{ f.tipo_objeto_existente.errors }}
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <small class="text-muted d-block mb-1">
+                                            O crea un nuevo tipo de objeto
+                                        </small>
+                                        <div class="row">
+                                            <div class="col-sm-6 mb-2">
+                                                <span class="small d-block mb-1">Marca</span>
+                                                {{ f.marca }}
+                                                {{ f.marca.errors }}
+                                            </div>
+                                            <div class="col-sm-6 mb-2">
+                                                <span class="small d-block mb-1">Material y/o observación</span>
+                                                {{ f.material }}
+                                                {{ f.material.errors }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Paso 4: Datos en este lugar -->
+                            <div class="mb-1">
+                                <label class="form-label fw-semibold small d-block">
+                                    4. Datos en este lugar
+                                </label>
+
+                                <div class="row">
+                                    <div class="col-md-3 mb-2">
+                                        <span class="small d-block mb-1">Cantidad total</span>
+                                        {{ f.cantidad }}
+                                        {{ f.cantidad.errors }}
+                                    </div>
+
+                                    <div class="col-md-3 mb-2">
+                                        <span class="small d-block mb-1">Cantidad mala</span>
+                                        {{ f.cantidad_mala }}
+                                        {{ f.cantidad_mala.errors }}
+                                    </div>
+
+                                    <div class="col-md-3 mb-2">
+                                        <span class="small d-block mb-1">Cantidad pendiente</span>
+                                        {{ f.cantidad_pendiente }}
+                                        {{ f.cantidad_pendiente.errors }}
+                                    </div>
+
+                                    <div class="col-md-3 mb-2">
+                                        <span class="small d-block mb-1">Mínimo operativo</span>
+                                        {{ f.minimo_operativo }}
+                                        {{ f.minimo_operativo.errors }}
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-3 mb-2">
+                                        <span class="small d-block mb-1">Importancia</span>
+                                        {{ f.importancia }}
+                                        {{ f.importancia.errors }}
+                                    </div>
+
+                                    <div class="col-md-9 mb-2">
+                                        <span class="small d-block mb-1">Detalle opcional</span>
+                                        {{ f.detalle }}
+                                        {{ f.detalle.errors }}
+                                    </div>
+                                </div>
+
+                                <small class="text-muted d-block">
+                                    El estado se calcula automáticamente según las cantidades ingresadas.
+                                </small>
+                            </div>
+
+                            {% if f.non_field_errors %}
+                                <div class="alert alert-warning py-1 mt-2 mb-0">
+                                    {{ f.non_field_errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Template oculto para nuevos objetos -->
+                <div id="empty-form" class="d-none">
+                    <div class="border rounded p-3 mb-3 objeto-form">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="mb-0 objeto-title">Objeto X</h6>
+                            <button type="button" class="btn btn-outline-danger btn-sm remove-obj-btn">
+                                Quitar
+                            </button>
+                        </div>
+
+                        <!-- Paso 1: Categoría -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small d-block">
+                                1. Categoría
+                            </label>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <small class="text-muted d-block mb-1">
+                                        Categoría existente
+                                    </small>
+                                    {{ objetos_formset.empty_form.categoria_existente }}
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <small class="text-muted d-block mb-1">
+                                        O escribe una nueva categoría
+                                    </small>
+                                    {{ objetos_formset.empty_form.categoria_nueva }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Paso 2: Objeto -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small d-block">
+                                2. Objeto
+                            </label>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <small class="text-muted d-block mb-1">
+                                        Objeto existente ligado a la categoría
+                                    </small>
+                                    {{ objetos_formset.empty_form.objeto_existente }}
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <small class="text-muted d-block mb-1">
+                                        O escribe el nombre del nuevo objeto
+                                    </small>
+                                    {{ objetos_formset.empty_form.objeto_nuevo }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Paso 3: Tipo de objeto -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small d-block">
+                                3. Tipo de objeto
+                            </label>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <small class="text-muted d-block mb-1">
+                                        Tipo de objeto existente
+                                    </small>
+                                    {{ objetos_formset.empty_form.tipo_objeto_existente }}
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <small class="text-muted d-block mb-1">
+                                        O crea un nuevo tipo de objeto
+                                    </small>
+                                    <div class="row">
+                                        <div class="col-sm-6 mb-2">
+                                            <span class="small d-block mb-1">Marca</span>
+                                            {{ objetos_formset.empty_form.marca }}
+                                        </div>
+                                        <div class="col-sm-6 mb-2">
+                                            <span class="small d-block mb-1">Material y/o observación</span>
+                                            {{ objetos_formset.empty_form.material }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Paso 4: Datos en este lugar -->
+                        <div class="mb-1">
+                            <label class="form-label fw-semibold small d-block">
+                                4. Datos en este lugar
+                            </label>
+
+                            <div class="row">
+                                <div class="col-md-3 mb-2">
+                                    <span class="small d-block mb-1">Cantidad total</span>
+                                    {{ objetos_formset.empty_form.cantidad }}
+                                </div>
+
+                                <div class="col-md-3 mb-2">
+                                    <span class="small d-block mb-1">Cantidad mala</span>
+                                    {{ objetos_formset.empty_form.cantidad_mala }}
+                                </div>
+
+                                <div class="col-md-3 mb-2">
+                                    <span class="small d-block mb-1">Cantidad pendiente</span>
+                                    {{ objetos_formset.empty_form.cantidad_pendiente }}
+                                </div>
+
+                                <div class="col-md-3 mb-2">
+                                    <span class="small d-block mb-1">Mínimo operativo</span>
+                                    {{ objetos_formset.empty_form.minimo_operativo }}
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-3 mb-2">
+                                    <span class="small d-block mb-1">Importancia</span>
+                                    {{ objetos_formset.empty_form.importancia }}
+                                </div>
+
+                                <div class="col-md-9 mb-2">
+                                    <span class="small d-block mb-1">Detalle opcional</span>
+                                    {{ objetos_formset.empty_form.detalle }}
+                                </div>
+                            </div>
+
+                            <small class="text-muted d-block">
+                                El estado se calcula automáticamente según las cantidades ingresadas.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="add-obj-btn" class="btn btn-outline-secondary btn-sm" type="button">
+                    + Agregar otro objeto
+                </button>
+
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Guardar todo</button>
+    </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const addBtn = document.getElementById("add-obj-btn");
+    const container = document.getElementById("objetos-container");
+    const totalFormsInput = document.getElementById("id_obj-TOTAL_FORMS");
+    const emptyFormDiv = document.getElementById("empty-form");
+
+    function renumerarTitulos() {
+        const titulos = container.querySelectorAll(".objeto-title");
+        titulos.forEach(function (titulo, idx) {
+            titulo.textContent = "Objeto " + (idx + 1);
+        });
+    }
+
+    function reindexForms() {
+        const forms = container.querySelectorAll(".objeto-form");
+
+        forms.forEach(function (formElem, index) {
+            const campos = formElem.querySelectorAll("input, select, textarea, label");
+            campos.forEach(function (el) {
+                if (el.name && el.name.indexOf("obj-") === 0) {
+                    el.name = el.name.replace(/obj-(\d+)-/, "obj-" + index + "-");
+                }
+                if (el.id && el.id.indexOf("id_obj-") === 0) {
+                    el.id = el.id.replace(/id_obj-(\d+)-/, "id_obj-" + index + "-");
+                }
+                if (el.htmlFor && el.htmlFor.indexOf("id_obj-") === 0) {
+                    el.htmlFor = el.htmlFor.replace(/id_obj-(\d+)-/, "id_obj-" + index + "-");
+                }
+            });
+        });
+
+        totalFormsInput.value = forms.length;
+        renumerarTitulos();
+    }
+
+    addBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+
+        const currentCount = parseInt(totalFormsInput.value, 10) || 0;
+        const newIndex = currentCount;
+
+        const templateHtml = emptyFormDiv.innerHTML.replace(/__prefix__/g, newIndex);
+        const tempContainer = document.createElement("div");
+        tempContainer.innerHTML = templateHtml.trim();
+
+        const newForm = tempContainer.firstElementChild;
+        container.appendChild(newForm);
+
+        reindexForms();
+    });
+
+    container.addEventListener("click", function (e) {
+        const btn = e.target.closest(".remove-obj-btn");
+        if (!btn) return;
+
+        e.preventDefault();
+        const card = btn.closest(".objeto-form");
+        if (card) {
+            card.remove();
+            reindexForms();
+        }
+    });
+
+    reindexForms();
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const sectorSelect = document.getElementById("id_sector_existente");
+  const ubicacionSelect = document.getElementById("id_ubicacion_existente");
+  const pisoSelect = document.getElementById("id_piso_existente");
+
+  if (sectorSelect && ubicacionSelect && pisoSelect) {
+    sectorSelect.addEventListener("change", function () {
+      const sectorId = this.value || "";
+
+      ubicacionSelect.innerHTML = '<option value="">---------</option>';
+      pisoSelect.innerHTML = '<option value="">---------</option>';
+
+      if (!sectorId) return;
+
+      fetch(`/ajax/ubicaciones-por-sector/?sector_id=${sectorId}`)
+        .then(r => r.json())
+        .then(data => {
+          data.forEach(item => {
+            const opt = document.createElement("option");
+            opt.value = item.id;
+            opt.textContent = item.nombre;
+            ubicacionSelect.appendChild(opt);
+          });
+        })
+        .catch(err => console.error("Error cargando ubicaciones:", err));
+    });
+
+    ubicacionSelect.addEventListener("change", function () {
+      const ubicacionId = this.value || "";
+
+      pisoSelect.innerHTML = '<option value="">---------</option>';
+      if (!ubicacionId) return;
+
+      fetch(`/ajax/pisos-por-ubicacion/?ubicacion_id=${ubicacionId}`)
+        .then(r => r.json())
+        .then(data => {
+          data.forEach(item => {
+            const opt = document.createElement("option");
+            opt.value = item.id;
+            opt.textContent = item.nombre;
+            pisoSelect.appendChild(opt);
+          });
+        })
+        .catch(err => console.error("Error cargando pisos:", err));
+    });
+  }
+
+  const objetosContainer = document.getElementById("objetos-container");
+
+  if (objetosContainer) {
+    objetosContainer.addEventListener("change", function (e) {
+      const target = e.target;
+      if (!target.name) return;
+
+      if (target.name.endsWith("-categoria_existente")) {
+        const card = target.closest(".objeto-form");
+        if (!card) return;
+
+        const objetoSelect = card.querySelector('select[name$="-objeto_existente"]');
+        const tipoSelect = card.querySelector('select[name$="-tipo_objeto_existente"]');
+
+        if (objetoSelect) {
+          objetoSelect.innerHTML = '<option value="">---------</option>';
+        }
+        if (tipoSelect) {
+          tipoSelect.innerHTML = '<option value="">---------</option>';
+        }
+
+        const categoriaId = target.value || "";
+        if (!categoriaId || !objetoSelect) return;
+
+        fetch(`/ajax/objetos-por-categoria/?categoria_id=${categoriaId}`)
+          .then(r => r.json())
+          .then(data => {
+            data.forEach(item => {
+              const opt = document.createElement("option");
+              opt.value = item.id;
+              opt.textContent = item.nombre;
+              objetoSelect.appendChild(opt);
+            });
+          })
+          .catch(err => console.error("Error cargando objetos:", err));
+      }
+
+      if (target.name.endsWith("-objeto_existente")) {
+        const card = target.closest(".objeto-form");
+        if (!card) return;
+
+        const tipoSelect = card.querySelector('select[name$="-tipo_objeto_existente"]');
+        if (!tipoSelect) return;
+
+        tipoSelect.innerHTML = '<option value="">---------</option>';
+
+        const objetoId = target.value || "";
+        if (!objetoId) return;
+
+        fetch(`/ajax/tipos-por-objeto/?objeto_id=${objetoId}`)
+          .then(r => r.json())
+          .then(data => {
+            data.forEach(item => {
+              const opt = document.createElement("option");
+              opt.value = item.id;
+              opt.textContent = item.nombre;
+              tipoSelect.appendChild(opt);
+            });
+          })
+          .catch(err => console.error("Error cargando tipos de objeto:", err));
+      }
+    });
+  }
+});
+</script>
+
+<script>
+(() => {
+  if (window.__TIPICOS_MODAL_INSTALLED__) return;
+  window.__TIPICOS_MODAL_INSTALLED__ = true;
+
+  const $ = (sel, root = document) => root.querySelector(sel);
+
+  function ensureModal() {
+    let modalEl =
+      document.getElementById("modalObjetosTipicos") ||
+      document.getElementById("modal-objetos-tipicos");
+
+    if (modalEl) return modalEl;
+
+    const wrap = document.createElement("div");
+    wrap.innerHTML = `
+<div class="modal fade" id="modalObjetosTipicos" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Objetos típicos del tipo de lugar</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted mb-2">Marca los que quieres agregar. Se seleccionarán en los combobox.</p>
+        <div id="lista-objetos-tipicos" class="d-flex flex-column gap-2"></div>
+        <div id="tipicos-vacio" class="text-muted small mt-2" style="display:none;">
+          Este tipo de lugar no tiene lista de típicos configurada.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnAgregarTipicos">Agregar seleccionados</button>
+      </div>
+    </div>
+  </div>
+</div>`;
+    document.body.appendChild(wrap.firstElementChild);
+    return document.getElementById("modalObjetosTipicos");
+  }
+
+  function getTotalFormsInput() {
+    return document.querySelector('input[name$="-TOTAL_FORMS"]');
+  }
+
+  function getPrefix() {
+    const inp = getTotalFormsInput();
+    return inp ? inp.name.replace("-TOTAL_FORMS", "") : "form";
+  }
+
+  function addNewRowAndGetIndex() {
+    const totalInput = getTotalFormsInput();
+    if (!totalInput) return { idx: null, card: null };
+
+    const idx = parseInt(totalInput.value, 10) || 0;
+
+    const empty =
+      document.getElementById("empty-form") ||
+      document.querySelector("[data-empty-form]");
+
+    const container =
+      document.getElementById("objetos-container") ||
+      document.querySelector("[data-objetos-container]");
+
+    if (!empty || !container) return { idx: null, card: null };
+
+    const html = (empty.dataset.emptyForm || empty.innerHTML).replaceAll("__prefix__", idx);
+
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = html.trim();
+
+    const nodes = Array.from(wrapper.childNodes).filter(n => n.nodeType === 1);
+    nodes.forEach(n => container.appendChild(n));
+
+    totalInput.value = idx + 1;
+
+    const cards = container.querySelectorAll(".objeto-form");
+    const card = cards.length ? cards[cards.length - 1] : null;
+
+    return { idx, card };
+  }
+
+  function findByName(name, root = document) {
+    return root.querySelector(`[name="${CSS.escape(name)}"]`);
+  }
+
+  function dispatchChange(el) {
+    if (!el) return;
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function clearText(name, root = document) {
+    const el = findByName(name, root);
+    if (el) el.value = "";
+  }
+
+  function setValueByName(name, value, root = document) {
+    const el = findByName(name, root);
+    if (!el) return null;
+    el.value = String(value);
+    return el;
+  }
+
+  async function waitForOption(selectEl, value, timeoutMs = 2500) {
+    if (!selectEl) return false;
+    const target = String(value);
+    const start = Date.now();
+
+    while (Date.now() - start < timeoutMs) {
+      const has = Array.from(selectEl.options).some(o => String(o.value) === target);
+      if (has) return true;
+      await new Promise(r => setTimeout(r, 50));
+    }
+    return false;
+  }
+
+  async function setCascadeSelects(prefix, idx, item, cardRoot) {
+    const categoriaName = `${prefix}-${idx}-categoria_existente`;
+    const objetoName = `${prefix}-${idx}-objeto_existente`;
+    const tipoName = `${prefix}-${idx}-tipo_objeto_existente`;
+
+    const categoriaSel = setValueByName(categoriaName, item.categoria_id, cardRoot) || findByName(categoriaName);
+    dispatchChange(categoriaSel);
+
+    const objetoSel = findByName(objetoName, cardRoot) || findByName(objetoName);
+    await waitForOption(objetoSel, item.objeto_id);
+    if (objetoSel) {
+      objetoSel.value = String(item.objeto_id);
+      dispatchChange(objetoSel);
+    }
+
+    const tipoSel = findByName(tipoName, cardRoot) || findByName(tipoName);
+    await waitForOption(tipoSel, item.tipo_objeto_id);
+    if (tipoSel) {
+      tipoSel.value = String(item.tipo_objeto_id);
+      dispatchChange(tipoSel);
+    }
+
+    const cantName = `${prefix}-${idx}-cantidad`;
+    const malaName = `${prefix}-${idx}-cantidad_mala`;
+    const pendienteName = `${prefix}-${idx}-cantidad_pendiente`;
+    const importanciaName = `${prefix}-${idx}-importancia`;
+    const minimoName = `${prefix}-${idx}-minimo_operativo`;
+
+    const cantEl = findByName(cantName, cardRoot) || findByName(cantName);
+    if (cantEl && (cantEl.value === "" || cantEl.value == null)) {
+      cantEl.value = 1;
+    }
+
+    const malaEl = findByName(malaName, cardRoot) || findByName(malaName);
+    if (malaEl && (malaEl.value === "" || malaEl.value == null)) {
+      malaEl.value = 0;
+    }
+
+    const pendienteEl = findByName(pendienteName, cardRoot) || findByName(pendienteName);
+    if (pendienteEl && (pendienteEl.value === "" || pendienteEl.value == null)) {
+      pendienteEl.value = 0;
+    }
+
+    const importanciaEl = findByName(importanciaName, cardRoot) || findByName(importanciaName);
+    if (importanciaEl && (importanciaEl.value === "" || importanciaEl.value == null)) {
+      importanciaEl.value = 1;
+    }
+
+    const minimoEl = findByName(minimoName, cardRoot) || findByName(minimoName);
+    if (minimoEl && (minimoEl.value === "" || minimoEl.value == null)) {
+      minimoEl.value = 1;
+    }
+  }
+
+  function closeModalHard(modalEl) {
+    if (!modalEl) return;
+
+    try {
+      if (typeof bootstrap !== "undefined") {
+        const inst = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+        inst.hide();
+      }
+    } catch (e) {}
+
+    setTimeout(() => {
+      modalEl.classList.remove("show");
+      modalEl.style.display = "none";
+      modalEl.setAttribute("aria-hidden", "true");
+      modalEl.removeAttribute("aria-modal");
+
+      document.body.classList.remove("modal-open");
+      document.querySelectorAll(".modal-backdrop").forEach(b => b.remove());
+      document.body.style.removeProperty("padding-right");
+      document.body.style.removeProperty("overflow");
+    }, 50);
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const tipoLugarSelect = document.getElementById("id_tipo_lugar_existente");
+    if (!tipoLugarSelect) return;
+
+    const modalEl = ensureModal();
+    const lista =
+      document.getElementById("lista-objetos-tipicos") ||
+      document.getElementById("listaObjetosTipicos");
+    const vacio = document.getElementById("tipicos-vacio");
+    const btnAgregar = document.getElementById("btnAgregarTipicos");
+
+    if (!modalEl || !lista || !btnAgregar || typeof bootstrap === "undefined") return;
+
+    const modal = new bootstrap.Modal(modalEl);
+
+    async function loadTipicosAndShow(tipoLugarPk) {
+      lista.innerHTML = "";
+      if (vacio) vacio.style.display = "none";
+
+      const r = await fetch(`/api/objetos-tipicos/${tipoLugarPk}/`, {
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      });
+      const data = await r.json();
+
+      const items = Array.isArray(data) ? data : (data.objetos || data.items || []);
+
+      if (!items.length) {
+        if (vacio) vacio.style.display = "block";
+        modal.show();
+        return;
+      }
+
+      items.forEach((it) => {
+        const item = {
+          categoria_id: it.categoria_id ?? it.categoria ?? it.categoriaId,
+          objeto_id: it.objeto_id ?? it.objeto ?? it.objetoId,
+          tipo_objeto_id: it.tipo_objeto_id ?? it.tipo ?? it.tipoId ?? it.tipo_objeto ?? it.tipo_objetoId,
+          label: it.label ?? it.nombre ?? it.texto ?? ""
+        };
+
+        const row = document.createElement("div");
+        row.className = "form-check";
+        row.innerHTML = `
+          <input class="form-check-input" type="checkbox" checked
+                 data-categoria="${item.categoria_id}"
+                 data-objeto="${item.objeto_id}"
+                 data-tipo="${item.tipo_objeto_id}"
+                 id="chk_tipico_${item.tipo_objeto_id}_${item.objeto_id}">
+          <label class="form-check-label" for="chk_tipico_${item.tipo_objeto_id}_${item.objeto_id}">
+            ${item.label || `ID ${item.tipo_objeto_id}`}
+          </label>
+        `;
+        lista.appendChild(row);
+      });
+
+      modal.show();
+    }
+
+    tipoLugarSelect.addEventListener("change", async function () {
+      const tipoLugarPk = this.value;
+      if (!tipoLugarPk) return;
+
+      try {
+        await loadTipicosAndShow(tipoLugarPk);
+      } catch (e) {
+        console.error(e);
+      }
+    });
+
+    btnAgregar.addEventListener("click", async function () {
+      const prefix = getPrefix();
+      const checks = lista.querySelectorAll('input[type="checkbox"]:checked');
+
+      if (!checks.length) {
+        closeModalHard(modalEl);
+        return;
+      }
+
+      for (const chk of checks) {
+        const { idx, card } = addNewRowAndGetIndex();
+        if (idx === null) continue;
+
+        clearText(`${prefix}-${idx}-categoria_nueva`, card || document);
+        clearText(`${prefix}-${idx}-objeto_nuevo`, card || document);
+        clearText(`${prefix}-${idx}-marca`, card || document);
+        clearText(`${prefix}-${idx}-material`, card || document);
+
+        await setCascadeSelects(
+          prefix,
+          idx,
+          {
+            categoria_id: chk.dataset.categoria,
+            objeto_id: chk.dataset.objeto,
+            tipo_objeto_id: chk.dataset.tipo
+          },
+          card || document
+        );
+      }
+
+      closeModalHard(modalEl);
+    });
+  });
+})();
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const pisoSel = document.getElementById("id_piso_existente");
+  const tipoSel = document.getElementById("id_tipo_lugar_existente");
+  const lugarSel = document.getElementById("id_lugar_existente");
+
+  const pisoNuevo = document.getElementById("id_piso_nuevo");
+  const tipoNuevo = document.getElementById("id_tipo_lugar_nuevo");
+  const lugarNuevo = document.getElementById("id_lugar_nuevo");
+
+  if (!pisoSel || !tipoSel || !lugarSel) return;
+
+  function resetLugar() {
+    lugarSel.innerHTML = '<option value="">---------</option>';
+  }
+
+  function canLoad() {
+    const pisoId = (pisoSel.value || "").trim();
+    const tipoId = (tipoSel.value || "").trim();
+    const pisoNew = (pisoNuevo?.value || "").trim();
+    const tipoNew = (tipoNuevo?.value || "").trim();
+
+    return !!(pisoId && tipoId) && !pisoNew && !tipoNew;
+  }
+
+  async function loadLugares() {
+    resetLugar();
+
+    if (!canLoad()) {
+      lugarSel.disabled = true;
+      return;
+    }
+
+    lugarSel.disabled = false;
+
+    const pisoId = (pisoSel.value || "").trim();
+    const tipoId = (tipoSel.value || "").trim();
+
+    try {
+      const url = `/ajax/lugares-por-piso/?piso_id=${encodeURIComponent(pisoId)}&tipo_lugar_id=${encodeURIComponent(tipoId)}`;
+      const r = await fetch(url);
+      const data = await r.json();
+
+      data.forEach(item => {
+        const opt = document.createElement("option");
+        opt.value = item.id;
+        opt.textContent = item.nombre;
+        lugarSel.appendChild(opt);
+      });
+    } catch (err) {
+      console.error("Error cargando lugares:", err);
+    }
+  }
+
+  pisoSel.addEventListener("change", loadLugares);
+  tipoSel.addEventListener("change", loadLugares);
+
+  if (pisoNuevo) {
+    pisoNuevo.addEventListener("input", () => {
+      resetLugar();
+      lugarSel.disabled = true;
+    });
+  }
+
+  if (tipoNuevo) {
+    tipoNuevo.addEventListener("input", () => {
+      resetLugar();
+      lugarSel.disabled = true;
+    });
+  }
+
+  if (lugarNuevo) {
+    lugarSel.addEventListener("change", () => {
+      if ((lugarSel.value || "").trim()) {
+        lugarNuevo.value = "";
+      }
+    });
+
+    lugarNuevo.addEventListener("input", () => {
+      if ((lugarNuevo.value || "").trim()) {
+        lugarSel.value = "";
+      }
+    });
+  }
+
+  loadLugares();
+});
+</script>
+
+{% endblock %}

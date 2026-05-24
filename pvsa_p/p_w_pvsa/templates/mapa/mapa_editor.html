@@ -1,0 +1,265 @@
+{# templates/mapa/mapa_editor.html #}
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_link %}
+  <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h3 class="mb-0">Editor del mapa</h3>
+    <div class="text-muted small">
+      {% if modo == "editar" %}
+        Reemplazar polígono · {{ obj_label }}
+      {% else %}
+        Dibuja manualmente con clicks y guarda como Sector / Ubicación / Lugar
+      {% endif %}
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{% url 'mapa_admin' %}">Volver</a>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-white border-0 d-flex flex-wrap gap-2 align-items-center">
+    <button id="btnMarcar" class="btn btn-outline-primary">ACTIVAR MARCADO (CLICK)</button>
+    <button id="btnDeshacer" class="btn btn-outline-secondary">Deshacer</button>
+    <button id="btnLimpiar" class="btn btn-outline-secondary">Limpiar</button>
+    <button id="btnListo" class="btn btn-success">LISTO</button>
+
+    <span class="ms-auto badge bg-light text-muted fw-normal" id="estadoModo">Modo: OFF</span>
+    <span class="badge bg-light text-muted fw-normal" id="contador">Puntos: 0</span>
+  </div>
+
+  <div class="card-body">
+    <div id="mapaEditor" style="height: 70vh; width:100%; border-radius: .5rem;"></div>
+  </div>
+</div>
+
+<!-- Modal Guardar -->
+<div class="modal fade" id="modalGuardar" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Guardar polígono</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <form method="post" action="{% url 'mapa_guardar' %}">
+        {% csrf_token %}
+
+        <input type="hidden" name="geom_json" id="geom_json">
+        <input type="hidden" name="accion" value="{{ modo }}">
+        <input type="hidden" name="editar_tipo" value="{{ editar_tipo }}">
+        <input type="hidden" name="editar_id" value="{{ editar_id }}">
+
+        <input type="hidden" id="parentSectorId" value="{{ parent_sector_id|default:'' }}">
+        <input type="hidden" id="parentUbicacionId" value="{{ parent_ubicacion_id|default:'' }}">
+
+        <div class="modal-body">
+
+          {% if modo == "editar" %}
+            <div class="alert alert-info mb-0">
+              Se reemplazará la geometría de: <strong>{{ obj_label }}</strong>
+            </div>
+          {% else %}
+            <div class="mb-3">
+              <label class="form-label">¿Qué quieres crear en el mapa?</label>
+              <select class="form-select" id="tipoRegistro" name="tipo_registro">
+                <option value="sector">Sector</option>
+                <option value="ubicacion">Ubicación</option>
+                <option value="lugar_sector">Lugar móvil (directo en Sector)</option>
+              </select>
+            </div>
+
+            <!-- Sector -->
+            <div id="bloqueSector" class="border rounded p-3 mb-3">
+              <div class="row g-2">
+                <div class="col-md-6">
+                  <label class="form-label">Sector existente</label>
+                  <select class="form-select" name="sector_existente" id="sectorExistente">
+                    <option value="">-- seleccionar --</option>
+                    {% for s in sectores %}
+                      <option value="{{ s.id }}">{{ s.sector }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Sector nuevo</label>
+                  <input class="form-control" name="sector_nuevo" placeholder="Nombre del sector">
+                </div>
+              </div>
+            </div>
+
+            <!-- Ubicación -->
+            <div id="bloqueUbicacion" class="border rounded p-3 mb-3" style="display:none;">
+              <div class="row g-2">
+                <div class="col-md-6">
+                  <label class="form-label">Sector (para ubicación)</label>
+                  <select class="form-select" name="sector_para_ubicacion" id="sectorParaUbicacion">
+                    <option value="">-- seleccionar --</option>
+                    {% for s in sectores %}
+                      <option value="{{ s.id }}">{{ s.sector }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Ubicación existente</label>
+                  <select class="form-select" name="ubicacion_existente" id="ubicacionExistente">
+                    <option value="">-- seleccionar --</option>
+                    {% for u in ubicaciones %}
+                      <option value="{{ u.id }}" data-sector="{{ u.sector_id }}">
+                        {{ u.ubicacion }} ({{ u.sector.sector }})
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label">Ubicación nueva</label>
+                  <input class="form-control" name="ubicacion_nueva" placeholder="Nombre de la ubicación">
+                </div>
+              </div>
+              <div class="small text-muted mt-2">La lista de ubicaciones se filtra por el sector seleccionado.</div>
+            </div>
+
+            <!-- Lugar normal -->
+            <div id="bloqueLugar" class="border rounded p-3 mb-3" style="display:none;">
+              <div class="row g-2">
+                <div class="col-md-6">
+                  <label class="form-label">Ubicación (padre)</label>
+                  <select class="form-select" name="lugar_ubicacion" id="lugarUbicacion">
+                    <option value="">-- seleccionar --</option>
+                    {% for u in ubicaciones %}
+                      <option value="{{ u.id }}" data-sector="{{ u.sector_id }}">
+                        {{ u.ubicacion }} ({{ u.sector.sector }})
+                      </option>
+                    {% endfor %}
+                  </select>
+                  <div class="small text-muted mt-1">El polígono del Lugar debe quedar dentro del polígono de esta Ubicación.</div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Piso</label>
+                  <select class="form-select" id="lugarPiso">
+                    <option value="">-- seleccionar --</option>
+                  </select>
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label">Lugar existente</label>
+                  <select class="form-select" name="lugar_id" id="lugarExistente">
+                    <option value="">-- seleccionar --</option>
+                  </select>
+                  <div class="small text-muted mt-1">
+                    (Si no aparece aquí, primero crea el Lugar en el mantenedor y vuelve a dibujar.)
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Lugar móvil directo en Sector -->
+            <div id="bloqueLugarSector" class="border rounded p-3 mb-3" style="display:none;">
+              <div class="row g-2">
+
+                <div class="col-md-6">
+                  <label class="form-label">Sector (padre)</label>
+                  <select class="form-select" name="lugar_sector_sector" id="lugarSectorSector">
+                    <option value="">-- seleccionar --</option>
+                    {% for s in sectores %}
+                      <option value="{{ s.id }}">{{ s.sector }}</option>
+                    {% endfor %}
+                  </select>
+                  <div class="small text-muted mt-1">
+                    El polígono del móvil debe quedar dentro del Sector seleccionado.
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Lugar móvil existente (opcional)</label>
+                  <select class="form-select" name="lugar_sector_id" id="lugarSectorExistente">
+                    <option value="">-- seleccionar --</option>
+                    {% for l in lugares_movil %}
+                      <option value="{{ l.id }}" data-sector="{{ l.piso.ubicacion.sector_id }}">
+                        {{ l.nombre_del_lugar }} ({{ l.piso.ubicacion.sector.sector }})
+                      </option>
+                    {% endfor %}
+                  </select>
+                  <div class="small text-muted mt-1">
+                    Se filtra por el sector seleccionado.
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Nombre nuevo (si no eliges uno existente)</label>
+                  <input class="form-control" name="lugar_sector_nuevo" placeholder="Ej: Baño rodante 1">
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Tipo de lugar</label>
+                  <select class="form-select" name="lugar_sector_tipo_lugar">
+                    <option value="">-- seleccionar --</option>
+                    {% for tl in tipos_lugar %}
+                      <option value="{{ tl.id }}">{{ tl.tipo_de_lugar }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+              </div>
+            </div>
+
+          {% endif %}
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-success">Guardar</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal Error -->
+<div class="modal fade" id="modalErrorGeom" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-danger">No se puede guardar</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div id="errorGeomMsg" class="mb-0"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if geom_inicial %}
+  {{ geom_inicial|json_script:"geom-inicial" }}
+{% endif %}
+
+{% if mapa_geojson %}
+  {{ mapa_geojson|json_script:"mapa-data" }}
+{% endif %}
+
+<div id="mapa-config"
+     data-url-pisos="{% url 'ajax_pisos_por_ubicacion' %}"
+     data-url-lugares="{% url 'ajax_lugares_por_piso' %}"></div>
+
+{% endblock %}
+
+{% block extra_script %}
+  <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+  <script src="{% static 'p_w_pvsa/js/mapa_editor.js' %}?v=300"></script>
+{% endblock %}

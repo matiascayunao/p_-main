@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>PVSA</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.15.0/dist/maplibre-gl.css">
+
+    {% block extra_link %}{% endblock %}
+
+    <!-- Estilos mínimos propios -->
+    <style>
+      body { background-color: #f5f7fa; }
+      .navbar-pvsa { background: #06b6b9; }
+      .navbar-pvsa .nav-link,
+      .navbar-pvsa .navbar-brand { color: #ffffff !important; }
+      .navbar-pvsa .dropdown-menu { font-size: .9rem; }
+      main { min-height: calc(100vh - 56px); }
+      footer { font-size: .8rem; }
+
+      /* =========================================================
+         [SUBMENÚ USUARIO] SIEMPRE HACIA LA IZQUIERDA
+         - Porque el dropdown del usuario está en el borde derecho
+         - Así el submenú cae hacia el centro y NO se sale de pantalla
+         ========================================================= */
+      .dropdown-menu .dropstart { position: relative; }
+
+      .dropdown-menu .dropstart > .dropdown-menu{
+        top: 0;
+        right: 100%;
+        left: auto;
+        margin-right: .15rem;
+        z-index: 1060;
+      }
+
+      /* flecha indicadora en items con submenú */
+      .dropdown-menu .submenu-toggle::after{
+        content: "‹";
+        float: right;
+        opacity: .7;
+        margin-left: .5rem;
+        font-size: 1rem;
+        line-height: 1;
+      }
+
+      /* móvil: mejor desplegar hacia abajo */
+      @media (max-width: 991.98px){
+        .dropdown-menu .dropstart > .dropdown-menu{
+          position: static;
+          margin: .25rem 0 0 0;
+        }
+        .dropdown-menu .submenu-toggle::after{
+          content: "▾";
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-pvsa shadow-sm">
+      <div class="container-fluid px-3">
+
+        <!-- Marca (izquierda) -->
+        <a class="navbar-brand fw-bold" href="{% url 'home' %}">PVSA</a>
+
+        {% if user.is_authenticated %}
+          <!-- Botón hamburguesa -->
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarPVSA"
+                  aria-controls="navbarPVSA" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <div class="collapse navbar-collapse" id="navbarPVSA">
+
+            <div class="d-flex flex-grow-1 justify-content-lg-center">
+              <ul class="navbar-nav align-items-lg-center flex-lg-nowrap gap-1 gap-lg-2 py-2 py-lg-0">
+
+                <li class="nav-item">
+                  <!-- NOTA: en tu original esto apuntaba a resumen_general.
+                       Si tu carga masiva es otra URL, cámbiala a 'carga_masiva' -->
+                  <a class="nav-link fw-semibold" href="{% url 'carga_masiva' %}">CARGA MASIVA</a>
+                </li>
+
+                <li class="nav-item">
+                  <a class="nav-link fw-semibold" href="{% url 'crear_estructura' %}">FORMULARIO</a>
+                </li>
+
+                <li class="nav-item">
+                  <a class="nav-link fw-semibold" href="{% url 'resumen_general' %}">RESUMEN</a>
+                </li>
+
+                <li class="nav-item d-none d-lg-block">
+                  <span class="vr mx-1"></span>
+                </li>
+
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    MAPA
+                  </a>
+                  <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{% url 'mapa_admin' %}">Administrador del mapa</a></li>
+                    <li><a class="dropdown-item" href="{% url 'mapa_crear' %}">Marcar en terreno</a></li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+
+            <!-- =========================
+                 MENÚ USUARIO (CON SUBMENÚS)
+                 ========================= -->
+            <ul class="navbar-nav ms-lg-auto pb-2 pb-lg-0">
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  {{ user.username }}
+                </a>
+
+                <!-- IMPORTANTE: no cerrar al interactuar con submenús -->
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm" data-bs-auto-close="outside">
+
+                  <!-- Sector -->
+                  <li class="dropstart">
+                    <a class="dropdown-item submenu-toggle" href="#">Sector</a>
+                    <ul class="dropdown-menu shadow-sm">
+                      <li><a class="dropdown-item" href="{% url 'lista_sectores' %}">Ver</a></li>
+                      <li><a class="dropdown-item" href="{% url 'crear_sector' %}">Crear</a></li>
+                    </ul>
+                  </li>
+
+                  <!-- Ubicación -->
+                  <li class="dropstart">
+                    <a class="dropdown-item submenu-toggle" href="#">Ubicación</a>
+                    <ul class="dropdown-menu shadow-sm">
+                      <li><a class="dropdown-item" href="{% url 'lista_ubicaciones' %}">Ver</a></li>
+                      <li><a class="dropdown-item" href="{% url 'crear_ubicacion' %}">Crear</a></li>
+                    </ul>
+                  </li>
+
+                  <!-- Piso -->
+                  <li class="dropstart">
+                    <a class="dropdown-item submenu-toggle" href="#">Piso</a>
+                    <ul class="dropdown-menu shadow-sm">
+                      <li><a class="dropdown-item" href="{% url 'lista_pisos' %}">Ver</a></li>
+                      <li><a class="dropdown-item" href="{% url 'crear_piso' %}">Crear</a></li>
+                    </ul>
+                  </li>
+
+                  <!-- Lugar -->
+                  <li class="dropstart">
+                    <a class="dropdown-item submenu-toggle" href="#">Lugar</a>
+                    <ul class="dropdown-menu shadow-sm">
+                      <li><a class="dropdown-item" href="{% url 'lista_lugares' %}">Ver</a></li>
+                      <li><a class="dropdown-item" href="{% url 'crear_lugar' %}">Crear</a></li>
+                    </ul>
+                  </li>
+
+                  <li><hr class="dropdown-divider"></li>
+
+                  <!-- Tipo de lugar -->
+                  <li class="dropstart">
+                    <a class="dropdown-item submenu-toggle" href="#">Tipo de lugar</a>
+                    <ul class="dropdown-menu shadow-sm">
+                      <li><a class="dropdown-item" href="{% url 'lista_tipos_lugar' %}">Ver</a></li>
+                      <li><a class="dropdown-item" href="{% url 'crear_tipo_lugar' %}">Crear</a></li>
+                    </ul>
+                  </li>
+
+                  <!-- Categoría del objeto -->
+                  <li class="dropstart">
+                    <a class="dropdown-item submenu-toggle" href="#">Categoría</a>
+                    <ul class="dropdown-menu shadow-sm">
+                      <li><a class="dropdown-item" href="{% url 'lista_categorias' %}">Ver</a></li>
+                      <li><a class="dropdown-item" href="{% url 'crear_categoria_objeto' %}">Crear</a></li>
+                    </ul>
+                  </li>
+
+                  <!-- Objeto -->
+                  <li class="dropstart">
+                    <a class="dropdown-item submenu-toggle" href="#">Objeto</a>
+                    <ul class="dropdown-menu shadow-sm">
+                      <li><a class="dropdown-item" href="{% url 'lista_objetos' %}">Ver</a></li>
+                      <li><a class="dropdown-item" href="{% url 'crear_objeto' %}">Crear</a></li>
+                    </ul>
+                  </li>
+
+                  <!-- Tipo de objeto -->
+                  <li class="dropstart">
+                    <a class="dropdown-item submenu-toggle" href="#">Tipo de objeto</a>
+                    <ul class="dropdown-menu shadow-sm">
+                      <li><a class="dropdown-item" href="{% url 'lista_tipos_objeto' %}">Ver</a></li>
+                      <li><a class="dropdown-item" href="{% url 'crear_tipo_objeto' %}">Crear</a></li>
+                    </ul>
+                  </li>
+
+                  <li><hr class="dropdown-divider"></li>
+
+                  <!-- Objeto del lugar -->
+                  <li class="dropstart">
+                    <a class="dropdown-item submenu-toggle" href="#">Objeto del lugar</a>
+                    <ul class="dropdown-menu shadow-sm">
+                      <li><a class="dropdown-item" href="{% url 'lista_objetos_lugar' %}">Ver</a></li>
+                    </ul>
+                  </li>
+
+                  <!-- Histórico -->
+                  <li class="dropstart">
+                    <a class="dropdown-item submenu-toggle" href="#">Histórico</a>
+                    <ul class="dropdown-menu shadow-sm">
+                      <li><a class="dropdown-item" href="{% url 'lista_historicos' %}">Ver</a></li>
+                    </ul>
+                  </li>
+
+                  {% if user.is_staff or user.is_superuser %}
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{% url 'descargar_excel_sectores' %}">Descargar Excel</a></li>
+                    <li><a class="dropdown-item" href="{% url 'carga_masiva' %}">Carga Masiva</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="/admin/">Panel Admin</a></li>
+                    <li><a class="dropdown-item" href="{% url 'signup' %}">Crear usuario</a></li>
+                  {% endif %}
+
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="{% url 'signout' %}">Cerrar sesión</a></li>
+                </ul>
+
+              </li>
+            </ul>
+
+          </div>
+        {% endif %}
+      </div>
+    </nav>
+
+    <main class="py-4">
+      <div class="container">
+        {% if messages %}
+          <div class="mb-3">
+            {% for message in messages %}
+              <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+
+    <footer class="border-top bg-white py-2">
+      <div class="container d-flex justify-content-between">
+        <span class="text-muted">PVSA · Sistema de registro de activos</span>
+        <span class="text-muted">v1.0</span>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+            crossorigin="anonymous"></script>
+
+    <script>
+      window.mapboxgl = window.maplibregl;
+
+      /* =========================================================
+         SUBMENÚS DEL USUARIO (CLICK)
+         - Abre/cierra submenú con click
+         - NO usa data-bs-toggle="dropdown" en los sub-items (evita conflicto)
+         ========================================================= */
+      document.addEventListener("DOMContentLoaded", function () {
+
+        // Click en items que abren submenú
+        document.querySelectorAll(".dropdown-menu .dropstart > .submenu-toggle").forEach(function (toggle) {
+
+          toggle.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const submenu = toggle.nextElementSibling;
+            if (!submenu || !submenu.classList.contains("dropdown-menu")) return;
+
+            // Cierra otros submenús hermanos (mismo nivel)
+            const parentMenu = toggle.closest(".dropdown-menu");
+            parentMenu.querySelectorAll(":scope > .dropstart > .dropdown-menu.show").forEach(function (m) {
+              if (m !== submenu) m.classList.remove("show");
+            });
+
+            // Toggle del submenú actual
+            submenu.classList.toggle("show");
+          });
+        });
+
+        // Cuando se cierra el dropdown principal del usuario, cerrar submenús abiertos
+        document.querySelectorAll(".nav-item.dropdown").forEach(function (dd) {
+          dd.addEventListener("hidden.bs.dropdown", function () {
+            dd.querySelectorAll(".dropdown-menu .dropdown-menu.show").forEach(function (m) {
+              m.classList.remove("show");
+            });
+          });
+        });
+
+      });
+    </script>
+
+    {% block extra_script %}{% endblock %}
+  </body>
+</html>

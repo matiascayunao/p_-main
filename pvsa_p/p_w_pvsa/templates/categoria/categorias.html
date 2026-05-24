@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-xxl py-4" style="max-width: 980px;">
+
+  <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
+    <div>
+      <h2 class="h4 fw-bold mb-1">Categorías</h2>
+      <div class="text-muted">Organiza los objetos por tipo (infraestructura, higiene, etc.).</div>
+    </div>
+    <a href="{% url 'crear_categoria_objeto' %}" class="btn btn-primary">
+      + Crear categoría
+    </a>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-body p-0">
+      {% if categorias %}
+        <div class="list-group list-group-flush">
+          {% for c in categorias %}
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+               href="{% url 'detalle_categoria' categoria_id=c.id %}">
+              <div class="fw-semibold">{{ c.nombre_de_categoria }}</div>
+              <span class="text-muted">Ver →</span>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="p-4">
+          <div class="alert alert-secondary mb-0 rounded-4">No hay categorías registradas.</div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

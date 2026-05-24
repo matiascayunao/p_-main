@@ -1,0 +1,407 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-xxl py-4" style="max-width: 1200px;">
+
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{% url 'detalle_piso' piso_id=lugar.piso.id %}" class="btn btn-outline-secondary btn-sm">
+        Volver al piso
+      </a>
+
+      <a href="{% url 'lista_lugares' %}" class="btn btn-outline-secondary btn-sm">
+        Ver lista de lugares
+      </a>
+    </div>
+
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-primary btn-sm" href="{% url 'editar_lugar' lugar_id=lugar.id %}">
+        Editar lugar
+      </a>
+
+      <button
+        type="button"
+        class="btn btn-outline-danger btn-sm"
+        data-bs-toggle="modal"
+        data-bs-target="#confirmDeleteModal"
+        data-delete-url="{% url 'borrar_lugar' lugar_id=lugar.id %}"
+        data-delete-name="{{ lugar.nombre_del_lugar|escape }}"
+      >
+        Borrar lugar
+      </button>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <div class="text-muted small">Ruta</div>
+    <div class="fw-semibold">
+      Sector: {{ lugar.piso.ubicacion.sector.sector }}
+      <span class="text-muted">/</span>
+      Ubicación: {{ lugar.piso.ubicacion.ubicacion }}
+      <span class="text-muted">/</span>
+      Piso: {{ lugar.piso.piso }}
+      <span class="text-muted">/</span>
+      Lugar: {{ lugar.nombre_del_lugar }}
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3">
+    <div class="card-body p-4">
+      <div class="row g-4 align-items-start">
+
+        <div class="col-12 col-lg-6">
+          <div class="text-muted small mb-1">Lugar registrado</div>
+
+          <h1 class="h4 fw-bold mb-2">
+            {{ lugar.nombre_del_lugar }}
+          </h1>
+
+          <div class="row g-2">
+            <div class="col-12 col-md-6">
+              <div class="small text-muted">Sector</div>
+              <div class="fw-semibold">{{ lugar.piso.ubicacion.sector.sector }}</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="small text-muted">Ubicación</div>
+              <div class="fw-semibold">{{ lugar.piso.ubicacion.ubicacion }}</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="small text-muted">Piso</div>
+              <div class="fw-semibold">{{ lugar.piso.piso }}</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="small text-muted">Tipo de lugar</div>
+              <div class="fw-semibold">{{ lugar.lugar_tipo_lugar.tipo_de_lugar }}</div>
+            </div>
+          </div>
+
+          <div class="mt-3 d-flex flex-wrap gap-2">
+            {% if lugar.geom %}
+              <span class="badge rounded-pill bg-success px-3 py-2">En mapa: Sí</span>
+
+              <a href="{% url 'mapa_lugar_editar_geom' lugar_id=lugar.id %}" class="btn btn-outline-primary btn-sm">
+                Editar polígono
+              </a>
+
+              <a href="{% url 'mapa_lugar_quitar_geom' lugar_id=lugar.id %}" class="btn btn-outline-danger btn-sm">
+                Quitar del mapa
+              </a>
+            {% else %}
+              <span class="badge rounded-pill text-bg-light border px-3 py-2">En mapa: No</span>
+
+              <a href="{% url 'mapa_lugar_editar_geom' lugar_id=lugar.id %}" class="btn btn-outline-primary btn-sm">
+                Marcar en mapa
+              </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+          <div class="text-muted small mb-2">Estado general</div>
+
+          <div class="border rounded-4 p-3 bg-white">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+              <div>
+                <div class="fw-bold">Operatividad del lugar</div>
+                <div class="small text-muted">
+                  Promedio calculado según la operatividad e importancia de los objetos registrados.
+                </div>
+              </div>
+
+              <span class="badge rounded-pill bg-primary px-3 py-2">
+                {{ lugar.operatividad_lugar }}%
+              </span>
+            </div>
+
+            <div class="progress mb-3" style="height: 20px;">
+              <div
+                id="barraOperatividadLugar"
+                class="progress-bar"
+                role="progressbar"
+                data-operatividad="{{ lugar.operatividad_lugar }}"
+                aria-valuenow="{{ lugar.operatividad_lugar }}"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              >
+                {{ lugar.operatividad_lugar }}%
+              </div>
+            </div>
+
+            <div class="row g-2">
+              <div class="col-6">
+                <div class="small text-muted">Objetos registrados</div>
+                <div class="fw-semibold">{{ objetos|length }}</div>
+              </div>
+
+              <div class="col-6">
+                <div class="small text-muted">Resultado</div>
+                <div class="fw-semibold">
+                  {% if lugar.operatividad_lugar < 50 %}
+                    Crítico
+                  {% elif lugar.operatividad_lugar < 80 %}
+                    Con observaciones
+                  {% else %}
+                    Operativo
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert alert-light border rounded-4 mt-3 mb-0">
+            <div class="fw-semibold mb-1">Cómo leer esta pantalla</div>
+            <div class="small text-muted">
+              La operatividad resume el estado del lugar considerando sus objetos, cantidades, fallas, pendientes, importancia y mínimo operativo.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-header bg-white border-0 p-3 p-md-4">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div>
+          <div class="fw-bold">Objetos en este lugar</div>
+          <div class="text-muted small">Listado de inventario asociado al lugar</div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          <span class="badge rounded-pill text-bg-light border px-3 py-2">
+            Registros: <strong class="ms-1">{{ objetos|length }}</strong>
+          </span>
+
+          <a class="btn btn-primary btn-sm" href="{% url 'crear_objeto_lugar' lugar_id=lugar.id %}">
+            + Agregar objeto
+          </a>
+
+          <a class="btn btn-outline-secondary btn-sm" href="{% url 'lista_objetos_lugar' %}?lugar={{ lugar.id }}">
+            Ver en listado general
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body p-0">
+      {% if objetos %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width:90px;">Cant.</th>
+                <th>Objeto</th>
+                <th style="width:170px;">Importancia</th>
+                <th style="width:120px;">Malas</th>
+                <th style="width:140px;">Pendientes</th>
+                <th style="width:170px;">Operatividad</th>
+                <th style="width:140px;">Fecha</th>
+                <th class="text-end" style="width:180px;">Acciones</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for o in objetos %}
+              <tr>
+                <td class="fw-semibold">{{ o.cantidad }}</td>
+
+                <td>
+                  <div class="fw-semibold">
+                    {% if o.tipo_de_objeto and o.tipo_de_objeto.objeto %}
+                      {{ o.tipo_de_objeto.objeto.nombre_del_objeto }}
+                    {% else %}
+                      Objeto no especificado
+                    {% endif %}
+                  </div>
+
+                  <div class="small text-muted">
+                    {% if o.tipo_de_objeto and o.tipo_de_objeto.objeto and o.tipo_de_objeto.objeto.objeto_categoria %}
+                      Categoría: {{ o.tipo_de_objeto.objeto.objeto_categoria.nombre_de_categoria }}
+                    {% else %}
+                      Categoría: —
+                    {% endif %}
+                  </div>
+
+                  <div class="small text-muted">
+                    {% if o.tipo_de_objeto %}
+                      {{ o.tipo_de_objeto.marca|default:"Sin marca" }}
+                      {{ o.tipo_de_objeto.material|default:"Sin material" }}
+                    {% endif %}
+                  </div>
+
+                  {% if o.detalle %}
+                    <div class="small mt-1">{{ o.detalle }}</div>
+                  {% endif %}
+                </td>
+
+                <td>{{ o.get_importancia_display }}</td>
+
+                <td>
+                  {% if o.cantidad_mala > 0 %}
+                    <span class="fw-semibold text-danger">{{ o.cantidad_mala }}</span>
+                  {% else %}
+                    <span class="text-muted">0</span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if o.cantidad_pendiente > 0 %}
+                    <span class="fw-semibold text-warning">{{ o.cantidad_pendiente }}</span>
+                  {% else %}
+                    <span class="text-muted">0</span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="progress flex-grow-1" style="height: 14px;">
+                      <div
+                        class="progress-bar barra-operatividad-objeto"
+                        role="progressbar"
+                        data-operatividad="{{ o.operatividad_objeto }}"
+                        aria-valuenow="{{ o.operatividad_objeto }}"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                      ></div>
+                    </div>
+
+                    <span class="small fw-semibold" style="min-width: 52px;">
+                      {{ o.operatividad_objeto }}%
+                    </span>
+                  </div>
+                </td>
+
+                <td>{{ o.fecha|date:"d/m/Y" }}</td>
+
+                <td class="text-end">
+                  <div class="btn-group btn-group-sm">
+                    <a class="btn btn-outline-primary" href="{% url 'detalle_objeto_lugar' objeto_lugar_id=o.id %}">
+                      Ver
+                    </a>
+
+                    <a class="btn btn-outline-secondary" href="{% url 'editar_objeto_lugar' objeto_lugar_id=o.id %}">
+                      Editar
+                    </a>
+
+                    <button
+                      type="button"
+                      class="btn btn-outline-danger"
+                      data-bs-toggle="modal"
+                      data-bs-target="#confirmDeleteModal"
+                      data-delete-url="{% url 'borrar_objeto_lugar' objeto_lugar_id=o.id %}"
+                      data-delete-name="{% if o.tipo_de_objeto and o.tipo_de_objeto.objeto %}{{ o.tipo_de_objeto.objeto.nombre_del_objeto|escape }}{% else %}Registro{% endif %}"
+                    >
+                      Borrar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="p-4">
+          <div class="alert alert-secondary mb-0 rounded-4">
+            Este lugar no tiene objetos registrados.
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirmar borrado</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-2">¿Seguro que quieres borrar:</div>
+          <div class="fw-semibold" id="deleteTargetName">—</div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+
+          <form method="post" id="deleteForm" action="#">
+            {% csrf_token %}
+            <button class="btn btn-danger" type="submit">Sí, borrar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  function aplicarBarra(barra) {
+    let valor = barra.getAttribute("data-operatividad") || "0";
+    valor = String(valor).replace(",", ".");
+    valor = parseFloat(valor);
+
+    if (isNaN(valor)) {
+      valor = 0;
+    }
+
+    if (valor < 0) {
+      valor = 0;
+    }
+
+    if (valor > 100) {
+      valor = 100;
+    }
+
+    barra.style.width = valor + "%";
+
+    if (valor < 50) {
+      barra.classList.add("bg-danger");
+    } else if (valor < 80) {
+      barra.classList.add("bg-warning");
+      barra.classList.add("text-dark");
+    } else {
+      barra.classList.add("bg-success");
+    }
+  }
+
+  const barraLugar = document.getElementById("barraOperatividadLugar");
+
+  if (barraLugar) {
+    aplicarBarra(barraLugar);
+  }
+
+  document.querySelectorAll(".barra-operatividad-objeto").forEach(function (barra) {
+    aplicarBarra(barra);
+  });
+
+  const confirmModal = document.getElementById("confirmDeleteModal");
+  const deleteForm = document.getElementById("deleteForm");
+  const nameEl = document.getElementById("deleteTargetName");
+
+  if (confirmModal) {
+    confirmModal.addEventListener("show.bs.modal", function (event) {
+      const btn = event.relatedTarget;
+      const url = btn?.getAttribute("data-delete-url") || "#";
+      const name = btn?.getAttribute("data-delete-name") || "—";
+
+      if (deleteForm) {
+        deleteForm.action = url;
+      }
+
+      if (nameEl) {
+        nameEl.textContent = name;
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

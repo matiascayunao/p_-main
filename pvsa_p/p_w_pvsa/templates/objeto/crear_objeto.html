@@ -1,0 +1,73 @@
+{# templates/objeto/crear_objeto.html #}
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5" style="max-width: 720px;">
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-4 p-md-5">
+      <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+        <div>
+          <h3 class="mb-1">Crear objeto</h3>
+          <p class="text-muted mb-0">Define el nombre del objeto y su categoría.</p>
+        </div>
+        <a class="btn btn-outline-secondary btn-sm" href="{% url 'lista_objetos' %}">&laquo; Volver</a>
+      </div>
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger mb-3">
+            {{ form.non_field_errors|striptags }}
+          </div>
+        {% endif %}
+
+        <div class="mb-3">
+          <label class="form-label" for="{{ form.nombre_del_objeto.id_for_label }}">Nombre del objeto</label>
+          <input
+            type="text"
+            name="{{ form.nombre_del_objeto.name }}"
+            id="{{ form.nombre_del_objeto.id_for_label }}"
+            value="{{ form.nombre_del_objeto.value|default_if_none:'' }}"
+            class="form-control {% if form.nombre_del_objeto.errors %}is-invalid{% endif %}"
+            placeholder="Ej: Lavamanos"
+            required
+          >
+          {% if form.nombre_del_objeto.errors %}
+            <div class="invalid-feedback">{{ form.nombre_del_objeto.errors|striptags }}</div>
+          {% else %}
+            <div class="form-text">Usa un nombre claro y corto (sin marca/material).</div>
+          {% endif %}
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label" for="{{ form.objeto_categoria.id_for_label }}">Categoría</label>
+          <select
+            name="{{ form.objeto_categoria.name }}"
+            id="{{ form.objeto_categoria.id_for_label }}"
+            class="form-select {% if form.objeto_categoria.errors %}is-invalid{% endif %}"
+            required
+          >
+            {% for option in form.objeto_categoria.field.choices %}
+              <option value="{{ option.0 }}"
+                {% if form.objeto_categoria.value|stringformat:"s" == option.0|stringformat:"s" %}selected{% endif %}>
+                {{ option.1 }}
+              </option>
+            {% endfor %}
+          </select>
+          {% if form.objeto_categoria.errors %}
+            <div class="invalid-feedback">{{ form.objeto_categoria.errors|striptags }}</div>
+          {% else %}
+            <div class="form-text">La categoría te ayuda a filtrar y agrupar objetos.</div>
+          {% endif %}
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-primary" type="submit">Guardar</button>
+          <a class="btn btn-outline-secondary" href="{% url 'lista_objetos' %}">Cancelar</a>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

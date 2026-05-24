@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h2 class="mb-0">Lugares</h2>
+      <div class="text-muted">Listado de lugares</div>
+    </div>
+    <a href="{% url 'crear_lugar' %}" class="btn btn-primary">+ Crear lugar</a>
+  </div>
+
+  <!-- Filtros -->
+  <form method="get" class="row g-2 align-items-end mb-3">
+    <!-- Filtro por ubicación -->
+    <div class="col-md-4">
+      <label for="id_ubicacion_filtro" class="form-label mb-1">Ubicación</label>
+      <select
+        name="ubicacion"
+        id="id_ubicacion_filtro"
+        class="form-select"
+      >
+        <option value="">Todas las ubicaciones</option>
+        {% for u in ubicaciones %}
+          <option value="{{ u.id }}"
+                  {% if ubicacion_actual == u.id|stringformat:'s' %}selected{% endif %}>
+            {{ u.ubicacion }} ({{ u.sector.sector }})
+          </option>
+        {% endfor %}
+      </select>
+      <small class="text-muted">
+        Primero puedes elegir una ubicación.
+      </small>
+    </div>
+
+    <!-- Filtro por piso -->
+    <div class="col-md-4">
+      <label for="id_piso_filtro" class="form-label mb-1">Piso</label>
+      <select
+        name="piso"
+        id="id_piso_filtro"
+        class="form-select"
+      >
+        <option value="">Todos los pisos</option>
+        {% for p in pisos %}
+          <option value="{{ p.id }}"
+                  data-ubicacion="{{ p.ubicacion_id }}"
+                  {% if piso_actual == p.id|stringformat:'s' %}selected{% endif %}>
+            Piso {{ p.piso }} (Ubicación: {{ p.ubicacion }})
+          </option>
+        {% endfor %}
+      </select>
+      <small class="text-muted">
+        Opcional: luego puedes acotar a un piso específico.
+      </small>
+    </div>
+
+    <!-- Botón aplicar -->
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-outline-secondary mt-3 w-100">
+        Aplicar
+      </button>
+    </div>
+  </form>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+      {% if lugares %}
+        <div class="list-group list-group-flush">
+          {% for l in lugares %}
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+               href="{% url 'detalle_lugar' lugar_id=l.id %}">
+              <span>
+                {{ l.nombre_del_lugar }}
+                | Piso {{ l.piso.piso }}
+                | Ubicación: {{ l.piso.ubicacion }}
+                | Sector: {{ l.piso.ubicacion.sector }}
+              </span>
+              <span class="text-muted">Ver &raquo;</span>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="p-4">
+          <div class="alert alert-secondary mb-0">
+            No hay lugares registrados
+            {% if ubicacion_actual or piso_actual %} para el filtro seleccionado{% endif %}.
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const ubicacionSelect = document.getElementById("id_ubicacion_filtro");
+    const pisoSelect = document.getElementById("id_piso_filtro");
+    if (!ubicacionSelect || !pisoSelect) return;
+
+    function filtrarPisosPorUbicacion() {
+        const ubicacionId = ubicacionSelect.value;
+        let pisoSeleccionadoSigueSiendoValido = false;
+
+        Array.from(pisoSelect.options).forEach(function (opt) {
+            if (opt.value === "") {
+                // opción "Todos los pisos" siempre visible
+                opt.hidden = false;
+                return;
+            }
+            const optUbicacion = opt.dataset.ubicacion;
+
+            if (!ubicacionId || optUbicacion === ubicacionId) {
+                opt.hidden = false;
+                if (pisoSelect.value === opt.value) {
+                    pisoSeleccionadoSigueSiendoValido = true;
+                }
+            } else {
+                opt.hidden = true;
+            }
+        });
+
+        // Si el piso seleccionado ya no corresponde a la ubicación, lo limpiamos
+        if (!pisoSeleccionadoSigueSiendoValido) {
+            pisoSelect.value = "";
+        }
+    }
+
+    // Al cargar la página (por si viene con filtros aplicados)
+    filtrarPisosPorUbicacion();
+
+    // Cuando se cambia la ubicación en el combo
+    ubicacionSelect.addEventListener("change", function () {
+        filtrarPisosPorUbicacion();
+    });
+});
+</script>
+{% endblock %}

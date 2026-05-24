@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-xxl py-4" style="max-width:1280px;">
+
+  <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
+    <div>
+      <nav aria-label="breadcrumb" class="small">
+        <ol class="breadcrumb mb-2">
+          <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'lista_ubicaciones' %}">Ubicaciones</a></li>
+          <li class="breadcrumb-item active" aria-current="page">{{ ubicacion.ubicacion }}</li>
+        </ol>
+      </nav>
+
+      <h1 class="h4 fw-bold mb-1">{{ ubicacion.ubicacion }}</h1>
+      <div class="text-muted">Sector: <strong>{{ ubicacion.sector.sector }}</strong></div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{% url 'lista_ubicaciones' %}" class="btn btn-outline-secondary">Volver</a>
+      <a href="{% url 'crear_piso' %}" class="btn btn-primary">+ Agregar piso</a>
+      <a class="btn btn-outline-primary" href="{% url 'editar_ubicacion' ubicacion.id %}">Editar</a>
+      <a class="btn btn-outline-danger" href="{% url 'borrar_ubicacion' ubicacion.id %}">Borrar</a>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-header bg-white border-0 p-3 p-md-4">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div>
+          <div class="fw-bold">Pisos</div>
+          <div class="text-muted small">Selecciona un piso para ver sus lugares.</div>
+        </div>
+        <span class="badge rounded-pill text-bg-light border px-3 py-2">
+          Registros: <strong class="ms-1">{{ pisos|length }}</strong>
+        </span>
+      </div>
+    </div>
+
+    <div class="card-body p-0">
+      {% if pisos %}
+        <div class="list-group list-group-flush">
+          {% for p in pisos %}
+            <a href="{% url 'detalle_piso' p.id %}"
+               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+              <div class="fw-semibold">Piso {{ p.piso }}</div>
+              <span class="text-muted">Abrir &raquo;</span>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="p-4">
+          <div class="alert alert-secondary mb-0 rounded-4">
+            Esta ubicación no tiene pisos cargados.
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
