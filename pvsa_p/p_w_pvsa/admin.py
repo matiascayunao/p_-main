@@ -553,7 +553,7 @@ class HistoricoObjetoAdminForm(forms.ModelForm):
 
         if cantidad_mala + cantidad_pendiente > cantidad:
             raise forms.ValidationError(
-                "La suma de cantidad mala y pendiente no puede superar la cantidad total."
+                "La suma de unidades malas y pendientes no puede superar la cantidad total."
             )
 
         if minimo_operativo > cantidad:
@@ -575,7 +575,7 @@ class HistoricoObjetoAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "Cantidades anteriores",
+            "Unidades anteriores",
             {
                 "fields": (
                     "cantidad_anterior",
@@ -586,7 +586,7 @@ class HistoricoObjetoAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "Estado anterior",
+            "Condición anterior",
             {
                 "fields": (
                     "importancia_anterior",

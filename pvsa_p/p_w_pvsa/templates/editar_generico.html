@@ -1,21 +1,164 @@
 {% extends "base.html" %}
+
 {% block content %}
-<div class="container py-5" style="max-width: 720px;">
-  <div class="card shadow-sm border-0">
-    <div class="card-body p-4">
-      <h3 class="mb-3">{{ titulo }}</h3>
+<style>
+  .edit-page {
+    max-width: 860px;
+    margin: 0 auto;
+  }
 
-      <form method="post">
+  .edit-card {
+    border: 0;
+    border-radius: 18px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+  }
+
+  .edit-header {
+    background: #ffffff;
+    border-bottom: 1px solid #eef0f2;
+    padding: 1.25rem 1.5rem;
+  }
+
+  .edit-body {
+    padding: 1.5rem;
+  }
+
+  .form-row-custom {
+    margin-bottom: 1rem;
+  }
+
+  .form-row-custom label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.35rem;
+    color: #343a40;
+  }
+
+  .form-row-custom input,
+  .form-row-custom select,
+  .form-row-custom textarea {
+    display: block;
+    width: 100%;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0.55rem;
+  }
+
+  .form-row-custom input:focus,
+  .form-row-custom select:focus,
+  .form-row-custom textarea:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+  }
+
+  .help-text {
+    font-size: 0.78rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+  }
+
+  .field-error {
+    font-size: 0.8rem;
+    color: #dc3545;
+    margin-top: 0.25rem;
+  }
+
+  .required-mark {
+    color: #dc3545;
+    margin-left: 2px;
+  }
+
+  .edit-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    border-top: 1px solid #eef0f2;
+    padding-top: 1rem;
+    margin-top: 1.25rem;
+  }
+</style>
+
+<div class="container-fluid py-4 edit-page">
+
+  <div class="card edit-card">
+    <div class="edit-header">
+      <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+        <div>
+          <h3 class="h5 fw-bold mb-1">
+            {{ titulo }}
+          </h3>
+          <div class="text-muted small">
+            Modifica los datos necesarios y luego guarda los cambios.
+          </div>
+        </div>
+
+        <a class="btn btn-outline-secondary btn-sm" href="{{ cancel_url }}">
+          Cancelar
+        </a>
+      </div>
+    </div>
+
+    <div class="edit-body">
+      <form method="post" novalidate>
         {% csrf_token %}
-        {{ form.as_p }}
 
-        <div class="d-flex gap-2">
-          <button class="btn btn-primary" type="submit">Guardar</button>
-          <a class="btn btn-outline-secondary" href="{{ cancel_url }}">Cancelar</a>
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger rounded-4">
+            {% for error in form.non_field_errors %}
+              <div>{{ error }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
 
+        {% for field in form %}
+          {% if field.is_hidden %}
+            {{ field }}
+          {% else %}
+            <div class="form-row-custom">
+              <label for="{{ field.id_for_label }}">
+                {{ field.label }}
+                {% if field.field.required %}
+                  <span class="required-mark">*</span>
+                {% endif %}
+              </label>
+
+              {{ field }}
+
+              {% if field.help_text %}
+                <div class="help-text">
+                  {{ field.help_text }}
+                </div>
+              {% endif %}
+
+              {% if field.errors %}
+                {% for error in field.errors %}
+                  <div class="field-error">
+                    {{ error }}
+                  </div>
+                {% endfor %}
+              {% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+
+        <div class="edit-actions">
+          <button class="btn btn-primary px-4" type="submit">
+            Guardar
+          </button>
+
+          <a class="btn btn-outline-secondary" href="{{ cancel_url }}">
+            Cancelar
+          </a>
         </div>
       </form>
     </div>
   </div>
+
 </div>
 {% endblock %}

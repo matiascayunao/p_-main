@@ -2273,26 +2273,37 @@ def _resumen_sector_dict():
         .values("lugar__piso__ubicacion__sector_id")
         .annotate(
             total=Sum("cantidad"),
-            buenas=Sum("cantidad", filter=Q(estado="B")),
-            pendientes=Sum("cantidad", filter=Q(estado="P")),
-            malas=Sum("cantidad", filter=Q(estado="M")),
+            malas=Sum("cantidad_mala"),
+            pendientes=Sum("cantidad_pendiente"),
         )
     )
+
     d = {}
+
     for r in qs:
-        total = r["total"] or 0
-        malas = r["malas"] or 0
-        pendientes = r["pendientes"] or 0
-        buenas = r["buenas"] or 0
+        total = int(r.get("total") or 0)
+        malas = int(r.get("malas") or 0)
+        pendientes = int(r.get("pendientes") or 0)
+
+        buenas = total - malas - pendientes
+
+        if buenas < 0:
+            buenas = 0
+
         pct_malas = round(malas * 100 / total, 1) if total else 0
         pct_pend = round(pendientes * 100 / total, 1) if total else 0
         pct_bue = round(buenas * 100 / total, 1) if total else 0
+
         d[r["lugar__piso__ubicacion__sector_id"]] = {
             "total": total,
+            "buenas": buenas,
+            "malas": malas,
+            "pendientes": pendientes,
             "pct_malas": pct_malas,
             "pct_pendientes": pct_pend,
             "pct_buenas": pct_bue,
         }
+
     return d
 
 
@@ -2302,26 +2313,37 @@ def _resumen_ubicacion_dict():
         .values("lugar__piso__ubicacion_id")
         .annotate(
             total=Sum("cantidad"),
-            buenas=Sum("cantidad", filter=Q(estado="B")),
-            pendientes=Sum("cantidad", filter=Q(estado="P")),
-            malas=Sum("cantidad", filter=Q(estado="M")),
+            malas=Sum("cantidad_mala"),
+            pendientes=Sum("cantidad_pendiente"),
         )
     )
+
     d = {}
+
     for r in qs:
-        total = r["total"] or 0
-        malas = r["malas"] or 0
-        pendientes = r["pendientes"] or 0
-        buenas = r["buenas"] or 0
+        total = int(r.get("total") or 0)
+        malas = int(r.get("malas") or 0)
+        pendientes = int(r.get("pendientes") or 0)
+
+        buenas = total - malas - pendientes
+
+        if buenas < 0:
+            buenas = 0
+
         pct_malas = round(malas * 100 / total, 1) if total else 0
         pct_pend = round(pendientes * 100 / total, 1) if total else 0
         pct_bue = round(buenas * 100 / total, 1) if total else 0
+
         d[r["lugar__piso__ubicacion_id"]] = {
             "total": total,
+            "buenas": buenas,
+            "malas": malas,
+            "pendientes": pendientes,
             "pct_malas": pct_malas,
             "pct_pendientes": pct_pend,
             "pct_buenas": pct_bue,
         }
+
     return d
 
 def _feature(kind, obj, geom, extra_props=None):
@@ -2413,9 +2435,8 @@ def mapa_sector_detalle(request, sector_id):
         .values("lugar__piso__ubicacion_id")
         .annotate(
             total=Sum("cantidad"),
-            buenas=Sum("cantidad", filter=Q(estado="B")),
-            pendientes=Sum("cantidad", filter=Q(estado="P")),
-            malas=Sum("cantidad", filter=Q(estado="M")),
+            malas=Sum("cantidad_mala"),
+            pendientes=Sum("cantidad_pendiente"),
         )
     )
     stats_ubic = _stats_dict_from_rows(ubic_rows, "lugar__piso__ubicacion_id")
@@ -2436,9 +2457,8 @@ def mapa_sector_detalle(request, sector_id):
         .values("lugar_id")
         .annotate(
             total=Sum("cantidad"),
-            buenas=Sum("cantidad", filter=Q(estado="B")),
-            pendientes=Sum("cantidad", filter=Q(estado="P")),
-            malas=Sum("cantidad", filter=Q(estado="M")),
+            malas=Sum("cantidad_mala"),
+            pendientes=Sum("cantidad_pendiente"),
         )
     )
     stats_lugar = _stats_dict_from_rows(lugar_rows, "lugar_id")
@@ -2520,22 +2540,28 @@ def _stats_lugar_dict():
         .values("lugar_id")
         .annotate(
             total=Sum("cantidad"),
-            buenas=Sum(Case(When(estado="B", then=F("cantidad")), default=Value(0), output_field=IntegerField())),
-            pendientes=Sum(Case(When(estado="P", then=F("cantidad")), default=Value(0), output_field=IntegerField())),
-            malas=Sum(Case(When(estado="M", then=F("cantidad")), default=Value(0), output_field=IntegerField())),
+            malas=Sum("cantidad_mala"),
+            pendientes=Sum("cantidad_pendiente"),
         )
     )
+
     return _stats_dict_from_rows(rows, "lugar_id")
 
 
 def _stats_dict_from_rows(rows, key_field: str):
     out = {}
+
     for r in rows:
         _id = r[key_field]
+
         total = int(r.get("total") or 0)
-        buenas = int(r.get("buenas") or 0)
-        pendientes = int(r.get("pendientes") or 0)
         malas = int(r.get("malas") or 0)
+        pendientes = int(r.get("pendientes") or 0)
+
+        buenas = total - malas - pendientes
+
+        if buenas < 0:
+            buenas = 0
 
         if total > 0:
             pct_b = round((buenas * 100.0) / total, 1)
@@ -2543,7 +2569,9 @@ def _stats_dict_from_rows(rows, key_field: str):
             pct_m = round((malas * 100.0) / total, 1)
             hasPct = True
         else:
-            pct_b = pct_p = pct_m = 0.0
+            pct_b = 0.0
+            pct_p = 0.0
+            pct_m = 0.0
             hasPct = False
 
         out[str(_id)] = {
@@ -2556,6 +2584,7 @@ def _stats_dict_from_rows(rows, key_field: str):
             "pct_malas": pct_m,
             "hasPct": hasPct,
         }
+
     return out
 
 @login_required
@@ -2592,15 +2621,18 @@ def mapa_ubicacion_detalle(request, ubicacion_id):
 
     agg = base.aggregate(
         total=Sum("cantidad"),
-        buenas=Sum("cantidad", filter=Q(estado="B")),
-        pendientes=Sum("cantidad", filter=Q(estado="P")),
-        malas=Sum("cantidad", filter=Q(estado="M")),
+        malas=Sum("cantidad_mala"),
+        pendientes=Sum("cantidad_pendiente"),
     )
 
     total = int(agg.get("total") or 0)
-    buenas = int(agg.get("buenas") or 0)
-    pendientes = int(agg.get("pendientes") or 0)
     malas = int(agg.get("malas") or 0)
+    pendientes = int(agg.get("pendientes") or 0)
+
+    buenas = total - malas - pendientes
+
+    if buenas < 0:
+        buenas = 0
 
     if total > 0:
         pct_b = round((buenas * 100.0) / total, 1)
@@ -2625,9 +2657,8 @@ def mapa_ubicacion_detalle(request, ubicacion_id):
         base.values("lugar__piso_id")
         .annotate(
             total=Sum("cantidad"),
-            buenas=Sum("cantidad", filter=Q(estado="B")),
-            pendientes=Sum("cantidad", filter=Q(estado="P")),
-            malas=Sum("cantidad", filter=Q(estado="M")),
+            malas=Sum("cantidad_mala"),
+            pendientes=Sum("cantidad_pendiente"),
         )
     )
     piso_stats = _stats_dict_from_rows(piso_rows, "lugar__piso_id")
@@ -2636,9 +2667,8 @@ def mapa_ubicacion_detalle(request, ubicacion_id):
         base.values("lugar_id")
         .annotate(
             total=Sum("cantidad"),
-            buenas=Sum("cantidad", filter=Q(estado="B")),
-            pendientes=Sum("cantidad", filter=Q(estado="P")),
-            malas=Sum("cantidad", filter=Q(estado="M")),
+            malas=Sum("cantidad_mala"),
+            pendientes=Sum("cantidad_pendiente"),
         )
     )
     lugar_stats = _stats_dict_from_rows(lugar_rows, "lugar_id")
@@ -2994,9 +3024,8 @@ def _stats_sector_dict():
         .values("lugar__piso__ubicacion__sector_id")
         .annotate(
             total=Sum("cantidad"),
-            buenas=Sum(Case(When(estado="B", then=F("cantidad")), default=Value(0), output_field=IntegerField())),
-            pendientes=Sum(Case(When(estado="P", then=F("cantidad")), default=Value(0), output_field=IntegerField())),
-            malas=Sum(Case(When(estado="M", then=F("cantidad")), default=Value(0), output_field=IntegerField())),
+            malas=Sum("cantidad_mala"),
+            pendientes=Sum("cantidad_pendiente"),
         )
     )
     return _stats_dict_from_rows(rows, "lugar__piso__ubicacion__sector_id")
@@ -3009,9 +3038,8 @@ def _stats_ubicacion_dict():
         .values("lugar__piso__ubicacion_id")
         .annotate(
             total=Sum("cantidad"),
-            buenas=Sum(Case(When(estado="B", then=F("cantidad")), default=Value(0), output_field=IntegerField())),
-            pendientes=Sum(Case(When(estado="P", then=F("cantidad")), default=Value(0), output_field=IntegerField())),
-            malas=Sum(Case(When(estado="M", then=F("cantidad")), default=Value(0), output_field=IntegerField())),
+            malas=Sum("cantidad_mala"),
+            pendientes=Sum("cantidad_pendiente"),
         )
     )
     return _stats_dict_from_rows(rows, "lugar__piso__ubicacion_id")
