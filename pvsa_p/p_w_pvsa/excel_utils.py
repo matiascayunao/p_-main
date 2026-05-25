@@ -319,153 +319,305 @@ def build_excel_sectores(ubicaciones_qs):
     return bio.getvalue()
 
 def build_excel_plantilla_carga_masiva():
-    """
-    Plantilla NORMALIZADA para Carga Masiva.
-    - Hoja: "ObjetosLugar" (tu parser la busca)
-    - Encabezados: ubicacion/sector/lugar/cantidad/estado (y extras)
-    - Panel de ayuda en columnas P..V
-    """
-
     wb = Workbook()
     ws = wb.active
     ws.title = "ObjetosLugar"
 
-    # ---- estilos ----
     THIN = Side(style="thin", color="D1D5DB")
     BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 
-    FILL_HDR = PatternFill("solid", fgColor="E5E7EB") # gris claro
-    FILL_HELP_T = PatternFill("solid", fgColor="CFE2F3") # celeste
-    FILL_HELP_B = PatternFill("solid", fgColor="FFF2CC") # amarillo suave
+    FILL_HDR = PatternFill("solid", fgColor="E5E7EB")
+    FILL_TITLE = PatternFill("solid", fgColor="CFE2F3")
+    FILL_HELP = PatternFill("solid", fgColor="FFF2CC")
+    FILL_REQ = PatternFill("solid", fgColor="FCE4D6")
 
+    FONT_TITLE = Font(bold=True, size=13)
     FONT_HDR = Font(bold=True, size=10)
-    FONT_T = Font(bold=True, size=13)
-    FONT_HELP_T = Font(bold=True, size=12)
     FONT_CELL = Font(size=10)
+    FONT_HELP_TITLE = Font(bold=True, size=12)
 
     CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
     LEFT = Alignment(horizontal="left", vertical="top", wrap_text=True)
 
-    # ---- columnas (A..K) ----
     headers = [
         "Sector",
-        "Ubicación", 
-        "Piso", 
-        "Tipo de lugar", 
+        "Ubicación",
+        "Piso",
+        "Tipo de lugar",
         "Lugar",
         "Categoría",
-        "Objeto", 
+        "Objeto",
         "Tipo",
-        "Cantidad", 
-        "Estado",
+        "Cantidad total",
+        "Cantidad mala",
+        "Cantidad pendiente",
+        "Mínimo operativo",
+        "Importancia",
         "Detalle",
     ]
 
-    # anchos
     widths = {
-        "A": 20, "B": 18, "C": 10, "D": 18, "E": 22,
-        "F": 16, "G": 18, "H": 20, "I": 10, "J": 14, "K": 28,
-        # panel ayuda
-        "P": 18, "Q": 18, "R": 18, "S": 18, "T": 18, "U": 18, "V": 18,
+        "A": 20,
+        "B": 24,
+        "C": 10,
+        "D": 18,
+        "E": 26,
+        "F": 18,
+        "G": 24,
+        "H": 26,
+        "I": 16,
+        "J": 16,
+        "K": 20,
+        "L": 18,
+        "M": 20,
+        "N": 38,
+        "P": 24,
+        "Q": 24,
+        "R": 24,
+        "S": 24,
+        "T": 24,
+        "U": 24,
+        "V": 24,
     }
-    for col, w in widths.items():
-        ws.column_dimensions[col].width = w
 
-    # ---- título arriba ----
-    ws.merge_cells("A1:K1")
-    ws["A1"] = "Plantilla · Carga Masiva (relleno manual)"
-    ws["A1"].font = FONT_T
+    for col, width in widths.items():
+        ws.column_dimensions[col].width = width
+
+    ws.merge_cells("A1:N1")
+    ws["A1"] = "Plantilla · Carga Masiva"
+    ws["A1"].font = FONT_TITLE
     ws["A1"].alignment = CENTER
+    ws["A1"].fill = FILL_TITLE
 
-    # ---- encabezados (fila 3) ----
     hdr_row = 3
-    for i, h in enumerate(headers, start=1):
-        c = ws.cell(row=hdr_row, column=i, value=h)
-        c.font = FONT_HDR
-        c.fill = FILL_HDR
-        c.alignment = CENTER
-        c.border = BORDER
 
-    # borde completo fila header
-    for col in range(1, 12):
-        ws.cell(hdr_row, col).border = BORDER
+    for i, header in enumerate(headers, start=1):
+        cell = ws.cell(row=hdr_row, column=i, value=header)
+        cell.font = FONT_HDR
+        cell.alignment = CENTER
+        cell.border = BORDER
 
-    # ---- datos de ejemplo (desde fila 4) ----
+        if header in [
+            "Sector",
+            "Ubicación",
+            "Lugar",
+            "Objeto",
+            "Cantidad total",
+        ]:
+            cell.fill = FILL_REQ
+        else:
+            cell.fill = FILL_HDR
+
     examples = [
-        # ubicacion, sector, piso, tipo_lugar, lugar, categoria, objeto, tipo, cantidad, estado, detalle
-        ["Edificio Central", "Camino Costero", 1, "Baño", "Baño Hombres", "Sanitario", "Tasas", "Sin marca - Sin material", 2, "Bueno", "OK"],
-        ["Edificio Central", "Camino Costero", 1, "Baño", "Baño Hombres", "Higiene", "Dispensadores de papel", "Sin marca - Sin material", 1, "Pendiente", "Falta recarga"],
-        ["Edificio Central", "Camino Costero", 1, "Baño", "Baño Hombres", "Infraestructura", "Luces", "Philips - LED", 6, "Bueno", ""],
-        ["Carpa", "Camino Costero", 1, "Comedor", "Comedor Principal", "Mobiliario", "Mesas", "Sin marca - Plástico", 10, "Bueno", ""],
-        ["Muelle", "Muelle", 1, "Vestidor", "Vestidor 1", "Climatización", "Extractores", "Sin marca - Sin material", 2, "Malo", "No enciende"],
+        [
+            "Camino Costero",
+            "Edificio Central",
+            1,
+            "Baño",
+            "Baño hombres principal",
+            "Sanitario",
+            "WC",
+            "Sin marca - Sin material",
+            5,
+            3,
+            0,
+            3,
+            "Alta / Crítica",
+            "Prueba: 3 WC malos de 5.",
+        ],
+        [
+            "Camino Costero",
+            "Edificio Central",
+            1,
+            "Baño",
+            "Baño hombres principal",
+            "Infraestructura",
+            "Luz",
+            "Sin marca - Sin material",
+            6,
+            0,
+            1,
+            4,
+            "Media",
+            "Una luz pendiente de revisión.",
+        ],
+        [
+            "Camino Costero",
+            "Módulos Camino Costero",
+            1,
+            "Oficina",
+            "Oficina administración",
+            "Climatización",
+            "Aire acondicionado",
+            "Sin marca - Sin material",
+            11,
+            2,
+            1,
+            3,
+            "Media",
+            "Aire acondicionado pendiente, importante en verano.",
+        ],
+        [
+            "Camino Costero",
+            "Módulos Camino Costero",
+            1,
+            "Oficina",
+            "Oficina administración",
+            "Mobiliario",
+            "Escritorio",
+            "Sin marca - Sin material",
+            4,
+            0,
+            0,
+            2,
+            "Media",
+            "Escritorios operativos.",
+        ],
+        [
+            "Terminal Costa",
+            "Edificio Ingenieros MANT",
+            1,
+            "Sala bombas",
+            "Sala bombas",
+            "Equipo crítico",
+            "Bomba principal",
+            "Sin marca - Sin material",
+            2,
+            1,
+            0,
+            2,
+            "Alta / Crítica",
+            "Una bomba fuera de servicio. Mínimo requerido: 2.",
+        ],
     ]
 
     start_row = 4
-    for r_i, row in enumerate(examples, start=start_row):
-        for c_i, val in enumerate(row, start=1):
-            cell = ws.cell(row=r_i, column=c_i, value=val)
+
+    for row_index, row_data in enumerate(examples, start=start_row):
+        for col_index, value in enumerate(row_data, start=1):
+            cell = ws.cell(row=row_index, column=col_index, value=value)
             cell.font = FONT_CELL
-            cell.alignment = LEFT if c_i in (1,2,4,5,6,7,8,11) else CENTER
             cell.border = BORDER
 
-    # ---- validaciones ----
-    # Estado: Bueno/Pendiente/Malo
-    dv_estado = DataValidation(type="list", formula1='"Bueno,Pendiente,Malo"', allow_blank=True)
-    ws.add_data_validation(dv_estado)
-    dv_estado.add(f"J{start_row}:J2000")
+            if col_index in (3, 9, 10, 11, 12, 13):
+                cell.alignment = CENTER
+            else:
+                cell.alignment = LEFT
 
-    # Cantidad: entero >= 0
-    dv_cant = DataValidation(type="whole", operator="greaterThanOrEqual", formula1="0", allow_blank=True)
-    ws.add_data_validation(dv_cant)
-    dv_cant.add(f"I{start_row}:I2000")
+    for row in range(start_row + len(examples), 2001):
+        for col in range(1, len(headers) + 1):
+            cell = ws.cell(row=row, column=col)
+            cell.border = BORDER
+            cell.font = FONT_CELL
 
-    # ---- congelar panel ----
+    dv_cantidad_total = DataValidation(
+        type="whole",
+        operator="greaterThanOrEqual",
+        formula1="1",
+        allow_blank=False,
+    )
+    ws.add_data_validation(dv_cantidad_total)
+    dv_cantidad_total.add("I4:I2000")
+
+    dv_cantidad_mala = DataValidation(
+        type="whole",
+        operator="greaterThanOrEqual",
+        formula1="0",
+        allow_blank=True,
+    )
+    ws.add_data_validation(dv_cantidad_mala)
+    dv_cantidad_mala.add("J4:J2000")
+
+    dv_cantidad_pendiente = DataValidation(
+        type="whole",
+        operator="greaterThanOrEqual",
+        formula1="0",
+        allow_blank=True,
+    )
+    ws.add_data_validation(dv_cantidad_pendiente)
+    dv_cantidad_pendiente.add("K4:K2000")
+
+    dv_minimo = DataValidation(
+        type="whole",
+        operator="greaterThanOrEqual",
+        formula1="1",
+        allow_blank=True,
+    )
+    ws.add_data_validation(dv_minimo)
+    dv_minimo.add("L4:L2000")
+
+    dv_importancia = DataValidation(
+        type="list",
+        formula1='"Baja,Media,Alta / Crítica"',
+        allow_blank=True,
+    )
+    ws.add_data_validation(dv_importancia)
+    dv_importancia.add("M4:M2000")
+
     ws.freeze_panes = "A4"
+    ws.auto_filter.ref = "A3:N2000"
 
-    # ---- autofiltro ----
-    ws.auto_filter.ref = f"A{hdr_row}:K2000"
-
-    # =========================================================
-    # Panel de ayuda a la derecha (P..V)
-    # =========================================================
     ws.merge_cells("P1:V1")
     ws["P1"] = "Ayuda rápida"
-    ws["P1"].font = FONT_HELP_T
-    ws["P1"].fill = FILL_HELP_T
+    ws["P1"].font = FONT_HELP_TITLE
+    ws["P1"].fill = FILL_TITLE
     ws["P1"].alignment = CENTER
 
     help_text = (
-        "✅ Una fila = 1 objeto en un lugar.\n\n"
-        "OBLIGATORIO:\n"
-        "• Ubicación, Sector, Lugar, Cantidad, Estado.\n\n"
-        "RECOMENDADO:\n"
-        "• Piso: número (ej: 1, 2, 3).\n"
-        "• Tipo de lugar: Baño, Comedor, Vestidor, etc.\n"
-        "• Categoría / Objeto: según tu catálogo.\n\n"
-        "COLUMNA 'Tipo':\n"
-        "• Formato sugerido: Marca - Material\n"
-        " Ej: Philips - LED\n"
-        "• Si no sabes: Sin marca - Sin material\n\n"
-        "ESTADO:\n"
-        "• Debe ser: Bueno / Pendiente / Malo\n\n"
+        "Una fila = 1 objeto en un lugar.\n\n"
+        "COLUMNAS OBLIGATORIAS:\n"
+        "• Sector\n"
+        "• Ubicación\n"
+        "• Lugar\n"
+        "• Objeto\n"
+        "• Cantidad total\n\n"
+        "COLUMNAS RECOMENDADAS:\n"
+        "• Piso\n"
+        "• Tipo de lugar\n"
+        "• Categoría\n"
+        "• Tipo\n"
+        "• Cantidad mala\n"
+        "• Cantidad pendiente\n"
+        "• Mínimo operativo\n"
+        "• Importancia\n\n"
         "IMPORTANTE:\n"
-        "• No cambies los nombres de los encabezados.\n"
-        "• Puedes borrar las filas de ejemplo y dejar tus datos.\n"
+        "• Ya no debes escribir Estado.\n"
+        "• La condición se calcula automáticamente:\n"
+        "  - Si hay cantidad mala: Con unidades malas.\n"
+        "  - Si no hay malas, pero hay pendientes: Con pendientes.\n"
+        "  - Si malas y pendientes son 0: Todo bueno.\n\n"
+        "IMPORTANCIA:\n"
+        "• Baja\n"
+        "• Media\n"
+        "• Alta / Crítica\n\n"
+        "COLUMNA TIPO:\n"
+        "Formato recomendado:\n"
+        "Marca - Material\n\n"
+        "Ejemplos:\n"
+        "• Sin marca - Sin material\n"
+        "• Philips - LED\n"
+        "• Sin marca - Plástico\n\n"
+        "No cambies los nombres de los encabezados."
     )
 
-    ws.merge_cells("P2:V16")
+    ws.merge_cells("P2:V24")
     ws["P2"] = help_text
     ws["P2"].font = FONT_CELL
-    ws["P2"].fill = FILL_HELP_B
+    ws["P2"].fill = FILL_HELP
     ws["P2"].alignment = LEFT
 
-    # bordes panel ayuda
-    for r in range(1, 17):
-        for col in range(16, 23): # P=16 .. V=22
-            ws.cell(r, col).border = BORDER
+    for row in range(1, 25):
+        for col in range(16, 23):
+            ws.cell(row=row, column=col).border = BORDER
+
+    for row in range(3, 2001):
+        for col in range(9, 14):
+            ws.cell(row=row, column=col).alignment = CENTER
 
     bio = BytesIO()
     wb.save(bio)
     bio.seek(0)
+
     return bio.getvalue()
+
 

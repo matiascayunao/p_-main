@@ -115,14 +115,28 @@ class CrearTipoObjeto(ModelForm):
         model = TipoObjeto
         fields = ["objeto", "marca", "material"]
 
-
 class CrearHistorico(forms.ModelForm):
     fecha_anterior = forms.DateField(
         input_formats=["%d/%m/%Y"],
         widget=forms.DateInput(
             format="%d/%m/%Y",
-            attrs={"class": "form-control", "placeholder": "dd/mm/aaaa"},
+            attrs={
+                "class": "form-control",
+                "placeholder": "dd/mm/aaaa",
+            },
         ),
+    )
+
+    importancia_anterior = forms.TypedChoiceField(
+        label="Importancia anterior",
+        required=True,
+        coerce=int,
+        choices=(
+            (1, "Baja"),
+            (2, "Media"),
+            (3, "Alta / Crítica"),
+        ),
+        widget=forms.Select(attrs={"class": "form-select"}),
     )
 
     class Meta:
@@ -130,20 +144,64 @@ class CrearHistorico(forms.ModelForm):
         fields = [
             "objeto_del_lugar",
             "cantidad_anterior",
+            "cantidad_mala_anterior",
+            "cantidad_pendiente_anterior",
+            "minimo_operativo_anterior",
+            "importancia_anterior",
             "estado_anterior",
             "detalle_anterior",
             "fecha_anterior",
         ]
+
         widgets = {
             "objeto_del_lugar": forms.Select(attrs={"class": "form-select"}),
-            "cantidad_anterior": forms.NumberInput(attrs={"class": "form-control"}),
+            "cantidad_anterior": forms.NumberInput(attrs={"class": "form-control", "min": "1"}),
+            "cantidad_mala_anterior": forms.NumberInput(attrs={"class": "form-control", "min": "0"}),
+            "cantidad_pendiente_anterior": forms.NumberInput(attrs={"class": "form-control", "min": "0"}),
+            "minimo_operativo_anterior": forms.NumberInput(attrs={"class": "form-control", "min": "1"}),
             "estado_anterior": forms.Select(attrs={"class": "form-select"}),
             "detalle_anterior": forms.TextInput(attrs={"class": "form-control"}),
         }
 
+        labels = {
+            "objeto_del_lugar": "Objeto del lugar",
+            "cantidad_anterior": "Cantidad total anterior",
+            "cantidad_mala_anterior": "Cantidad mala anterior",
+            "cantidad_pendiente_anterior": "Cantidad pendiente anterior",
+            "minimo_operativo_anterior": "Mínimo operativo anterior",
+            "estado_anterior": "Condición anterior",
+            "detalle_anterior": "Detalle anterior",
+            "fecha_anterior": "Fecha anterior",
+        }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["objeto_del_lugar"].disabled = True
+
+        if self.initial.get("objeto_del_lugar") or getattr(self.instance, "objeto_del_lugar_id", None):
+            self.fields["objeto_del_lugar"].disabled = True
+
+    def clean(self):
+        cleaned = super().clean()
+
+        cantidad = cleaned.get("cantidad_anterior") or 0
+        cantidad_mala = cleaned.get("cantidad_mala_anterior") or 0
+        cantidad_pendiente = cleaned.get("cantidad_pendiente_anterior") or 0
+        minimo_operativo = cleaned.get("minimo_operativo_anterior") or 1
+
+        if cantidad <= 0:
+            raise forms.ValidationError("La cantidad total anterior debe ser mayor a 0.")
+
+        if cantidad_mala + cantidad_pendiente > cantidad:
+            raise forms.ValidationError(
+                "La suma de cantidad mala anterior y cantidad pendiente anterior no puede superar la cantidad total anterior."
+            )
+
+        if minimo_operativo > cantidad:
+            raise forms.ValidationError(
+                "El mínimo operativo anterior no puede ser mayor que la cantidad total anterior."
+            )
+
+        return cleaned
 
 
 # -------------------
@@ -248,17 +306,87 @@ class EditarObjetoLugar(forms.ModelForm):
             "importancia": "Nivel de peso del objeto dentro del lugar.",
         }
 
-class EditarHistorico(ModelForm):
+class EditarHistorico(forms.ModelForm):
+    fecha_anterior = forms.DateField(
+        input_formats=["%d/%m/%Y"],
+        widget=forms.DateInput(
+            format="%d/%m/%Y",
+            attrs={
+                "class": "form-control",
+                "placeholder": "dd/mm/aaaa",
+            },
+        ),
+    )
+
+    importancia_anterior = forms.TypedChoiceField(
+        label="Importancia anterior",
+        required=True,
+        coerce=int,
+        choices=(
+            (1, "Baja"),
+            (2, "Media"),
+            (3, "Alta / Crítica"),
+        ),
+        widget=forms.Select(attrs={"class": "form-select"}),
+    )
+
     class Meta:
         model = HistoricoObjeto
         fields = [
             "objeto_del_lugar",
             "cantidad_anterior",
+            "cantidad_mala_anterior",
+            "cantidad_pendiente_anterior",
+            "minimo_operativo_anterior",
+            "importancia_anterior",
             "estado_anterior",
             "detalle_anterior",
             "fecha_anterior",
         ]
 
+        widgets = {
+            "objeto_del_lugar": forms.Select(attrs={"class": "form-select"}),
+            "cantidad_anterior": forms.NumberInput(attrs={"class": "form-control", "min": "1"}),
+            "cantidad_mala_anterior": forms.NumberInput(attrs={"class": "form-control", "min": "0"}),
+            "cantidad_pendiente_anterior": forms.NumberInput(attrs={"class": "form-control", "min": "0"}),
+            "minimo_operativo_anterior": forms.NumberInput(attrs={"class": "form-control", "min": "1"}),
+            "estado_anterior": forms.Select(attrs={"class": "form-select"}),
+            "detalle_anterior": forms.TextInput(attrs={"class": "form-control"}),
+        }
+
+        labels = {
+            "objeto_del_lugar": "Objeto del lugar",
+            "cantidad_anterior": "Cantidad total anterior",
+            "cantidad_mala_anterior": "Cantidad mala anterior",
+            "cantidad_pendiente_anterior": "Cantidad pendiente anterior",
+            "minimo_operativo_anterior": "Mínimo operativo anterior",
+            "estado_anterior": "Condición anterior",
+            "detalle_anterior": "Detalle anterior",
+            "fecha_anterior": "Fecha anterior",
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+
+        cantidad = cleaned.get("cantidad_anterior") or 0
+        cantidad_mala = cleaned.get("cantidad_mala_anterior") or 0
+        cantidad_pendiente = cleaned.get("cantidad_pendiente_anterior") or 0
+        minimo_operativo = cleaned.get("minimo_operativo_anterior") or 1
+
+        if cantidad <= 0:
+            raise forms.ValidationError("La cantidad total anterior debe ser mayor a 0.")
+
+        if cantidad_mala + cantidad_pendiente > cantidad:
+            raise forms.ValidationError(
+                "La suma de cantidad mala anterior y cantidad pendiente anterior no puede superar la cantidad total anterior."
+            )
+
+        if minimo_operativo > cantidad:
+            raise forms.ValidationError(
+                "El mínimo operativo anterior no puede ser mayor que la cantidad total anterior."
+            )
+
+        return cleaned
 
 # ============================
 # FORMULARIO BASE DE ESTRUCTURA

@@ -1,135 +1,371 @@
 {% extends "base.html" %}
-{% block content %}
-<div class="container-xxl py-4" style="max-width: 1280px;">
 
-  <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
+{% block content %}
+<style>
+  .hist-page {
+    max-width: 1550px;
+    margin: 0 auto;
+  }
+
+  .card-soft {
+    border: 0;
+    border-radius: 18px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+  }
+
+  .filters-card {
+    position: sticky;
+    top: 80px;
+  }
+
+  .tabla-historicos {
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .tabla-historicos th {
+    font-size: 0.8rem;
+    color: #495057;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+
+  .tabla-historicos td {
+    font-size: 0.86rem;
+    vertical-align: middle;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: break-word;
+  }
+
+  .col-info {
+    width: 31%;
+  }
+
+  .col-cantidades {
+    width: 14%;
+  }
+
+  .col-condicion {
+    width: 13%;
+  }
+
+  .col-importancia {
+    width: 12%;
+  }
+
+  .col-detalle {
+    width: 15%;
+  }
+
+  .col-fecha {
+    width: 7%;
+  }
+
+  .col-acciones {
+    width: 8%;
+  }
+
+  .info-title {
+    font-weight: 700;
+  }
+
+  .info-sub {
+    color: #6c757d;
+    font-size: 0.8rem;
+  }
+
+  .cantidades-resumen {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 135px;
+  }
+
+  .cantidad-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.1;
+  }
+
+  .cantidad-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    white-space: nowrap;
+  }
+
+  .cantidad-value {
+    font-size: 0.9rem;
+    font-weight: 700;
+    min-width: 26px;
+    text-align: right;
+  }
+
+  .acciones-wrap {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    justify-content: flex-end;
+    align-items: center;
+  }
+
+  .btn-mini {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.76rem;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 1199px) {
+    .filters-card {
+      position: static;
+    }
+
+    .tabla-historicos,
+    .tabla-historicos thead,
+    .tabla-historicos tbody,
+    .tabla-historicos th,
+    .tabla-historicos td,
+    .tabla-historicos tr {
+      display: block;
+      width: 100%;
+    }
+
+    .tabla-historicos thead {
+      display: none;
+    }
+
+    .tabla-historicos tr {
+      padding: 1rem;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .tabla-historicos td {
+      border: 0;
+      padding: 0.35rem 0;
+    }
+
+    .acciones-wrap {
+      justify-content: flex-start;
+    }
+  }
+</style>
+
+<div class="container-fluid py-4 hist-page">
+
+  <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-4">
     <div>
       <h2 class="h4 fw-bold mb-1">Históricos</h2>
-      <div class="text-muted">Cambios registrados en objetos (cantidad, estado o detalle).</div>
+      <div class="text-muted">
+        Cambios anteriores registrados en objetos del lugar.
+      </div>
     </div>
 
     <div class="d-flex gap-2">
       <a href="{% url 'lista_historicos' %}" class="btn btn-outline-secondary btn-sm">
         Limpiar filtros
       </a>
+
       <span class="badge rounded-pill text-bg-light border px-3 py-2">
         Registros: <strong class="ms-1">{{ historicos|length }}</strong>
       </span>
     </div>
   </div>
 
-  <div class="row g-3">
+  <div class="row g-4">
+
     <!-- Filtros -->
-    <div class="col-12 col-lg-4 col-xl-3">
-      <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body p-3 p-md-4">
+    <div class="col-12 col-xl-3 col-xxl-2">
+      <div class="card card-soft filters-card">
+        <div class="card-body p-3">
           <div class="fw-semibold mb-1">Filtros</div>
-          <div class="text-muted small mb-3">Refina la búsqueda y ubica el cambio rápidamente.</div>
+          <div class="text-muted small mb-3">
+            Refina la búsqueda y ubica el cambio rápidamente.
+          </div>
 
           <form method="get" class="vstack gap-3">
+
             <div>
-              <label for="id_filtro_lugar" class="form-label small text-muted mb-1">Lugar</label>
+              <label for="id_filtro_lugar" class="form-label small text-muted mb-1">
+                Lugar
+              </label>
+
               <select id="id_filtro_lugar" name="lugar" class="form-select form-select-sm">
                 <option value="">Todos</option>
+
                 {% for l in lugares %}
                   <option value="{{ l.id }}" {% if lugar_actual == l.id|stringformat:'s' %}selected{% endif %}>
-                    {{ l.nombre_del_lugar }} – Piso {{ l.piso.piso }} – {{ l.piso.ubicacion.ubicacion }}
+                    {{ l.nombre_del_lugar }} · Piso {{ l.piso.piso }} · {{ l.piso.ubicacion.ubicacion }}
                   </option>
                 {% endfor %}
               </select>
             </div>
 
             <div>
-              <label for="id_filtro_objeto" class="form-label small text-muted mb-1">Objeto</label>
+              <label for="id_filtro_objeto" class="form-label small text-muted mb-1">
+                Objeto
+              </label>
+
               <select id="id_filtro_objeto" name="objeto" class="form-select form-select-sm">
                 <option value="">Todos</option>
+
                 {% for obj in objetos_catalogo %}
                   <option value="{{ obj.id }}" {% if objeto_actual == obj.id|stringformat:'s' %}selected{% endif %}>
-                    {{ obj.nombre_del_objeto }} ({{ obj.objeto_categoria.nombre_de_categoria }})
+                    {{ obj.nombre_del_objeto }} · {{ obj.objeto_categoria.nombre_de_categoria }}
                   </option>
                 {% endfor %}
               </select>
             </div>
 
             <div>
-              <label for="id_filtro_tipo" class="form-label small text-muted mb-1">Tipo de objeto</label>
+              <label for="id_filtro_tipo" class="form-label small text-muted mb-1">
+                Tipo de objeto
+              </label>
+
               <select id="id_filtro_tipo" name="tipo" class="form-select form-select-sm">
                 <option value="">Todos</option>
+
                 {% for t in tipos %}
                   <option value="{{ t.id }}" {% if tipo_actual == t.id|stringformat:'s' %}selected{% endif %}>
-                    {{ t.objeto.nombre_del_objeto }} – {{ t.marca }} {{ t.material }}
+                    {{ t.objeto.nombre_del_objeto }} · {{ t.marca }} {{ t.material }}
                   </option>
                 {% endfor %}
               </select>
             </div>
 
             <div>
-              <label for="id_filtro_estado" class="form-label small text-muted mb-1">Estado anterior</label>
+              <label for="id_filtro_estado" class="form-label small text-muted mb-1">
+                Condición anterior
+              </label>
+
               <select id="id_filtro_estado" name="estado" class="form-select form-select-sm">
-                <option value="">Todos</option>
+                <option value="">Todas</option>
+
                 {% for value, label in estados %}
                   <option value="{{ value }}" {% if estado_actual == value|stringformat:'s' %}selected{% endif %}>
-                    {{ label }}
+                    {% if value == "B" %}
+                      Todo bueno
+                    {% elif value == "P" %}
+                      Con pendientes
+                    {% else %}
+                      Con unidades malas
+                    {% endif %}
                   </option>
                 {% endfor %}
               </select>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100">Aplicar</button>
-          </form>
+            <button type="submit" class="btn btn-primary w-100">
+              Aplicar
+            </button>
 
+          </form>
         </div>
       </div>
     </div>
 
     <!-- Resultados -->
-    <div class="col-12 col-lg-8 col-xl-9">
-      <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="col-12 col-xl-9 col-xxl-10">
+      <div class="card card-soft">
+
         <div class="card-body p-0">
           {% if historicos %}
-            <div class="table-responsive">
-              <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                  <tr>
-                    <th style="min-width: 360px;">Lugar / Objeto</th>
-                    <th class="text-center" style="width: 110px;">Cant.</th>
-                    <th style="width: 140px;">Estado</th>
-                    <th style="min-width: 220px;">Detalle</th>
-                    <th style="width: 120px;">Fecha</th>
-                    <th class="text-end" style="width: 240px;">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for h in historicos %}
+
+            <table class="table table-hover tabla-historicos align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="col-info">Lugar / Objeto</th>
+                  <th class="col-cantidades">Cantidades anteriores</th>
+                  <th class="col-condicion">Condición anterior</th>
+                  <th class="col-importancia">Importancia</th>
+                  <th class="col-detalle">Detalle anterior</th>
+                  <th class="col-fecha">Fecha</th>
+                  <th class="col-acciones text-end">Acciones</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {% for h in historicos %}
                   <tr>
                     <td>
-                      <div class="fw-semibold">{{ h.objeto_del_lugar.lugar.nombre_del_lugar }}</div>
-                      <div class="text-muted small">
-                        Piso {{ h.objeto_del_lugar.lugar.piso.piso }} ·
-                        {{ h.objeto_del_lugar.lugar.piso.ubicacion.ubicacion }} ·
+                      <div class="info-title">
+                        {{ h.objeto_del_lugar.lugar.nombre_del_lugar }}
+                      </div>
+
+                      <div class="info-sub">
                         {{ h.objeto_del_lugar.lugar.piso.ubicacion.sector.sector }}
+                        · {{ h.objeto_del_lugar.lugar.piso.ubicacion.ubicacion }}
+                        · Piso {{ h.objeto_del_lugar.lugar.piso.piso }}
                       </div>
+
                       <div class="small mt-1">
-                        <span class="text-muted">Objeto:</span>
-                        {{ h.objeto_del_lugar.tipo_de_objeto.objeto.nombre_del_objeto }}
-                        · <span class="text-muted">Categoría:</span>
-                        {{ h.objeto_del_lugar.tipo_de_objeto.objeto.objeto_categoria.nombre_de_categoria }}
+                        <strong>{{ h.objeto_del_lugar.tipo_de_objeto.objeto.nombre_del_objeto }}</strong>
+                        · {{ h.objeto_del_lugar.tipo_de_objeto.objeto.objeto_categoria.nombre_de_categoria }}
                       </div>
-                      <div class="text-muted small">
-                        Tipo: {{ h.objeto_del_lugar.tipo_de_objeto.marca|default:"—" }}
-                        {{ h.objeto_del_lugar.tipo_de_objeto.material|default:"" }}
+
+                      <div class="info-sub">
+                        {% if h.objeto_del_lugar.tipo_de_objeto.marca %}
+                          {{ h.objeto_del_lugar.tipo_de_objeto.marca }}
+                        {% else %}
+                          Sin marca
+                        {% endif %}
+                        /
+                        {% if h.objeto_del_lugar.tipo_de_objeto.material %}
+                          {{ h.objeto_del_lugar.tipo_de_objeto.material }}
+                        {% else %}
+                          Sin material
+                        {% endif %}
                       </div>
                     </td>
 
-                    <td class="text-center fw-semibold">{{ h.cantidad_anterior }}</td>
+                    <td>
+                      <div class="cantidades-resumen">
+                        <div class="cantidad-row">
+                          <span class="cantidad-label">Total</span>
+                          <span class="cantidad-value">{{ h.cantidad_anterior }}</span>
+                        </div>
+
+                        <div class="cantidad-row">
+                          <span class="cantidad-label">Malas</span>
+                          <span class="cantidad-value {% if h.cantidad_mala_anterior > 0 %}text-danger{% endif %}">
+                            {{ h.cantidad_mala_anterior }}
+                          </span>
+                        </div>
+
+                        <div class="cantidad-row">
+                          <span class="cantidad-label">Pendientes</span>
+                          <span class="cantidad-value {% if h.cantidad_pendiente_anterior > 0 %}text-warning{% endif %}">
+                            {{ h.cantidad_pendiente_anterior }}
+                          </span>
+                        </div>
+
+                        <div class="cantidad-row">
+                          <span class="cantidad-label">Mínimo</span>
+                          <span class="cantidad-value">{{ h.minimo_operativo_anterior }}</span>
+                        </div>
+                      </div>
+                    </td>
 
                     <td>
                       {% if h.estado_anterior == "B" %}
-                        <span class="badge bg-success">Bueno</span>
+                        <span class="badge bg-success">Todo bueno</span>
                       {% elif h.estado_anterior == "P" %}
-                        <span class="badge bg-warning text-dark">Pendiente</span>
+                        <span class="badge bg-warning text-dark">Con pendientes</span>
                       {% else %}
-                        <span class="badge bg-danger">Malo</span>
+                        <span class="badge bg-danger">Con unidades malas</span>
+                      {% endif %}
+                    </td>
+
+                    <td>
+                      {% if h.importancia_anterior == 3 %}
+                        <span class="fw-semibold">Alta / Crítica</span>
+                      {% elif h.importancia_anterior == 2 %}
+                        <span class="fw-semibold">Media</span>
+                      {% else %}
+                        <span class="fw-semibold">Baja</span>
                       {% endif %}
                     </td>
 
@@ -141,28 +377,38 @@
                       {% endif %}
                     </td>
 
-                    <td>{{ h.fecha_anterior|date:"d/m/Y" }}</td>
+                    <td>
+                      {{ h.fecha_anterior|date:"d/m/Y" }}
+                    </td>
 
                     <td class="text-end">
-                      <a class="btn btn-outline-primary btn-sm"
-                         href="{% url 'detalle_historico' historico_id=h.id %}">Ver</a>
+                      <div class="acciones-wrap">
+                        <a class="btn btn-outline-primary btn-mini"
+                           href="{% url 'detalle_historico' historico_id=h.id %}">
+                          Ver
+                        </a>
 
-                      <a class="btn btn-outline-secondary btn-sm"
-                         href="{% url 'editar_historico' historico_id=h.id %}">Editar</a>
+                        <a class="btn btn-outline-secondary btn-mini"
+                           href="{% url 'editar_historico' historico_id=h.id %}">
+                          Editar
+                        </a>
 
-                      <a class="btn btn-outline-danger btn-sm"
-                         href="{% url 'borrar_historico' historico_id=h.id %}">Borrar</a>
+                        <a class="btn btn-outline-danger btn-mini"
+                           href="{% url 'borrar_historico' historico_id=h.id %}">
+                          Borrar
+                        </a>
 
-                      <a class="btn btn-outline-dark btn-sm"
-                         href="{% url 'detalle_objeto_lugar' h.objeto_del_lugar.id %}">
-                        Ir al objeto
-                      </a>
+                        <a class="btn btn-outline-dark btn-mini"
+                           href="{% url 'detalle_objeto_lugar' h.objeto_del_lugar.id %}">
+                          Objeto
+                        </a>
+                      </div>
                     </td>
                   </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
+                {% endfor %}
+              </tbody>
+            </table>
+
           {% else %}
             <div class="p-4">
               <div class="alert alert-secondary mb-0 rounded-4">
@@ -174,6 +420,7 @@
             </div>
           {% endif %}
         </div>
+
       </div>
     </div>
 
