@@ -137,10 +137,14 @@ def crear_estructura(request):
                 objeto = row.get("objeto_existente")
                 if not objeto:
                     nombre_obj = (row.get("objeto_nuevo") or "").strip()
-                    objeto, _ = Objeto.objects.get_or_create(
-                        nombre_del_objeto=nombre_obj,
-                        objeto_categoria=categoria,
-                    )
+
+                    try:
+                        objeto = Objeto.objects.get(nombre_del_objeto__iexact=nombre_obj)
+                    except Objeto.DoesNotExist:
+                        objeto = Objeto.objects.create(
+                            nombre_del_objeto=nombre_obj,
+                            objeto_categoria=categoria,
+                        )
 
                 # --- Tipo de objeto ---
                 tipo_obj = row.get("tipo_objeto_existente")
@@ -151,7 +155,7 @@ def crear_estructura(request):
                     if not marca:
                         marca = "Sin marca"
                     if not material:
-                        material=  "Sin material"
+                        material = "Sin material"
 
                     tipo_obj, _ = TipoObjeto.objects.get_or_create(
                         objeto=objeto,
@@ -160,12 +164,18 @@ def crear_estructura(request):
                     )
 
                 cantidad = row.get("cantidad") or 0
-                estado = row.get("estado") or "B"
                 detalle = (row.get("detalle") or "").strip()
                 importancia = row.get("importancia") or 1
                 cantidad_mala = row.get("cantidad_mala") or 0
                 cantidad_pendiente = row.get("cantidad_pendiente") or 0
                 minimo_operativo = row.get("minimo_operativo") or 1
+
+                if cantidad_mala > 0:
+                    estado = "M"
+                elif cantidad_pendiente > 0:
+                    estado = "P"
+                else:
+                    estado = "B"
 
                 ObjetoLugar.objects.create(
                     lugar=lugar,
@@ -1600,30 +1610,43 @@ def crear_historico(request, objeto_lugar_id):
     if request.method == "GET":
         form = CrearHistorico(
             initial={
+                "objeto_del_lugar": objeto_lugar.id,
                 "cantidad_anterior": objeto_lugar.cantidad,
+                "cantidad_mala_anterior": objeto_lugar.cantidad_mala,
+                "cantidad_pendiente_anterior": objeto_lugar.cantidad_pendiente,
+                "minimo_operativo_anterior": objeto_lugar.minimo_operativo,
+                "importancia_anterior": objeto_lugar.importancia,
                 "estado_anterior": objeto_lugar.estado,
                 "detalle_anterior": objeto_lugar.detalle,
                 "fecha_anterior": objeto_lugar.fecha,
-                "objeto_del_lugar": objeto_lugar.id,
             }
         )
+
         return render(
             request,
             "historico/crear_historico.html",
-            {"form": form, "objeto_lugar": objeto_lugar},
+            {
+                "form": form,
+                "objeto_lugar": objeto_lugar,
+            },
         )
 
     form = CrearHistorico(request.POST)
+
     if form.is_valid():
         h = form.save(commit=False)
         h.objeto_del_lugar = objeto_lugar
         h.save()
+
         return redirect("detalle_objeto_lugar", objeto_lugar_id=objeto_lugar.id)
 
     return render(
         request,
         "historico/crear_historico.html",
-        {"form": form, "objeto_lugar": objeto_lugar},
+        {
+            "form": form,
+            "objeto_lugar": objeto_lugar,
+        },
     )
 
 

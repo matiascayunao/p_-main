@@ -78,8 +78,8 @@ class CrearObjetoLugar(forms.ModelForm):
             "cantidad": "Cantidad total",
             "detalle": "Detalle",
             "importancia": "Importancia",
-            "cantidad_mala": "Cantidad mala",
-            "cantidad_pendiente": "Cantidad pendiente",
+            "cantidad_mala": "Unidades malas",
+            "cantidad_pendiente": "Unidades pendientes",
             "minimo_operativo": "Mínimo operativo",
         }
 
@@ -90,6 +90,38 @@ class CrearObjetoLugar(forms.ModelForm):
             "minimo_operativo": "Cantidad mínima que debe estar funcionando para considerar aceptable este objeto.",
             "importancia": "Nivel de peso del objeto dentro del lugar.",
         }
+
+    def clean(self):
+        cleaned = super().clean()
+
+        cantidad = cleaned.get("cantidad") or 0
+        cantidad_mala = cleaned.get("cantidad_mala") or 0
+        cantidad_pendiente = cleaned.get("cantidad_pendiente") or 0
+        minimo_operativo = cleaned.get("minimo_operativo") or 1
+
+        if cantidad <= 0:
+            raise forms.ValidationError("La cantidad total debe ser mayor a 0.")
+
+        if cantidad_mala < 0:
+            raise forms.ValidationError("Las unidades malas no pueden ser negativas.")
+
+        if cantidad_pendiente < 0:
+            raise forms.ValidationError("Las unidades pendientes no pueden ser negativas.")
+
+        if cantidad_mala + cantidad_pendiente > cantidad:
+            raise forms.ValidationError(
+                "La suma de unidades malas y pendientes no puede superar la cantidad total."
+            )
+
+        if minimo_operativo <= 0:
+            raise forms.ValidationError("El mínimo operativo debe ser mayor a 0.")
+
+        if minimo_operativo > cantidad:
+            raise forms.ValidationError(
+                "El mínimo operativo no puede ser mayor que la cantidad total."
+            )
+
+        return cleaned
 
 
 class CrearTipoLugar(ModelForm):
@@ -293,8 +325,8 @@ class EditarObjetoLugar(forms.ModelForm):
             "cantidad": "Cantidad total",
             "detalle": "Detalle",
             "importancia": "Importancia",
-            "cantidad_mala": "Cantidad mala",
-            "cantidad_pendiente": "Cantidad pendiente",
+            "cantidad_mala": "Unidades malas",
+            "cantidad_pendiente": "Unidades pendientes",
             "minimo_operativo": "Mínimo operativo",
         }
 
@@ -305,6 +337,38 @@ class EditarObjetoLugar(forms.ModelForm):
             "minimo_operativo": "Cantidad mínima que debe estar funcionando para considerar aceptable este objeto.",
             "importancia": "Nivel de peso del objeto dentro del lugar.",
         }
+
+    def clean(self):
+        cleaned = super().clean()
+
+        cantidad = cleaned.get("cantidad") or 0
+        cantidad_mala = cleaned.get("cantidad_mala") or 0
+        cantidad_pendiente = cleaned.get("cantidad_pendiente") or 0
+        minimo_operativo = cleaned.get("minimo_operativo") or 1
+
+        if cantidad <= 0:
+            raise forms.ValidationError("La cantidad total debe ser mayor a 0.")
+
+        if cantidad_mala < 0:
+            raise forms.ValidationError("Las unidades malas no pueden ser negativas.")
+
+        if cantidad_pendiente < 0:
+            raise forms.ValidationError("Las unidades pendientes no pueden ser negativas.")
+
+        if cantidad_mala + cantidad_pendiente > cantidad:
+            raise forms.ValidationError(
+                "La suma de unidades malas y pendientes no puede superar la cantidad total."
+            )
+
+        if minimo_operativo <= 0:
+            raise forms.ValidationError("El mínimo operativo debe ser mayor a 0.")
+
+        if minimo_operativo > cantidad:
+            raise forms.ValidationError(
+                "El mínimo operativo no puede ser mayor que la cantidad total."
+            )
+
+        return cleaned
 
 class EditarHistorico(forms.ModelForm):
     fecha_anterior = forms.DateField(

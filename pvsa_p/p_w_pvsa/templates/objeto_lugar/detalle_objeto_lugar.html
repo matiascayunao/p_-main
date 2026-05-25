@@ -118,7 +118,7 @@
         </div>
 
         <div class="col-12 col-lg-6">
-          <div class="text-muted small mb-2">Estado actual</div>
+          <div class="text-muted small mb-2">Condición actual</div>
 
           <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
             <span class="badge rounded-pill text-bg-light border px-3 py-2">
@@ -126,11 +126,11 @@
             </span>
 
             {% if objeto_lugar.cantidad_mala > 0 %}
-              <span class="badge rounded-pill bg-danger px-3 py-2">Estado: Con fallas</span>
+              <span class="badge rounded-pill bg-danger px-3 py-2">Condición: Con unidades malas</span>
             {% elif objeto_lugar.cantidad_pendiente > 0 %}
-              <span class="badge rounded-pill bg-warning text-dark px-3 py-2">Estado: Pendiente</span>
+              <span class="badge rounded-pill bg-warning text-dark px-3 py-2">Condición: Con pendientes</span>
             {% else %}
-              <span class="badge rounded-pill bg-success px-3 py-2">Estado: Operativo</span>
+              <span class="badge rounded-pill bg-success px-3 py-2">Condición: Todo bueno</span>
             {% endif %}
 
             <span class="badge rounded-pill text-bg-secondary px-3 py-2">
@@ -202,7 +202,7 @@
           <div class="alert alert-light border rounded-4 mb-0">
             <div class="fw-semibold mb-1">Cómo leer esta pantalla</div>
             <div class="small text-muted">
-              El estado indica si existen fallas, pero la operatividad muestra qué tan disponible sigue estando el objeto dentro del lugar.
+              La condición indica si existen unidades malas o pendientes, mientras que la operatividad muestra qué tan disponible sigue estando el objeto dentro del lugar.
             </div>
           </div>
         </div>
@@ -231,7 +231,7 @@
             <thead class="table-light">
               <tr>
                 <th style="width:110px;">Cant. anterior</th>
-                <th style="width:160px;">Estado anterior</th>
+                <th style="width:160px;">Condición anterior</th>
                 <th style="width:120px;">Malas ant.</th>
                 <th style="width:140px;">Pendientes ant.</th>
                 <th style="width:150px;">Mín. operativo ant.</th>
@@ -284,7 +284,7 @@
 
         <div class="p-3 p-md-4 border-top bg-white">
           <div class="small text-muted">
-            Nota: el histórico se crea automáticamente cuando cambias cantidad, estado, detalle, importancia, cantidades o mínimo operativo.
+            Nota: el histórico se crea automáticamente cuando cambias cantidad, condición, detalle, importancia, cantidades o mínimo operativo.
           </div>
         </div>
       {% else %}

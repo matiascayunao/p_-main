@@ -178,9 +178,9 @@ class TipoLugarObjetoTipico(models.Model):
 
 class ObjetoLugar(models.Model):
     ESTADO = (
-        ("B", "Bueno"),
-        ("P", "Pendiente"),
-        ("M", "Malo"),
+        ("B", "Todo bueno"),
+        ("P", "Con pendientes"),
+        ("M", "Con unidades malas"),
     )
 
     IMPORTANCIA = (
@@ -226,18 +226,26 @@ class ObjetoLugar(models.Model):
     )
 
     def __str__(self):
-        # Resumen corto: qué objeto es, dónde está y su estado/cantidad
         lugar_txt = (
             f"{self.lugar.nombre_del_lugar} | "
             f"Piso {self.lugar.piso.piso} | {self.lugar.piso.ubicacion.ubicacion}"
             if self.lugar
             else "Sin lugar asignado"
         )
+
+        if self.tipo_de_objeto and self.tipo_de_objeto.objeto:
+            objeto_txt = self.tipo_de_objeto.objeto.nombre_del_objeto
+            marca_txt = self.tipo_de_objeto.marca or "Sin marca"
+            material_txt = self.tipo_de_objeto.material or "Sin material"
+        else:
+            objeto_txt = "Objeto no especificado"
+            marca_txt = "Sin marca"
+            material_txt = "Sin material"
+
         return (
-            f"{self.tipo_de_objeto.objeto.nombre_del_objeto} "
-            f"- {self.tipo_de_objeto.marca} {self.tipo_de_objeto.material or ''} "
+            f"{objeto_txt} - {marca_txt} {material_txt} "
             f"en {lugar_txt} "
-            f"(cant. {self.cantidad}, estado {self.get_estado_display()})"
+            f"(total {self.cantidad}, condición {self.get_estado_display()})"
         )
 
     @property
@@ -413,7 +421,10 @@ class ObjetoLugar(models.Model):
 class HistoricoObjeto(models.Model):
     # reutilizamos las mismas choices
     ESTADO = ObjetoLugar.ESTADO
-    importancia_anterior = models.PositiveSmallIntegerField(default=1)
+    importancia_anterior = models.PositiveSmallIntegerField(
+        default=1,
+        choices=ObjetoLugar.IMPORTANCIA,
+    )
     cantidad_mala_anterior = models.SmallIntegerField(default=0)
     cantidad_pendiente_anterior = models.SmallIntegerField(default=0)
     minimo_operativo_anterior = models.SmallIntegerField(default=1)
@@ -430,20 +441,30 @@ class HistoricoObjeto(models.Model):
     fecha_anterior = models.DateField()
 
     def __str__(self):
-        # Qué objeto es, dónde estaba y cuál era la situación anterior
         obj = self.objeto_del_lugar
+
         lugar_txt = (
             f"{obj.lugar.nombre_del_lugar} | "
             f"Piso {obj.lugar.piso.piso} | {obj.lugar.piso.ubicacion.ubicacion}"
-            if obj.lugar
+            if obj and obj.lugar
             else "Sin lugar asignado"
         )
+
+        if obj and obj.tipo_de_objeto and obj.tipo_de_objeto.objeto:
+            objeto_txt = obj.tipo_de_objeto.objeto.nombre_del_objeto
+            marca_txt = obj.tipo_de_objeto.marca or "Sin marca"
+            material_txt = obj.tipo_de_objeto.material or "Sin material"
+        else:
+            objeto_txt = "Objeto no especificado"
+            marca_txt = "Sin marca"
+            material_txt = "Sin material"
+
         return (
-            f"Histórico de {obj.tipo_de_objeto.objeto.nombre_del_objeto} "
-            f"- {obj.tipo_de_objeto.marca} {obj.tipo_de_objeto.material or ''} "
+            f"Histórico de {objeto_txt} "
+            f"- {marca_txt} {material_txt} "
             f"en {lugar_txt} "
-            f"(cant. ant. {self.cantidad_anterior}, "
-            f"estado ant. {self.get_estado_anterior_display()}, "
+            f"(total ant. {self.cantidad_anterior}, "
+            f"condición ant. {self.get_estado_anterior_display()}, "
             f"fecha {self.fecha_anterior.strftime('%d/%m/%Y')})"
         )
 

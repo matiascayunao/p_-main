@@ -278,7 +278,7 @@
               <thead class="table-light">
                 <tr>
                   <th class="col-info">Lugar / Objeto</th>
-                  <th class="col-cantidades">Cantidades anteriores</th>
+                  <th class="col-cantidades">Unidades anteriores</th>
                   <th class="col-condicion">Condición anterior</th>
                   <th class="col-importancia">Importancia</th>
                   <th class="col-detalle">Detalle anterior</th>
@@ -329,14 +329,14 @@
                         </div>
 
                         <div class="cantidad-row">
-                          <span class="cantidad-label">Malas</span>
+                          <span class="cantidad-label">Unid. malas</span>
                           <span class="cantidad-value {% if h.cantidad_mala_anterior > 0 %}text-danger{% endif %}">
                             {{ h.cantidad_mala_anterior }}
                           </span>
                         </div>
 
                         <div class="cantidad-row">
-                          <span class="cantidad-label">Pendientes</span>
+                          <span class="cantidad-label">Unid. pendientes</span>
                           <span class="cantidad-value {% if h.cantidad_pendiente_anterior > 0 %}text-warning{% endif %}">
                             {{ h.cantidad_pendiente_anterior }}
                           </span>
