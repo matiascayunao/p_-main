@@ -120,6 +120,8 @@ urlpatterns = [
     path("mapa/lugar/<int:lugar_id>/editar/", views.mapa_lugar_editar_geom, name="mapa_lugar_editar_geom"),
     path("mapa/lugar/<int:lugar_id>/quitar/", views.mapa_lugar_quitar_geom, name="mapa_lugar_quitar_geom"),
 
+    path("lugar/<int:lugar_id>/qr/", views.qr_lugar, name="qr_lugar"),
+
 
 
 ]

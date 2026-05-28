@@ -16,6 +16,9 @@
     </div>
 
     <div class="d-flex gap-2">
+      <a href="{% url 'qr_lugar' lugar_id=lugar.id %}" class="btn btn-outline-dark">
+        Descargar QR
+      </a>
       <a class="btn btn-outline-primary btn-sm" href="{% url 'editar_lugar' lugar_id=lugar.id %}">
         Editar lugar
       </a>

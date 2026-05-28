@@ -4075,3 +4075,29 @@ def mapa_lugar_quitar_geom(request, lugar_id):
 
     cancel_url = reverse("detalle_lugar", kwargs={"lugar_id": l.id})
     return render(request, "mapa/confirm_quitar_geom.html", {"obj": l, "cancel_url": cancel_url})
+
+
+
+@login_required
+def qr_lugar(request, lugar_id):
+    import qrcode
+    from io import BytesIO
+
+    lugar = get_object_or_404(Lugar, pk=lugar_id)
+
+    url = request.build_absolute_uri(
+        reverse("detalle_lugar", kwargs={"lugar_id": lugar.id})
+    )
+
+    img = qrcode.make(url)
+
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    buffer.seek(0)
+
+    filename = f"QR_LUGAR_{lugar.id}.png"
+
+    response = HttpResponse(buffer.getvalue(), content_type="image/png")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+
+    return response
