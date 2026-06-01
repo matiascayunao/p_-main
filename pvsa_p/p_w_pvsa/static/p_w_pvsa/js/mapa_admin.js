@@ -120,7 +120,7 @@
     }
     pct = Number(pct);
     if (!isFinite(pct)) return { label: "Sin datos", color: "#64748b" };
-    return { label: `${pct}% buenas`, color: colorForPct(pct) };
+    return { label: `Buenas ${pct}%`, color: colorForPct(pct) };
   }
 
   function coordsFromGeom(geom) {
@@ -260,8 +260,8 @@
             : `
               <div class="mt-2">
                 <div class="d-flex justify-content-between small">
-                  <span class="text-muted">Unidades buenas</span>
-                  <span class="fw-semibold">${pct}% buenas</span>
+                  <span class="text-muted">Unidades Buenas</span>
+                  <span class="fw-semibold">Buenas ${pct}%</span>
                 </div>
                 <div style="height:10px; background:#e5e7eb; border-radius:999px; overflow:hidden;">
                   <div style="width:${Math.max(0, Math.min(100, pct))}%; height:10px; background:${badge.color};"></div>

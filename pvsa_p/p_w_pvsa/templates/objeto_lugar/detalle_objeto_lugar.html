@@ -246,15 +246,13 @@
                 <td class="fw-semibold">{{ h.cantidad_anterior }}</td>
 
                 <td>
-                  {% with e=h.get_estado_anterior_display %}
-                    {% if e == "Bueno" %}
-                      <span class="badge bg-success">Bueno</span>
-                    {% elif e == "Pendiente" %}
-                      <span class="badge bg-warning text-dark">Pendiente</span>
-                    {% else %}
-                      <span class="badge bg-danger">Malo</span>
-                    {% endif %}
-                  {% endwith %}
+                  {% if h.cantidad_mala_anterior > 0 %}
+                    <span class="badge bg-danger">Con unidades malas</span>
+                  {% elif h.cantidad_pendiente_anterior > 0 %}
+                    <span class="badge bg-warning text-dark">Con pendientes</span>
+                  {% else %}
+                    <span class="badge bg-success">Todo bueno</span>
+                  {% endif %}
                 </td>
 
                 <td>{{ h.cantidad_mala_anterior|default:"0" }}</td>

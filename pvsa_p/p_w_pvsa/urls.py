@@ -122,6 +122,8 @@ urlpatterns = [
 
     path("lugar/<int:lugar_id>/qr/", views.qr_lugar, name="qr_lugar"),
 
+    path("ajax/filtros-dependientes/", views.ajax_filtros_dependientes, name="ajax_filtros_dependientes"),
+
 
 
 ]

@@ -45,18 +45,9 @@
 
         <hr>
 
-        <div class="d-flex justify-content-between"><span class="text-muted">% buenas</span><span class="fw-semibold">{{ resumen.pct_buenas }}%</span></div>
-        <div class="d-flex justify-content-between"><span class="text-muted">% pendientes</span><span class="fw-semibold">{{ resumen.pct_pendientes }}%</span></div>
-        <div class="d-flex justify-content-between"><span class="text-muted">% malas</span><span class="fw-semibold">{{ resumen.pct_malas }}%</span></div>
-
-        <hr>
-
-        <div class="d-grid gap-2">
-          <a class="btn btn-outline-primary" href="{{ url_detalle_ubicacion }}">Ver detalle (mantenedor)</a>
-          <a class="btn btn-outline-secondary" href="{{ url_lista_pisos }}">Ver pisos (lista)</a>
-          <a class="btn btn-outline-secondary" href="{{ url_lista_lugares }}">Ver lugares (lista)</a>
-          <a class="btn btn-outline-secondary" href="{{ url_lista_objetos_lugar }}">Ver objetos del lugar (lista)</a>
-        </div>
+        <div class="d-flex justify-content-between"><span class="text-muted">Buenas (%)</span><span class="fw-semibold">{{ resumen.pct_buenas }}%</span></div>
+        <div class="d-flex justify-content-between"><span class="text-muted">Pendientes (%)</span><span class="fw-semibold">{{ resumen.pct_pendientes }}%</span></div>
+        <div class="d-flex justify-content-between"><span class="text-muted">Malas (%)</span><span class="fw-semibold">{{ resumen.pct_malas }}%</span></div>
       </div>
     </div>
 
@@ -76,7 +67,7 @@
                     <div class="w-100 d-flex justify-content-between align-items-center gap-2">
                       <div class="fw-semibold">Piso {{ pi.piso.piso }}</div>
                       <div class="small text-muted text-end">
-                        Total: <b>{{ pi.stats.total }}</b> · {{ pi.stats.pct_buenas }}% buenas
+                        Total: <b>{{ pi.stats.total }}</b> · Buenas {{ pi.stats.pct_buenas }}%
                       </div>
                     </div>
                   </button>
@@ -100,7 +91,7 @@
                               </div>
                               <div class="text-end small">
                                 <div><b>{{ li.stats.total }}</b> total</div>
-                                <div class="text-muted">{{ li.stats.pct_buenas }}% buenas · {{ li.stats.pct_pendientes }}% pendientes · {{ li.stats.pct_malas }}% malas</div>
+                                <div class="text-muted">Buenas {{ li.stats.pct_buenas }}% · Pendientes {{ li.stats.pct_pendientes }}% · Malas {{ li.stats.pct_malas }}%</div>
                               </div>
                             </div>
                           </a>
@@ -268,7 +259,7 @@
         const pct = Number(p.pct_buenas || 0);
 
         const badgeColor = !hasPct ? "#64748b" : (pct >= 65 ? "#16a34a" : (pct >= 50 ? "#f59e0b" : "#ef4444"));
-        const badgeLabel = !hasPct ? "Sin datos" : `${pct}% buenas`;
+        const badgeLabel = !hasPct ? "Sin datos" : `Buenas ${pct}%`;
 
         const html = `
           <div style="min-width:240px">

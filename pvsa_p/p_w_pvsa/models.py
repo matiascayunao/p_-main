@@ -380,17 +380,40 @@ class ObjetoLugar(models.Model):
         """
         Guarda histórico automático cuando cambia información relevante
         del objeto dentro del lugar.
+
+        La condición anterior se calcula desde las cantidades anteriores,
+        no desde el campo estado guardado, porque ese campo pudo quedar antiguo.
         """
+
+        def calcular_estado(cantidad_mala, cantidad_pendiente):
+            cantidad_mala = cantidad_mala or 0
+            cantidad_pendiente = cantidad_pendiente or 0
+
+            if cantidad_mala > 0:
+                return "M"
+
+            if cantidad_pendiente > 0:
+                return "P"
+
+            return "B"
+
+        anterior = None
+        estado_anterior_calculado = None
+
+        if self.pk:
+            anterior = ObjetoLugar.objects.get(pk=self.pk)
+            estado_anterior_calculado = calcular_estado(
+                anterior.cantidad_mala,
+                anterior.cantidad_pendiente,
+            )
 
         self.actualizar_estado_automatico()
         self.full_clean()
 
-        if self.pk:
-            anterior = ObjetoLugar.objects.get(pk=self.pk)
-
+        if anterior:
             hubo_cambio = (
                 anterior.cantidad != self.cantidad
-                or anterior.estado != self.estado
+                or estado_anterior_calculado != self.estado
                 or (anterior.detalle or "") != (self.detalle or "")
                 or anterior.importancia != self.importancia
                 or anterior.cantidad_mala != self.cantidad_mala
@@ -405,7 +428,7 @@ class ObjetoLugar(models.Model):
                     HistoricoObjeto.objects.create(
                         objeto_del_lugar=self,
                         cantidad_anterior=anterior.cantidad,
-                        estado_anterior=anterior.estado,
+                        estado_anterior=estado_anterior_calculado,
                         detalle_anterior=anterior.detalle or "",
                         fecha_anterior=anterior.fecha,
                         importancia_anterior=anterior.importancia,
@@ -413,6 +436,7 @@ class ObjetoLugar(models.Model):
                         cantidad_pendiente_anterior=anterior.cantidad_pendiente,
                         minimo_operativo_anterior=anterior.minimo_operativo,
                     )
+
                 return
 
         super().save(*args, **kwargs)
