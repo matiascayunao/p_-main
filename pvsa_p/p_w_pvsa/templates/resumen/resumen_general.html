@@ -232,9 +232,9 @@
                         </div>
 
                         <div>
-                            <label for="id_filtro_estado" class="form-label mb-1">Estado</label>
+                            <label for="id_filtro_estado" class="form-label mb-1">Condición de unidades</label>
                             <select id="id_filtro_estado" name="estado" class="form-select form-select-sm">
-                                <option value="">Todos los estados</option>
+                                <option value="">Todas las condiciones</option>
                                 {% for value, label in estados %}
                                     <option value="{{ value }}" {% if estado_actual == value|stringformat:'s' %}selected{% endif %}>
                                         {{ label }}
@@ -425,13 +425,13 @@
                                             <td>
                                                 <div class="objeto-nombre">{{ obj.nombre }}</div>
 
-                                                {% if obj.malos %}
+                                                {% if obj.malas > 0 %}
                                                     <div class="objeto-detalle">
-                                                        Tiene unidades en mal estado.
+                                                        Tiene unidades malas
                                                     </div>
                                                 {% else %}
                                                     <div class="objeto-detalle">
-                                                        Sin fallas críticas registradas.
+                                                        Sin unidades malas registradas.
                                                     </div>
                                                 {% endif %}
                                             </td>

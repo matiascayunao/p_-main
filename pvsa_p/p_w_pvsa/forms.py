@@ -13,10 +13,6 @@ from .models import (
     HistoricoObjeto,
 )
 
-# -------------------
-# CREAR
-# -------------------
-
 
 class CrearSector(ModelForm):
     class Meta:
@@ -236,11 +232,6 @@ class CrearHistorico(forms.ModelForm):
         return cleaned
 
 
-# -------------------
-# EDITAR
-# -------------------
-
-
 class EditarSector(ModelForm):
     class Meta:
         model = Sector
@@ -452,12 +443,9 @@ class EditarHistorico(forms.ModelForm):
 
         return cleaned
 
-# ============================
-# FORMULARIO BASE DE ESTRUCTURA
-# ============================
 
 class EstructuraCompletaForm(forms.Form):
-    # --- Sector ---
+
     sector_existente = forms.ModelChoiceField(
         label="Sector (existente)",
         queryset=Sector.objects.all().order_by("sector"),
@@ -471,10 +459,10 @@ class EstructuraCompletaForm(forms.Form):
         widget=forms.TextInput(attrs={"class": "form-control"}),
     )
 
-    # --- Ubicación ---
+
     ubicacion_existente = forms.ModelChoiceField(
         label="Ubicación (existente)",
-        queryset=Ubicacion.objects.none(), # se llena por JS / __init__
+        queryset=Ubicacion.objects.none(),
         required=False,
         widget=forms.Select(attrs={"class": "form-select"}),
     )
@@ -485,10 +473,10 @@ class EstructuraCompletaForm(forms.Form):
         widget=forms.TextInput(attrs={"class": "form-control"}),
     )
 
-    # --- Piso ---
+
     piso_existente = forms.ModelChoiceField(
         label="Piso (existente)",
-        queryset=Piso.objects.none(), # se llena por JS / __init__
+        queryset=Piso.objects.none(),
         required=False,
         widget=forms.Select(attrs={"class": "form-select"}),
     )
@@ -498,7 +486,7 @@ class EstructuraCompletaForm(forms.Form):
         widget=forms.NumberInput(attrs={"class": "form-control"}),
     )
 
-    # --- Tipo de lugar ---
+
     tipo_lugar_existente = forms.ModelChoiceField(
         label="Tipo de lugar (existente)",
         queryset=TipoLugar.objects.all().order_by("tipo_de_lugar"),
@@ -512,10 +500,10 @@ class EstructuraCompletaForm(forms.Form):
         widget=forms.TextInput(attrs={"class": "form-control"}),
     )
 
-    # ✅ NUEVO: Lugar existente / nuevo
+
     lugar_existente = forms.ModelChoiceField(
         label="Lugar (existente)",
-        queryset=Lugar.objects.none(), # se llena por JS / __init__
+        queryset=Lugar.objects.none(),
         required=False,
         widget=forms.Select(attrs={"class": "form-select"}),
     )
@@ -531,7 +519,7 @@ class EstructuraCompletaForm(forms.Form):
 
         data = self.data or None
 
-        # Dependientes: por defecto vacíos (para no listar TODO)
+
         self.fields["ubicacion_existente"].queryset = Ubicacion.objects.none()
         self.fields["piso_existente"].queryset = Piso.objects.none()
         self.fields["lugar_existente"].queryset = Lugar.objects.none()
@@ -565,23 +553,23 @@ class EstructuraCompletaForm(forms.Form):
     def clean(self):
         cleaned = super().clean()
 
-        # Sector: existente o nuevo
+
         if not cleaned.get("sector_existente") and not (cleaned.get("sector_nuevo") or "").strip():
             raise forms.ValidationError("Debes seleccionar un sector existente o escribir uno nuevo.")
 
-        # Ubicación: existente o nueva
+
         if not cleaned.get("ubicacion_existente") and not (cleaned.get("ubicacion_nueva") or "").strip():
             raise forms.ValidationError("Debes seleccionar una ubicación existente o escribir una nueva.")
 
-        # Piso: existente o nuevo
+
         if not cleaned.get("piso_existente") and cleaned.get("piso_nuevo") in (None, ""):
             raise forms.ValidationError("Debes seleccionar un piso existente o escribir uno nuevo.")
 
-        # Tipo de lugar: existente o nuevo
+
         if not cleaned.get("tipo_lugar_existente") and not (cleaned.get("tipo_lugar_nuevo") or "").strip():
             raise forms.ValidationError("Debes seleccionar un tipo de lugar existente o escribir uno nuevo.")
 
-        # ✅ Lugar: existente o nuevo
+
         lugar_exist = cleaned.get("lugar_existente")
         lugar_new = (cleaned.get("lugar_nuevo") or "").strip()
 
@@ -591,7 +579,7 @@ class EstructuraCompletaForm(forms.Form):
         if not lugar_exist and not lugar_new:
             raise forms.ValidationError("Debes seleccionar un lugar existente o escribir uno nuevo.")
 
-        # Si eligió lugar existente, debe calzar con piso/tipo de lugar existentes
+
         piso_obj = cleaned.get("piso_existente")
         tipo_obj = cleaned.get("tipo_lugar_existente")
 
@@ -605,12 +593,8 @@ class EstructuraCompletaForm(forms.Form):
         return cleaned
 
 
-# ============================
-# FORMULARIO DE FILA DE OBJETO
-# ============================
-
 class ObjetoLugarFilaForm(forms.Form):
-    # --- Categoría ---
+
     categoria_existente = forms.ModelChoiceField(
         label="Categoría (existente)",
         queryset=CategoriaObjeto.objects.all().order_by("nombre_de_categoria"),
@@ -624,7 +608,7 @@ class ObjetoLugarFilaForm(forms.Form):
         widget=forms.TextInput(attrs={"class": "form-control form-control-sm"}),
     )
 
-    # --- Objeto ---
+
     objeto_existente = forms.ModelChoiceField(
         label="Objeto (existente)",
         queryset=Objeto.objects.select_related("objeto_categoria")
@@ -640,7 +624,7 @@ class ObjetoLugarFilaForm(forms.Form):
         widget=forms.TextInput(attrs={"class": "form-control form-control-sm"}),
     )
 
-    # --- Tipo de objeto ---
+
     tipo_objeto_existente = forms.ModelChoiceField(
         label="Tipo de objeto (existente)",
         queryset=TipoObjeto.objects.select_related("objeto")
@@ -662,7 +646,7 @@ class ObjetoLugarFilaForm(forms.Form):
         widget=forms.TextInput(attrs={"class": "form-control form-control-sm"}),
     )
 
-    # --- Datos del objeto en el lugar ---
+
     cantidad = forms.IntegerField(
         label="Cantidad",
         min_value=1,
@@ -728,9 +712,7 @@ class ObjetoLugarFilaForm(forms.Form):
     def clean(self):
         cleaned = super().clean()
 
-        # Primero revisamos si la fila está realmente vacía.
-        # No metemos importancia, cantidad_mala, cantidad_pendiente ni minimo_operativo
-        # porque tienen valores por defecto y podrían hacer parecer usada una fila vacía.
+
         fields_to_check = [
             "categoria_existente", "categoria_nueva",
             "objeto_existente", "objeto_nuevo",
@@ -742,7 +724,7 @@ class ObjetoLugarFilaForm(forms.Form):
             cleaned["__empty__"] = True
             return cleaned
 
-        # Desde aquí la fila ya se considera usada.
+
         cantidad = cleaned.get("cantidad")
         cantidad_mala = cleaned.get("cantidad_mala") or 0
         cantidad_pendiente = cleaned.get("cantidad_pendiente") or 0
@@ -761,13 +743,13 @@ class ObjetoLugarFilaForm(forms.Form):
                 "El mínimo operativo no puede ser mayor que la cantidad total."
             )
 
-        # Categoría: existente o nueva
+
         if not cleaned.get("categoria_existente") and not (cleaned.get("categoria_nueva") or "").strip():
             raise forms.ValidationError(
                 "En cada fila usa una categoría existente o escribe una nueva."
             )
 
-        # Objeto: existente o nuevo
+
         if not cleaned.get("objeto_existente") and not (cleaned.get("objeto_nuevo") or "").strip():
             raise forms.ValidationError(
                 "En cada fila usa un objeto existente o escribe uno nuevo."
@@ -787,11 +769,3 @@ ObjetoLugarFilaFormSet = formset_factory(
     extra=1,
     can_delete=False,
 )
-
-
-class UploadExcelForm(forms.Form):
-    archivo = forms.FileField(
-        widget=forms.ClearableFileInput(
-            attrs={"class": "form-control", "accept": ".xlsx"}
-        )
-    )

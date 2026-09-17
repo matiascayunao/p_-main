@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load static %}
 
 {% block content %}
 <div class="container-xxl py-4" style="max-width: 1200px;">
@@ -82,25 +81,6 @@
             </div>
           </div>
 
-          <div class="mt-3 d-flex flex-wrap gap-2">
-            {% if lugar.geom %}
-              <span class="badge rounded-pill bg-success px-3 py-2">En mapa: Sí</span>
-
-              <a href="{% url 'mapa_lugar_editar_geom' lugar_id=lugar.id %}" class="btn btn-outline-primary btn-sm">
-                Editar polígono
-              </a>
-
-              <a href="{% url 'mapa_lugar_quitar_geom' lugar_id=lugar.id %}" class="btn btn-outline-danger btn-sm">
-                Quitar del mapa
-              </a>
-            {% else %}
-              <span class="badge rounded-pill text-bg-light border px-3 py-2">En mapa: No</span>
-
-              <a href="{% url 'mapa_lugar_editar_geom' lugar_id=lugar.id %}" class="btn btn-outline-primary btn-sm">
-                Marcar en mapa
-              </a>
-            {% endif %}
-          </div>
         </div>
 
         <div class="col-12 col-lg-6">

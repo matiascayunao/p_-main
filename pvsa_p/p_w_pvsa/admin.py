@@ -1,7 +1,7 @@
-
 import nested_admin
-from django.contrib import admin
+
 from django import forms
+from django.contrib import admin
 
 from .models import (
     Sector,
@@ -15,30 +15,35 @@ from .models import (
     TipoLugarObjetoTipico,
     ObjetoLugar,
     HistoricoObjeto,
-    AreaMapa,
 )
 
+
+# =========================================================
+# CONFIGURACIÓN GENERAL DEL ADMIN
+# =========================================================
 
 admin.site.site_header = "Administración PVSA"
 admin.site.site_title = "PVSA"
 admin.site.index_title = "Panel de administración"
 
 
-# =====================================================
+# =========================================================
 # FUNCIONES AUXILIARES
-# =====================================================
+# =========================================================
 
 def texto_importancia(valor):
     if valor == 3:
         return "Alta / Crítica"
+
     if valor == 2:
         return "Media"
+
     return "Baja"
 
 
-# =====================================================
+# =========================================================
 # HISTÓRICO INLINE
-# =====================================================
+# =========================================================
 
 class HistoricoObjetoInline(nested_admin.NestedTabularInline):
     model = HistoricoObjeto
@@ -62,14 +67,17 @@ class HistoricoObjetoInline(nested_admin.NestedTabularInline):
         return False
 
 
-# =====================================================
+# =========================================================
 # OBJETO LUGAR INLINE
-# =====================================================
+# =========================================================
 
 class ObjetoLugarInline(nested_admin.NestedTabularInline):
     model = ObjetoLugar
     extra = 0
-    inlines = [HistoricoObjetoInline]
+
+    inlines = [
+        HistoricoObjetoInline,
+    ]
 
     fields = (
         "tipo_de_objeto",
@@ -92,80 +100,96 @@ class ObjetoLugarInline(nested_admin.NestedTabularInline):
         "fecha",
     )
 
-    autocomplete_fields = ("tipo_de_objeto",)
+    autocomplete_fields = (
+        "tipo_de_objeto",
+    )
 
     @admin.display(description="Buenas")
     def cantidad_buena_admin(self, obj):
         if obj and obj.pk:
             return obj.cantidad_buena
+
         return "-"
 
     @admin.display(description="Operatividad")
     def operatividad_objeto_admin(self, obj):
         if obj and obj.pk:
             return f"{obj.operatividad_objeto}%"
+
         return "-"
 
     @admin.display(description="Condición")
     def estado_calculado_admin(self, obj):
-        if obj and obj.pk:
-            if obj.estado == "B":
-                return "Todo bueno"
-            if obj.estado == "P":
-                return "Con pendientes"
-            return "Con unidades malas"
-        return "-"
+        if not obj or not obj.pk:
+            return "-"
+
+        return obj.get_estado_display()
 
 
-# =====================================================
+# =========================================================
 # LUGAR INLINE
-# =====================================================
+# =========================================================
 
 class LugarInline(nested_admin.NestedStackedInline):
     model = Lugar
     extra = 0
-    inlines = [ObjetoLugarInline]
+
+    inlines = [
+        ObjetoLugarInline,
+    ]
 
     fields = (
         "nombre_del_lugar",
         "lugar_tipo_lugar",
         "operatividad_lugar_admin",
-        "geom",
     )
 
-    readonly_fields = ("operatividad_lugar_admin",)
-    autocomplete_fields = ("lugar_tipo_lugar",)
+    readonly_fields = (
+        "operatividad_lugar_admin",
+    )
+
+    autocomplete_fields = (
+        "lugar_tipo_lugar",
+    )
 
     @admin.display(description="Operatividad del lugar")
     def operatividad_lugar_admin(self, obj):
         if obj and obj.pk:
             return f"{obj.operatividad_lugar}%"
+
         return "-"
 
 
-# =====================================================
+# =========================================================
 # PISO / UBICACIÓN / SECTOR
-# =====================================================
+# =========================================================
 
 class PisoInline(nested_admin.NestedStackedInline):
     model = Piso
     extra = 0
-    inlines = [LugarInline]
+
+    inlines = [
+        LugarInline,
+    ]
 
 
 class UbicacionInline(nested_admin.NestedStackedInline):
     model = Ubicacion
     extra = 0
-    inlines = [PisoInline]
+
+    inlines = [
+        PisoInline,
+    ]
 
     fields = (
         "ubicacion",
-        "geom",
     )
 
 
 class SectorAdmin(nested_admin.NestedModelAdmin):
-    inlines = [UbicacionInline]
+    inlines = [
+        UbicacionInline,
+    ]
 
     list_display = (
         "sector",
@@ -176,9 +200,9 @@ class SectorAdmin(nested_admin.NestedModelAdmin):
     )
 
 
-# =====================================================
+# =========================================================
 # CATEGORÍA / OBJETO / TIPO OBJETO
-# =====================================================
+# =========================================================
 
 class TipoObjetoInline(nested_admin.NestedTabularInline):
     model = TipoObjeto
@@ -193,7 +217,10 @@ class TipoObjetoInline(nested_admin.NestedTabularInline):
 class ObjetoInline(nested_admin.NestedStackedInline):
     model = Objeto
     extra = 0
-    inlines = [TipoObjetoInline]
+
+    inlines = [
+        TipoObjetoInline,
+    ]
 
     fields = (
         "nombre_del_objeto",
@@ -201,7 +228,9 @@ class ObjetoInline(nested_admin.NestedStackedInline):
 
 
 class CategoriaObjetoAdmin(nested_admin.NestedModelAdmin):
-    inlines = [ObjetoInline]
+    inlines = [
+        ObjetoInline,
+    ]
 
     list_display = (
         "nombre_de_categoria",
@@ -212,9 +241,9 @@ class CategoriaObjetoAdmin(nested_admin.NestedModelAdmin):
     )
 
 
-# =====================================================
+# =========================================================
 # TIPO DE LUGAR Y OBJETOS TÍPICOS
-# =====================================================
+# =========================================================
 
 class TipoLugarObjetoTipicoInline(admin.TabularInline):
     model = TipoLugarObjetoTipico
@@ -233,7 +262,9 @@ class TipoLugarObjetoTipicoInline(admin.TabularInline):
 
 
 class TipoLugarAdmin(admin.ModelAdmin):
-    inlines = [TipoLugarObjetoTipicoInline]
+    inlines = [
+        TipoLugarObjetoTipicoInline,
+    ]
 
     list_display = (
         "tipo_de_lugar",
@@ -249,9 +280,9 @@ class TipoLugarAdmin(admin.ModelAdmin):
         return obj.tipicos.count()
 
 
-# =====================================================
-# ADMIN INDIVIDUAL: UBICACIÓN / PISO / LUGAR
-# =====================================================
+# =========================================================
+# ADMIN INDIVIDUAL: UBICACIÓN
+# =========================================================
 
 class UbicacionAdmin(admin.ModelAdmin):
     list_display = (
@@ -269,6 +300,10 @@ class UbicacionAdmin(admin.ModelAdmin):
     )
 
 
+# =========================================================
+# ADMIN INDIVIDUAL: PISO
+# =========================================================
+
 class PisoAdmin(admin.ModelAdmin):
     list_display = (
         "piso",
@@ -282,7 +317,7 @@ class PisoAdmin(admin.ModelAdmin):
     )
 
     search_fields = (
-        "piso",
+        "=piso",
         "ubicacion__ubicacion",
         "ubicacion__sector__sector",
     )
@@ -292,8 +327,14 @@ class PisoAdmin(admin.ModelAdmin):
         return obj.ubicacion.sector
 
 
+# =========================================================
+# ADMIN INDIVIDUAL: LUGAR
+# =========================================================
+
 class LugarAdmin(nested_admin.NestedModelAdmin):
-    inlines = [ObjetoLugarInline]
+    inlines = [
+        ObjetoLugarInline,
+    ]
 
     list_display = (
         "nombre_del_lugar",
@@ -327,7 +368,6 @@ class LugarAdmin(nested_admin.NestedModelAdmin):
         "piso",
         "lugar_tipo_lugar",
         "operatividad_lugar_admin",
-        "geom",
     )
 
     @admin.display(description="Tipo de lugar")
@@ -346,12 +386,13 @@ class LugarAdmin(nested_admin.NestedModelAdmin):
     def operatividad_lugar_admin(self, obj):
         if obj and obj.pk:
             return f"{obj.operatividad_lugar}%"
+
         return "-"
 
 
-# =====================================================
-# ADMIN INDIVIDUAL: OBJETO / TIPO OBJETO
-# =====================================================
+# =========================================================
+# ADMIN INDIVIDUAL: OBJETO
+# =========================================================
 
 class ObjetoAdmin(admin.ModelAdmin):
     list_display = (
@@ -368,6 +409,10 @@ class ObjetoAdmin(admin.ModelAdmin):
         "objeto_categoria__nombre_de_categoria",
     )
 
+
+# =========================================================
+# ADMIN INDIVIDUAL: TIPO OBJETO
+# =========================================================
 
 class TipoObjetoAdmin(admin.ModelAdmin):
     list_display = (
@@ -395,12 +440,14 @@ class TipoObjetoAdmin(admin.ModelAdmin):
         return obj.objeto.objeto_categoria
 
 
-# =====================================================
+# =========================================================
 # ADMIN INDIVIDUAL: OBJETO LUGAR
-# =====================================================
+# =========================================================
 
 class ObjetoLugarAdmin(nested_admin.NestedModelAdmin):
-    inlines = [HistoricoObjetoInline]
+    inlines = [
+        HistoricoObjetoInline,
+    ]
 
     list_display = (
         "objeto_admin",
@@ -487,7 +534,14 @@ class ObjetoLugarAdmin(nested_admin.NestedModelAdmin):
 
     @admin.display(description="Objeto")
     def objeto_admin(self, obj):
-        return obj.tipo_de_objeto.objeto.nombre_del_objeto
+        if (
+            obj
+            and obj.tipo_de_objeto
+            and obj.tipo_de_objeto.objeto
+        ):
+            return obj.tipo_de_objeto.objeto.nombre_del_objeto
+
+        return "-"
 
     @admin.display(description="Buenas")
     def cantidad_buena_admin(self, obj):
@@ -503,36 +557,26 @@ class ObjetoLugarAdmin(nested_admin.NestedModelAdmin):
 
     @admin.display(description="Condición")
     def estado_calculado_admin(self, obj):
-        if obj.estado == "B":
-            return "Todo bueno"
-        if obj.estado == "P":
-            return "Con pendientes"
-        return "Con unidades malas"
+        return obj.get_estado_display()
 
 
-# =====================================================
-# ADMIN INDIVIDUAL: HISTÓRICO
-# =====================================================
+# =========================================================
+# FORMULARIO ADMIN DEL HISTÓRICO
+# =========================================================
+
 class HistoricoObjetoAdminForm(forms.ModelForm):
     importancia_anterior = forms.TypedChoiceField(
         label="Importancia anterior",
         required=True,
         coerce=int,
-        choices=(
-            (1, "Baja"),
-            (2, "Media"),
-            (3, "Alta / Crítica"),
-        ),
+        choices=ObjetoLugar.IMPORTANCIA,
         widget=forms.Select,
     )
+
     estado_anterior = forms.ChoiceField(
         label="Condición anterior",
         required=True,
-        choices=(
-            ("B", "Todo bueno"),
-            ("P", "Con pendientes"),
-            ("M", "Con unidades malas"),
-        ),
+        choices=ObjetoLugar.ESTADO,
         widget=forms.Select,
     )
 
@@ -543,25 +587,69 @@ class HistoricoObjetoAdminForm(forms.ModelForm):
     def clean(self):
         cleaned = super().clean()
 
-        cantidad = cleaned.get("cantidad_anterior") or 0
-        cantidad_mala = cleaned.get("cantidad_mala_anterior") or 0
-        cantidad_pendiente = cleaned.get("cantidad_pendiente_anterior") or 0
-        minimo_operativo = cleaned.get("minimo_operativo_anterior") or 1
+        cantidad = (
+            cleaned.get("cantidad_anterior")
+            or 0
+        )
+
+        cantidad_mala = (
+            cleaned.get("cantidad_mala_anterior")
+            or 0
+        )
+
+        cantidad_pendiente = (
+            cleaned.get("cantidad_pendiente_anterior")
+            or 0
+        )
+
+        minimo_operativo = (
+            cleaned.get("minimo_operativo_anterior")
+            or 1
+        )
 
         if cantidad <= 0:
-            raise forms.ValidationError("La cantidad anterior debe ser mayor a 0.")
-
-        if cantidad_mala + cantidad_pendiente > cantidad:
             raise forms.ValidationError(
-                "La suma de unidades malas y pendientes no puede superar la cantidad total."
+                "La cantidad anterior debe ser mayor a 0."
+            )
+
+        if cantidad_mala < 0:
+            raise forms.ValidationError(
+                "Las unidades malas no pueden ser negativas."
+            )
+
+        if cantidad_pendiente < 0:
+            raise forms.ValidationError(
+                "Las unidades pendientes no pueden ser negativas."
+            )
+
+        if (
+            cantidad_mala
+            + cantidad_pendiente
+            > cantidad
+        ):
+            raise forms.ValidationError(
+                "La suma de unidades malas y pendientes "
+                "no puede superar la cantidad total."
+            )
+
+        if minimo_operativo < 1:
+            raise forms.ValidationError(
+                "El mínimo operativo debe ser al menos 1."
             )
 
         if minimo_operativo > cantidad:
             raise forms.ValidationError(
-                "El mínimo operativo no puede ser mayor que la cantidad total."
+                "El mínimo operativo no puede ser mayor "
+                "que la cantidad total."
             )
 
         return cleaned
+
+
+# =========================================================
+# ADMIN INDIVIDUAL: HISTÓRICO
+# =========================================================
+
 class HistoricoObjetoAdmin(admin.ModelAdmin):
     form = HistoricoObjetoAdminForm
 
@@ -634,75 +722,97 @@ class HistoricoObjetoAdmin(admin.ModelAdmin):
 
     @admin.display(description="Objeto")
     def objeto_admin(self, obj):
-        return obj.objeto_del_lugar.tipo_de_objeto.objeto.nombre_del_objeto
+        objeto_lugar = obj.objeto_del_lugar
+
+        if (
+            objeto_lugar
+            and objeto_lugar.tipo_de_objeto
+            and objeto_lugar.tipo_de_objeto.objeto
+        ):
+            return (
+                objeto_lugar
+                .tipo_de_objeto
+                .objeto
+                .nombre_del_objeto
+            )
+
+        return "-"
 
     @admin.display(description="Lugar")
     def lugar_admin(self, obj):
-        return obj.objeto_del_lugar.lugar
+        if (
+            obj.objeto_del_lugar
+            and obj.objeto_del_lugar.lugar
+        ):
+            return obj.objeto_del_lugar.lugar
+
+        return "-"
 
     @admin.display(description="Importancia anterior")
     def importancia_anterior_admin(self, obj):
-        return texto_importancia(obj.importancia_anterior)
+        return texto_importancia(
+            obj.importancia_anterior
+        )
 
     @admin.display(description="Condición anterior")
     def estado_anterior_admin(self, obj):
-        if obj.estado_anterior == "B":
-            return "Todo bueno"
-        if obj.estado_anterior == "P":
-            return "Con pendientes"
-        return "Con unidades malas"
+        return obj.get_estado_anterior_display()
 
 
-# =====================================================
-# ADMIN MAPA
-# =====================================================
-
-class AreaMapaAdmin(admin.ModelAdmin):
-    list_display = (
-        "nombre",
-        "tipo",
-        "sector",
-        "ubicacion",
-        "creado_por",
-        "creado",
-        "actualizado",
-    )
-
-    list_filter = (
-        "tipo",
-        "sector",
-        "ubicacion",
-        "creado",
-    )
-
-    search_fields = (
-        "nombre",
-        "sector__sector",
-        "ubicacion__ubicacion",
-    )
-
-    readonly_fields = (
-        "creado",
-        "actualizado",
-    )
-
-
-# =====================================================
+# =========================================================
 # REGISTROS
-# =====================================================
+# =========================================================
 
-admin.site.register(Sector, SectorAdmin)
-admin.site.register(Ubicacion, UbicacionAdmin)
-admin.site.register(Piso, PisoAdmin)
-admin.site.register(TipoLugar, TipoLugarAdmin)
-admin.site.register(Lugar, LugarAdmin)
+admin.site.register(
+    Sector,
+    SectorAdmin,
+)
 
-admin.site.register(CategoriaObjeto, CategoriaObjetoAdmin)
-admin.site.register(Objeto, ObjetoAdmin)
-admin.site.register(TipoObjeto, TipoObjetoAdmin)
-admin.site.register(TipoLugarObjetoTipico)
+admin.site.register(
+    Ubicacion,
+    UbicacionAdmin,
+)
 
-admin.site.register(ObjetoLugar, ObjetoLugarAdmin)
-admin.site.register(HistoricoObjeto, HistoricoObjetoAdmin)
+admin.site.register(
+    Piso,
+    PisoAdmin,
+)
 
-admin.site.register(AreaMapa, AreaMapaAdmin)
+admin.site.register(
+    TipoLugar,
+    TipoLugarAdmin,
+)
+
+admin.site.register(
+    Lugar,
+    LugarAdmin,
+)
+
+admin.site.register(
+    CategoriaObjeto,
+    CategoriaObjetoAdmin,
+)
+
+admin.site.register(
+    Objeto,
+    ObjetoAdmin,
+)
+
+admin.site.register(
+    TipoObjeto,
+    TipoObjetoAdmin,
+)
+
+admin.site.register(
+    TipoLugarObjetoTipico,
+)
+
+admin.site.register(
+    ObjetoLugar,
+    ObjetoLugarAdmin,
+)
+
+admin.site.register(
+    HistoricoObjeto,
+    HistoricoObjetoAdmin,
+)
