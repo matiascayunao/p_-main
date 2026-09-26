@@ -77,115 +77,183 @@ def descargar_excel_sectores(request):
 def crear_estructura(request):
     if request.method == "POST":
         form = EstructuraCompletaForm(request.POST)
-        objetos_formset = ObjetoLugarFilaFormSet(request.POST, prefix="obj")
+        objetos_formset = ObjetoLugarFilaFormSet(
+            request.POST,
+            prefix="obj",
+        )
 
         if form.is_valid() and objetos_formset.is_valid():
             cd = form.cleaned_data
+
             sector = cd.get("sector_existente")
-            sector_nuevo = (cd.get("sector_nuevo") or "").strip()
-            if not sector and sector_nuevo:
-                sector, _ = Sector.objects.get_or_create(sector=sector_nuevo)
+            if not sector:
+                sector = Sector.objects.create(
+                    sector=(cd.get("sector_nuevo") or "").strip()
+                )
+
             ubicacion = cd.get("ubicacion_existente")
-            ubicacion_nueva = (cd.get("ubicacion_nueva") or "").strip()
-            if not ubicacion and ubicacion_nueva:
-                ubicacion, _ = Ubicacion.objects.get_or_create(
-                    ubicacion=ubicacion_nueva,
+            if not ubicacion:
+                ubicacion = Ubicacion.objects.create(
+                    ubicacion=(cd.get("ubicacion_nueva") or "").strip(),
                     sector=sector,
                 )
+
             piso = cd.get("piso_existente")
-            piso_nuevo = cd.get("piso_nuevo")
-            if not piso and piso_nuevo not in (None, ""):
-                piso, _ = Piso.objects.get_or_create(
-                    piso=piso_nuevo,
+            if not piso:
+                piso = Piso.objects.create(
+                    piso=cd.get("piso_nuevo"),
                     ubicacion=ubicacion,
                 )
-            tipo_lugar = cd.get("tipo_lugar_existente")
-            tipo_lugar_nuevo = (cd.get("tipo_lugar_nuevo") or "").strip()
-            if not tipo_lugar and tipo_lugar_nuevo:
-                tipo_lugar, _ = TipoLugar.objects.get_or_create(
-                    tipo_de_lugar=tipo_lugar_nuevo
-                )
-            lugar = cd.get("lugar_existente")
-            lugar_nuevo = (cd.get("lugar_nuevo")or "").strip()
 
+            tipo_lugar = cd.get("tipo_lugar_existente")
+            if not tipo_lugar:
+                tipo_lugar = TipoLugar.objects.create(
+                    tipo_de_lugar=(
+                        cd.get("tipo_lugar_nuevo") or ""
+                    ).strip()
+                )
+
+            lugar = cd.get("lugar_existente")
             if not lugar:
-                lugar = Lugar.objects.create(nombre_del_lugar = lugar_nuevo, piso=piso, lugar_tipo_lugar = tipo_lugar,)
-            for f in objetos_formset:
-                if not f.cleaned_data:
+                lugar = Lugar.objects.create(
+                    nombre_del_lugar=(
+                        cd.get("lugar_nuevo") or ""
+                    ).strip(),
+                    piso=piso,
+                    lugar_tipo_lugar=tipo_lugar,
+                )
+
+            for fila in objetos_formset:
+                if not fila.cleaned_data:
                     continue
-                if f.cleaned_data.get("__empty__"):
+
+                if fila.cleaned_data.get("__empty__"):
                     continue
-                row = f.cleaned_data
+
+                row = fila.cleaned_data
+
                 categoria = row.get("categoria_existente")
                 if not categoria:
-                    nombre_cat = (row.get("categoria_nueva") or "").strip()
-                    categoria, _ = CategoriaObjeto.objects.get_or_create(
-                        nombre_de_categoria=nombre_cat
+                    categoria = CategoriaObjeto.objects.create(
+                        nombre_de_categoria=(
+                            row.get("categoria_nueva") or ""
+                        ).strip()
                     )
+
                 objeto = row.get("objeto_existente")
                 if not objeto:
-                    nombre_obj = (row.get("objeto_nuevo") or "").strip()
+                    objeto = Objeto.objects.create(
+                        nombre_del_objeto=(
+                            row.get("objeto_nuevo") or ""
+                        ).strip(),
+                        objeto_categoria=categoria,
+                    )
 
-                    try:
-                        objeto = Objeto.objects.get(nombre_del_objeto__iexact=nombre_obj)
-                    except Objeto.DoesNotExist:
-                        objeto = Objeto.objects.create(
-                            nombre_del_objeto=nombre_obj,
-                            objeto_categoria=categoria,
-                        )
-                tipo_obj = row.get("tipo_objeto_existente")
-                if not tipo_obj:
-                    marca = (row.get("marca") or "").strip()
-                    material = (row.get("material") or "").strip()
+                tipo_objeto = row.get("tipo_objeto_existente")
+                if not tipo_objeto:
+                    marca = (row.get("marca") or "").strip() or None
+                    material = (row.get("material") or "").strip() or None
 
-                    if not marca:
-                        marca = "Sin marca"
-                    if not material:
-                        material = "Sin material"
-
-                    tipo_obj, _ = TipoObjeto.objects.get_or_create(
+                    tipo_objeto = TipoObjeto.objects.create(
                         objeto=objeto,
                         marca=marca,
                         material=material,
                     )
-                cantidad = row.get("cantidad") or 0
-                detalle = (row.get("detalle") or "").strip()
-                importancia = row.get("importancia") or 1
-                cantidad_mala = row.get("cantidad_mala") or 0
-                cantidad_pendiente = row.get("cantidad_pendiente") or 0
-                minimo_operativo = row.get("minimo_operativo") or 1
 
-                if cantidad_mala > 0:
-                    estado = "M"
-                elif cantidad_pendiente > 0:
-                    estado = "P"
-                else:
-                    estado = "B"
                 ObjetoLugar.objects.create(
                     lugar=lugar,
-                    tipo_de_objeto=tipo_obj,
-                    cantidad=cantidad,
-                    estado=estado,
-                    detalle=detalle,
-                    importancia=importancia,
-                    cantidad_mala=cantidad_mala,
-                    cantidad_pendiente=cantidad_pendiente,
-                    minimo_operativo=minimo_operativo,
+                    tipo_de_objeto=tipo_objeto,
+                    cantidad=row.get("cantidad"),
+                    detalle=(row.get("detalle") or "").strip(),
+                    importancia=row.get("importancia") or 1,
+                    cantidad_mala=row.get("cantidad_mala") or 0,
+                    cantidad_pendiente=(
+                        row.get("cantidad_pendiente") or 0
+                    ),
+                    minimo_operativo=(
+                        row.get("minimo_operativo") or 1
+                    ),
                 )
-            return redirect("detalle_lugar", lugar_id=lugar.id)
 
+            return redirect(
+                "detalle_lugar",
+                lugar_id=lugar.id,
+            )
     else:
         form = EstructuraCompletaForm()
-        objetos_formset = ObjetoLugarFilaFormSet(prefix="obj")
+        objetos_formset = ObjetoLugarFilaFormSet(
+            prefix="obj"
+        )
+
+    contexto = {
+        "form": form,
+        "objetos_formset": objetos_formset,
+        "sectores_existentes": list(
+            Sector.objects
+            .order_by("sector")
+            .values_list("sector", flat=True)
+        ),
+        "ubicaciones_existentes": list(
+            Ubicacion.objects
+            .select_related("sector")
+            .order_by("ubicacion")
+            .values(
+                "ubicacion",
+                "sector__sector",
+            )
+        ),
+        "pisos_existentes": list(
+            Piso.objects
+            .select_related("ubicacion")
+            .order_by(
+                "ubicacion__ubicacion",
+                "piso",
+            )
+            .values(
+                "piso",
+                "ubicacion_id",
+            )
+        ),
+        "tipos_lugar_existentes": list(
+            TipoLugar.objects
+            .order_by("tipo_de_lugar")
+            .values_list("tipo_de_lugar", flat=True)
+        ),
+        "lugares_existentes": list(
+            Lugar.objects
+            .select_related(
+                "piso",
+                "piso__ubicacion",
+                "piso__ubicacion__sector",
+            )
+            .order_by("nombre_del_lugar")
+            .values(
+                "nombre_del_lugar",
+                "piso_id",
+            )
+        ),
+        "categorias_existentes": list(
+            CategoriaObjeto.objects
+            .order_by("nombre_de_categoria")
+            .values_list("nombre_de_categoria", flat=True)
+        ),
+        "objetos_existentes": list(
+            Objeto.objects
+            .select_related("objeto_categoria")
+            .order_by("nombre_del_objeto")
+            .values(
+                "nombre_del_objeto",
+                "objeto_categoria__nombre_de_categoria",
+            )
+        ),
+    }
 
     return render(
         request,
         "crear_estructura.html",
-        {
-            "form": form,
-            "objetos_formset": objetos_formset,
-        },
+        contexto,
     )
+
 
 
 def signup(request):
@@ -326,13 +394,25 @@ def detalle_sector(request, sector_id):
 
 @login_required
 def crear_sector(request):
-    if request.method == "GET":
-        return render(request, "sector/crear_sector.html", {"form": CrearSector()})
-    form = CrearSector(request.POST)
-    if form.is_valid():
+    form = CrearSector(request.POST or None)
+
+    contexto = {
+        "form": form,
+        "sectores_existentes": list(
+            Sector.objects.order_by("sector").values_list("sector", flat=True)
+        ),
+    }
+
+    if request.method == "POST" and form.is_valid():
         form.save()
         return redirect("lista_sectores")
-    return render(request, "sector/crear_sector.html", {"form": form})
+
+    return render(
+        request,
+        "sector/crear_sector.html",
+        contexto,
+    )
+
 
 
 @login_required
@@ -401,13 +481,50 @@ def detalle_ubicacion(request, ubicacion_id):
 
 @login_required
 def crear_ubicacion(request):
-    if request.method == "GET":
-        return render(request, "ubicacion/crear_ubicacion.html", {"form": CrearUbicacion()})
-    form = CrearUbicacion(request.POST)
-    if form.is_valid():
+    initial = {}
+    sector_preseleccionado = None
+
+    sector_id = request.GET.get("sector", "").strip()
+
+    if sector_id:
+        try:
+            sector_preseleccionado = Sector.objects.get(pk=int(sector_id))
+            initial["sector"] = sector_preseleccionado
+        except (ValueError, Sector.DoesNotExist):
+            sector_preseleccionado = None
+
+    form = CrearUbicacion(
+        request.POST or None,
+        initial=initial if request.method == "GET" else None,
+    )
+
+    contexto = {
+        "form": form,
+        "sector_preseleccionado": sector_preseleccionado,
+        "ubicaciones_existentes": list(
+            Ubicacion.objects
+            .select_related("sector")
+            .order_by("ubicacion")
+            .values(
+                "ubicacion",
+                "sector__sector",
+            )
+        ),
+    }
+
+    if request.method == "POST" and form.is_valid():
         ubicacion = form.save()
-        return redirect("detalle_sector", sector_id=ubicacion.sector_id)
-    return render(request, "ubicacion/crear_ubicacion.html", {"form": form})
+        return redirect(
+            "detalle_sector",
+            sector_id=ubicacion.sector_id,
+        )
+
+    return render(
+        request,
+        "ubicacion/crear_ubicacion.html",
+        contexto,
+    )
+
 
 
 @login_required
@@ -479,13 +596,54 @@ def detalle_piso(request, piso_id):
 
 @login_required
 def crear_piso(request):
-    if request.method == "GET":
-        return render(request, "piso/crear_piso.html", {"form": CrearPiso()})
-    form = CrearPiso(request.POST)
-    if form.is_valid():
+    initial = {}
+    ubicacion_preseleccionada = None
+
+    ubicacion_id = request.GET.get("ubicacion", "").strip()
+
+    if ubicacion_id:
+        try:
+            ubicacion_preseleccionada = (
+                Ubicacion.objects
+                .select_related("sector")
+                .get(pk=int(ubicacion_id))
+            )
+            initial["ubicacion"] = ubicacion_preseleccionada
+        except (ValueError, Ubicacion.DoesNotExist):
+            ubicacion_preseleccionada = None
+
+    form = CrearPiso(
+        request.POST or None,
+        initial=initial if request.method == "GET" else None,
+    )
+
+    contexto = {
+        "form": form,
+        "ubicacion_preseleccionada": ubicacion_preseleccionada,
+        "pisos_existentes": list(
+            Piso.objects
+            .select_related("ubicacion")
+            .order_by("ubicacion__ubicacion", "piso")
+            .values(
+                "piso",
+                "ubicacion_id",
+            )
+        ),
+    }
+
+    if request.method == "POST" and form.is_valid():
         piso = form.save()
-        return redirect("detalle_ubicacion", ubicacion_id=piso.ubicacion_id)
-    return render(request, "piso/crear_piso.html", {"form": form})
+        return redirect(
+            "detalle_ubicacion",
+            ubicacion_id=piso.ubicacion_id,
+        )
+
+    return render(
+        request,
+        "piso/crear_piso.html",
+        contexto,
+    )
+
 
 @login_required
 def editar_piso(request, piso_id):
@@ -588,13 +746,73 @@ def detalle_lugar(request, lugar_id):
 
 @login_required
 def crear_lugar(request):
-    if request.method == "GET":
-        return render(request, "lugar/crear_lugar.html", {"form": CrearLugar()})
-    form = CrearLugar(request.POST)
-    if form.is_valid():
+    initial = {}
+    piso_preseleccionado = None
+
+    piso_id = request.GET.get("piso", "").strip()
+
+    if piso_id:
+        try:
+            piso_preseleccionado = (
+                Piso.objects
+                .select_related(
+                    "ubicacion",
+                    "ubicacion__sector",
+                )
+                .get(pk=int(piso_id))
+            )
+            initial["piso"] = piso_preseleccionado
+        except (ValueError, Piso.DoesNotExist):
+            piso_preseleccionado = None
+
+    form = CrearLugar(
+        request.POST or None,
+        initial=initial if request.method == "GET" else None,
+    )
+
+    lugares_existentes = list(
+        Lugar.objects
+        .select_related(
+            "piso",
+            "piso__ubicacion",
+            "piso__ubicacion__sector",
+            "lugar_tipo_lugar",
+        )
+        .order_by(
+            "piso__ubicacion__sector__sector",
+            "piso__ubicacion__ubicacion",
+            "piso__piso",
+            "nombre_del_lugar",
+        )
+        .values(
+            "nombre_del_lugar",
+            "piso_id",
+            "piso__piso",
+            "piso__ubicacion__ubicacion",
+            "piso__ubicacion__sector__sector",
+            "lugar_tipo_lugar__tipo_de_lugar",
+        )
+    )
+
+    contexto = {
+        "form": form,
+        "piso_preseleccionado": piso_preseleccionado,
+        "lugares_existentes": lugares_existentes,
+    }
+
+    if request.method == "POST" and form.is_valid():
         lugar = form.save()
-        return redirect("detalle_piso", piso_id=lugar.piso_id)
-    return render(request, "lugar/crear_lugar.html", {"form": form})
+        return redirect(
+            "detalle_lugar",
+            lugar_id=lugar.id,
+        )
+
+    return render(
+        request,
+        "lugar/crear_lugar.html",
+        contexto,
+    )
+
 
 
 @login_required
@@ -869,24 +1087,172 @@ def detalle_objeto_lugar(request, objeto_lugar_id):
 def crear_objeto_lugar(request, lugar_id):
     lugar = get_object_or_404(Lugar, pk=lugar_id)
 
+    tipos_catalogo = (
+        TipoObjeto.objects
+        .select_related("objeto", "objeto__objeto_categoria")
+        .all()
+        .order_by(
+            "objeto__nombre_del_objeto",
+            "marca",
+            "material",
+        )
+    )
+
+    objetos_catalogo = (
+        Objeto.objects
+        .select_related("objeto_categoria")
+        .all()
+        .order_by("nombre_del_objeto")
+    )
+
+    categorias_catalogo = CategoriaObjeto.objects.all().order_by("nombre_de_categoria")
+
+    nuevo_valores = {
+        "modo": request.POST.get("nuevo_modo", "nuevo") if request.method == "POST" else "nuevo",
+        "objeto_existente": request.POST.get("nuevo_objeto_existente", "") if request.method == "POST" else "",
+        "objeto_nombre": request.POST.get("nuevo_objeto_nombre", "") if request.method == "POST" else "",
+        "categoria_existente": request.POST.get("nueva_categoria_existente", "") if request.method == "POST" else "",
+        "categoria_nombre": request.POST.get("nueva_categoria_nombre", "") if request.method == "POST" else "",
+        "marca": request.POST.get("nueva_marca", "") if request.method == "POST" else "",
+        "material": request.POST.get("nuevo_material", "") if request.method == "POST" else "",
+    }
+
+    contexto = {
+        "lugar": lugar,
+        "tipos_catalogo": tipos_catalogo,
+        "objetos_catalogo": objetos_catalogo,
+        "categorias_catalogo": categorias_catalogo,
+        "nuevo_valores": nuevo_valores,
+    }
+
     if request.method == "GET":
+        contexto["form"] = CrearObjetoLugar()
         return render(
             request,
             "objeto_lugar/crear_objeto_lugar.html",
-            {"form": CrearObjetoLugar(), "lugar": lugar},
+            contexto,
         )
 
     form = CrearObjetoLugar(request.POST)
+    contexto["form"] = form
+
     if form.is_valid():
-        obj = form.save(commit=False)
-        obj.lugar = lugar
-        obj.save()
-        return redirect("detalle_lugar", lugar_id=lugar.id)
+        tipo_objeto = form.cleaned_data.get("tipo_de_objeto")
+
+        if not tipo_objeto:
+            modo = (request.POST.get("nuevo_modo") or "").strip()
+            objeto_existente_id = (request.POST.get("nuevo_objeto_existente") or "").strip()
+            objeto_nuevo_nombre = (request.POST.get("nuevo_objeto_nombre") or "").strip()
+            categoria_existente_id = (request.POST.get("nueva_categoria_existente") or "").strip()
+            categoria_nueva_nombre = (request.POST.get("nueva_categoria_nombre") or "").strip()
+            marca = (request.POST.get("nueva_marca") or "").strip()
+            material = (request.POST.get("nuevo_material") or "").strip()
+
+            objeto = None
+            categoria = None
+
+            if modo == "variante":
+                if not objeto_existente_id.isdigit():
+                    form.add_error(
+                        "tipo_de_objeto",
+                        "Selecciona el objeto al que quieres agregar una nueva marca o material.",
+                    )
+                else:
+                    objeto = Objeto.objects.filter(pk=int(objeto_existente_id)).first()
+                    if not objeto:
+                        form.add_error(
+                            "tipo_de_objeto",
+                            "El objeto seleccionado ya no existe.",
+                        )
+            else:
+                if not objeto_nuevo_nombre:
+                    form.add_error(
+                        "tipo_de_objeto",
+                        "Escribe el nombre del nuevo objeto.",
+                    )
+                else:
+                    objeto = Objeto.objects.filter(
+                        nombre_del_objeto__iexact=objeto_nuevo_nombre
+                    ).first()
+
+                    if not objeto:
+                        if categoria_existente_id.isdigit():
+                            categoria = CategoriaObjeto.objects.filter(
+                                pk=int(categoria_existente_id)
+                            ).first()
+
+                            if not categoria:
+                                form.add_error(
+                                    "tipo_de_objeto",
+                                    "La categoría seleccionada ya no existe.",
+                                )
+
+                        elif categoria_nueva_nombre:
+                            categoria = CategoriaObjeto.objects.filter(
+                                nombre_de_categoria__iexact=categoria_nueva_nombre
+                            ).first()
+
+                        else:
+                            form.add_error(
+                                "tipo_de_objeto",
+                                "Selecciona una categoría o escribe una nueva.",
+                            )
+
+            if not form.errors:
+                with transaction.atomic():
+                    if not objeto:
+                        if not categoria:
+                            categoria = CategoriaObjeto.objects.create(
+                                nombre_de_categoria=categoria_nueva_nombre
+                            )
+
+                        objeto = Objeto.objects.create(
+                            nombre_del_objeto=objeto_nuevo_nombre,
+                            objeto_categoria=categoria,
+                        )
+
+                    tipos_qs = TipoObjeto.objects.filter(objeto=objeto)
+
+                    if marca:
+                        tipos_qs = tipos_qs.filter(marca__iexact=marca)
+                    else:
+                        tipos_qs = tipos_qs.filter(
+                            Q(marca__isnull=True) | Q(marca__exact="")
+                        )
+
+                    if material:
+                        tipos_qs = tipos_qs.filter(material__iexact=material)
+                    else:
+                        tipos_qs = tipos_qs.filter(
+                            Q(material__isnull=True) | Q(material__exact="")
+                        )
+
+                    tipo_objeto = tipos_qs.first()
+
+                    if not tipo_objeto:
+                        tipo_objeto = TipoObjeto.objects.create(
+                            objeto=objeto,
+                            marca=marca,
+                            material=material,
+                        )
+
+                    obj = form.save(commit=False)
+                    obj.tipo_de_objeto = tipo_objeto
+                    obj.lugar = lugar
+                    obj.save()
+
+                return redirect("detalle_lugar", lugar_id=lugar.id)
+
+        else:
+            obj = form.save(commit=False)
+            obj.lugar = lugar
+            obj.save()
+            return redirect("detalle_lugar", lugar_id=lugar.id)
 
     return render(
         request,
         "objeto_lugar/crear_objeto_lugar.html",
-        {"form": form, "lugar": lugar},
+        contexto,
     )
 
 
@@ -1012,13 +1378,30 @@ def detalle_tipo_lugar(request, tipo_lugar_id):
 
 @login_required
 def crear_tipo_lugar(request):
-    if request.method == "GET":
-        return render(request, "tipo_lugar/crear_tipo_lugar.html", {"form": CrearTipoLugar()})
-    form = CrearTipoLugar(request.POST)
-    if form.is_valid():
-        form.save()
-        return redirect("lista_tipos_lugar")
-    return render(request, "tipo_lugar/crear_tipo_lugar.html", {"form": form})
+    form = CrearTipoLugar(request.POST or None)
+
+    contexto = {
+        "form": form,
+        "tipos_existentes": list(
+            TipoLugar.objects
+            .order_by("tipo_de_lugar")
+            .values_list("tipo_de_lugar", flat=True)
+        ),
+    }
+
+    if request.method == "POST" and form.is_valid():
+        tipo = form.save()
+        return redirect(
+            "detalle_tipo_lugar",
+            tipo_lugar_id=tipo.id,
+        )
+
+    return render(
+        request,
+        "tipo_lugar/crear_tipo_lugar.html",
+        contexto,
+    )
+
 
 
 @login_required
@@ -1081,17 +1464,29 @@ def detalle_categoria(request, categoria_id):
 
 @login_required
 def crear_categoria_objeto(request):
-    if request.method == "GET":
-        return render(
-            request,
-            "categoria/crear_categoria_objeto.html",
-            {"form": CrearCategoriaObjeto()},
+    form = CrearCategoriaObjeto(request.POST or None)
+
+    contexto = {
+        "form": form,
+        "categorias_existentes": list(
+            CategoriaObjeto.objects
+            .order_by("nombre_de_categoria")
+            .values_list("nombre_de_categoria", flat=True)
+        ),
+    }
+
+    if request.method == "POST" and form.is_valid():
+        categoria = form.save()
+        return redirect(
+            "detalle_categoria",
+            categoria_id=categoria.id,
         )
-    form = CrearCategoriaObjeto(request.POST)
-    if form.is_valid():
-        form.save()
-        return redirect("lista_categorias")
-    return render(request, "categoria/crear_categoria_objeto.html", {"form": form})
+
+    return render(
+        request,
+        "categoria/crear_categoria_objeto.html",
+        contexto,
+    )
 
 
 @login_required
@@ -1178,13 +1573,52 @@ def detalle_objeto(request, objeto_id):
 
 @login_required
 def crear_objeto(request):
-    if request.method == "GET":
-        return render(request, "objeto/crear_objeto.html", {"form": CrearObjeto()})
-    form = CrearObjeto(request.POST)
-    if form.is_valid():
-        form.save()
-        return redirect("lista_objetos")
-    return render(request, "objeto/crear_objeto.html", {"form": form})
+    initial = {}
+    categoria_preseleccionada = None
+
+    categoria_id = request.GET.get("categoria", "").strip()
+
+    if categoria_id:
+        try:
+            categoria_preseleccionada = CategoriaObjeto.objects.get(
+                pk=int(categoria_id)
+            )
+            initial["objeto_categoria"] = categoria_preseleccionada
+        except (ValueError, CategoriaObjeto.DoesNotExist):
+            categoria_preseleccionada = None
+
+    form = CrearObjeto(
+        request.POST or None,
+        initial=initial if request.method == "GET" else None,
+    )
+
+    contexto = {
+        "form": form,
+        "categoria_preseleccionada": categoria_preseleccionada,
+        "objetos_existentes": list(
+            Objeto.objects
+            .select_related("objeto_categoria")
+            .order_by("nombre_del_objeto")
+            .values(
+                "nombre_del_objeto",
+                "objeto_categoria__nombre_de_categoria",
+            )
+        ),
+    }
+
+    if request.method == "POST" and form.is_valid():
+        objeto = form.save()
+        return redirect(
+            "detalle_objeto",
+            objeto_id=objeto.id,
+        )
+
+    return render(
+        request,
+        "objeto/crear_objeto.html",
+        contexto,
+    )
+
 
 
 @login_required
@@ -1294,13 +1728,60 @@ def detalle_tipo_objeto(request, tipo_objeto_id):
 
 @login_required
 def crear_tipo_objeto(request):
-    if request.method == "GET":
-        return render(request, "tipo_objeto/crear_tipo_objeto.html", {"form": CrearTipoObjeto()})
-    form = CrearTipoObjeto(request.POST)
-    if form.is_valid():
-        form.save()
-        return redirect("lista_tipos_objeto")
-    return render(request, "tipo_objeto/crear_tipo_objeto.html", {"form": form})
+    initial = {}
+    objeto_preseleccionado = None
+
+    objeto_id = request.GET.get("objeto", "").strip()
+
+    if objeto_id:
+        try:
+            objeto_preseleccionado = (
+                Objeto.objects
+                .select_related("objeto_categoria")
+                .get(pk=int(objeto_id))
+            )
+            initial["objeto"] = objeto_preseleccionado
+        except (ValueError, Objeto.DoesNotExist):
+            objeto_preseleccionado = None
+
+    form = CrearTipoObjeto(
+        request.POST or None,
+        initial=initial if request.method == "GET" else None,
+    )
+
+    contexto = {
+        "form": form,
+        "objeto_preseleccionado": objeto_preseleccionado,
+        "variantes_existentes": list(
+            TipoObjeto.objects
+            .select_related("objeto")
+            .order_by(
+                "objeto__nombre_del_objeto",
+                "marca",
+                "material",
+            )
+            .values(
+                "objeto_id",
+                "objeto__nombre_del_objeto",
+                "marca",
+                "material",
+            )
+        ),
+    }
+
+    if request.method == "POST" and form.is_valid():
+        tipo = form.save()
+        return redirect(
+            "detalle_tipo_objeto",
+            tipo_objeto_id=tipo.id,
+        )
+
+    return render(
+        request,
+        "tipo_objeto/crear_tipo_objeto.html",
+        contexto,
+    )
+
 
 
 @login_required
@@ -2333,176 +2814,439 @@ def _split_tipo(tipo_str: str):
         marca, material = [x.strip() for x in tipo_str.split("-", 1)]
         return marca, material
     return tipo_str, ""
-
 def import_from_rows(rows):
-    def _piso_to_int(piso_raw: str) -> int:
+    def _piso_to_int(piso_raw):
         s = (piso_raw or "").strip()
         m = re.search(r"(\d+)", s)
         return int(m.group(1)) if m else 0
-    def _estado_to_code(estado_raw: str) -> str:
+
+    def _estado_to_code(estado_raw):
         s = (estado_raw or "").strip().lower()
-        if s in ("b", "bueno", "todo bueno", "operativo"):
+
+        if s in (
+            "b",
+            "bueno",
+            "todo bueno",
+            "operativo",
+            "funcionando",
+        ):
             return "B"
-        if s in ("p", "pendiente", "con pendientes"):
+
+        if s in (
+            "p",
+            "pendiente",
+            "con pendientes",
+            "por revisar",
+        ):
             return "P"
-        if s in ("m", "malo", "con fallas", "con unidades malas"):
+
+        if s in (
+            "m",
+            "malo",
+            "con fallas",
+            "con falla",
+            "con unidades malas",
+        ):
             return "M"
+
         return ""
-    def key(x):
-        return (x or "").strip().lower()
+
+    def key(value):
+        return (value or "").strip().casefold()
+
+    def normalizar_marca(value):
+        texto = (value or "").strip()
+        if texto.casefold() == "sin marca":
+            return ""
+        return texto
+
+    def normalizar_material(value):
+        texto = (value or "").strip()
+        if texto.casefold() == "sin material":
+            return ""
+        return texto
+
     created_ol = 0
     updated_ol = 0
+
     cache_sector = {}
-    cache_ubic = {}
+    cache_ubicacion = {}
     cache_piso = {}
-    cache_tl = {}
+    cache_tipo_lugar = {}
     cache_lugar = {}
-    cache_cat = {}
-    cache_obj = {}
-    cache_tipo = {}
+    cache_categoria = {}
+    cache_objeto = {}
+    cache_variante = {}
+
     with transaction.atomic():
         for r in rows:
             ubicacion = _clean_text(r.get("ubicacion"))
             sector = _clean_text(r.get("sector"))
             piso_raw = _clean_text(r.get("piso"))
-            tipo_de_lugar = _clean_text(r.get("tipo_de_lugar")) or "Sin especificar"
+            tipo_de_lugar = (
+                _clean_text(r.get("tipo_de_lugar"))
+                or "Sin especificar"
+            )
             lugar = _clean_text(r.get("lugar"))
-            categoria = _clean_text(r.get("categoria")) or "Sin categoría"
+            categoria = (
+                _clean_text(r.get("categoria"))
+                or "Sin categoría"
+            )
             objeto = _clean_text(r.get("objeto"))
             tipo_objeto_str = _clean_text(r.get("tipo_objeto"))
             marca_excel = _clean_text(r.get("marca"))
             material_excel = _clean_text(r.get("material"))
             detalle = _clean_text(r.get("detalle"))
             estado_excel = _estado_to_code(r.get("estado"))
+
             cantidad = _to_int(r.get("cantidad"), 0)
-            cantidad_mala = _to_int(r.get("cantidad_mala"), 0)
-            cantidad_pendiente = _to_int(r.get("cantidad_pendiente"), 0)
-            minimo_operativo = _to_int(r.get("minimo_operativo"), 1)
-            importancia = _importancia_to_int(r.get("importancia"))
-            if not (ubicacion and sector and lugar and objeto):
+            cantidad_mala = _to_int(
+                r.get("cantidad_mala"),
+                0,
+            )
+            cantidad_pendiente = _to_int(
+                r.get("cantidad_pendiente"),
+                0,
+            )
+            minimo_operativo = _to_int(
+                r.get("minimo_operativo"),
+                1,
+            )
+            importancia = _importancia_to_int(
+                r.get("importancia")
+            )
+
+            if not (
+                ubicacion
+                and sector
+                and lugar
+                and objeto
+            ):
                 continue
+
             if cantidad <= 0:
                 continue
+
             if cantidad_mala < 0:
                 cantidad_mala = 0
+
             if cantidad_pendiente < 0:
                 cantidad_pendiente = 0
+
             if minimo_operativo < 1:
                 minimo_operativo = 1
+
             if minimo_operativo > cantidad:
                 minimo_operativo = cantidad
-            if cantidad_mala == 0 and cantidad_pendiente == 0:
+
+            if (
+                cantidad_mala == 0
+                and cantidad_pendiente == 0
+            ):
                 if estado_excel == "M":
                     cantidad_mala = cantidad
                 elif estado_excel == "P":
                     cantidad_pendiente = cantidad
-            if cantidad_mala + cantidad_pendiente > cantidad:
+
+            if (
+                cantidad_mala
+                + cantidad_pendiente
+                > cantidad
+            ):
                 continue
+
             if cantidad_mala > 0:
                 estado = "M"
             elif cantidad_pendiente > 0:
                 estado = "P"
             else:
                 estado = "B"
-            ks = key(sector)
-            if ks in cache_sector:
-                sec_obj = cache_sector[ks]
+
+            sector_key = key(sector)
+
+            if sector_key in cache_sector:
+                sector_obj = cache_sector[sector_key]
             else:
-                sec_obj, _ = Sector.objects.get_or_create(sector=sector)
-                cache_sector[ks] = sec_obj
-            ku = (key(ubicacion), sec_obj.id)
-            if ku in cache_ubic:
-                ubi_obj = cache_ubic[ku]
-            else:
-                ubi_obj, _ = Ubicacion.objects.get_or_create(
-                    ubicacion=ubicacion,
-                    sector=sec_obj,
+                sector_obj = (
+                    Sector.objects
+                    .filter(sector__iexact=sector)
+                    .first()
                 )
-                cache_ubic[ku] = ubi_obj
-            piso_int = _piso_to_int(piso_raw)
-            kp = (piso_int, ubi_obj.id)
-            if kp in cache_piso:
-                piso_obj = cache_piso[kp]
-            else:
-                piso_obj, _ = Piso.objects.get_or_create(
-                    piso=piso_int,
-                    ubicacion=ubi_obj,
-                )
-                cache_piso[kp] = piso_obj
-            ktl = key(tipo_de_lugar)
-            if ktl in cache_tl:
-                tl_obj = cache_tl[ktl]
-            else:
-                tl_obj, _ = TipoLugar.objects.get_or_create(
-                    tipo_de_lugar=tipo_de_lugar
-                )
-                cache_tl[ktl] = tl_obj
-            kl = (key(lugar), piso_obj.id, tl_obj.id)
-            if kl in cache_lugar:
-                lug_obj = cache_lugar[kl]
-            else:
-                lug_obj, _ = Lugar.objects.get_or_create(
-                    nombre_del_lugar=lugar,
-                    piso=piso_obj,
-                    lugar_tipo_lugar=tl_obj,
-                )
-                cache_lugar[kl] = lug_obj
-            kc = key(categoria)
-            if kc in cache_cat:
-                cat_obj = cache_cat[kc]
-            else:
-                cat_obj, _ = CategoriaObjeto.objects.get_or_create(
-                    nombre_de_categoria=categoria
-                )
-                cache_cat[kc] = cat_obj
-            ko = key(objeto)
-            if ko in cache_obj:
-                obj_obj = cache_obj[ko]
-            else:
-                try:
-                    obj_obj = Objeto.objects.get(nombre_del_objeto__iexact=objeto)
-                except Objeto.DoesNotExist:
-                    obj_obj = Objeto.objects.create(
-                        nombre_del_objeto=objeto,
-                        objeto_categoria=cat_obj,
+
+                if not sector_obj:
+                    sector_obj = Sector.objects.create(
+                        sector=sector
                     )
-                cache_obj[ko] = obj_obj
-            if marca_excel or material_excel:
-                marca = marca_excel or "Sin marca"
-                material = material_excel or "Sin material"
+
+                cache_sector[sector_key] = sector_obj
+
+            ubicacion_key = key(ubicacion)
+
+            if ubicacion_key in cache_ubicacion:
+                ubicacion_obj = cache_ubicacion[
+                    ubicacion_key
+                ]
             else:
-                marca, material = _split_tipo(tipo_objeto_str)
-                if not marca:
-                    marca = "Sin marca"
-                if not material:
-                    material = "Sin material"
-            kt = (obj_obj.id, key(marca), key(material))
-            if kt in cache_tipo:
-                tipo_obj = cache_tipo[kt]
-            else:
-                tipo_obj, _ = TipoObjeto.objects.get_or_create(
-                    objeto=obj_obj,
-                    marca=marca,
-                    material=material,
+                ubicacion_obj = (
+                    Ubicacion.objects
+                    .select_related("sector")
+                    .filter(ubicacion__iexact=ubicacion)
+                    .first()
                 )
-                cache_tipo[kt] = tipo_obj
-            obj_lugar_existente = ObjetoLugar.objects.filter(
-                lugar=lug_obj,
-                tipo_de_objeto=tipo_obj,
-            ).order_by("id").first()
+
+                if ubicacion_obj:
+                    if (
+                        ubicacion_obj.sector_id
+                        != sector_obj.id
+                    ):
+                        raise ValueError(
+                            f'La ubicación "{ubicacion}" ya existe '
+                            f'en el sector '
+                            f'"{ubicacion_obj.sector.sector}" y no '
+                            f'puede importarse también en '
+                            f'"{sector_obj.sector}".'
+                        )
+                else:
+                    ubicacion_obj = Ubicacion.objects.create(
+                        ubicacion=ubicacion,
+                        sector=sector_obj,
+                    )
+
+                cache_ubicacion[
+                    ubicacion_key
+                ] = ubicacion_obj
+
+            piso_int = _piso_to_int(piso_raw)
+            piso_key = (
+                piso_int,
+                ubicacion_obj.id,
+            )
+
+            if piso_key in cache_piso:
+                piso_obj = cache_piso[piso_key]
+            else:
+                piso_obj = (
+                    Piso.objects
+                    .filter(
+                        piso=piso_int,
+                        ubicacion=ubicacion_obj,
+                    )
+                    .first()
+                )
+
+                if not piso_obj:
+                    piso_obj = Piso.objects.create(
+                        piso=piso_int,
+                        ubicacion=ubicacion_obj,
+                    )
+
+                cache_piso[piso_key] = piso_obj
+
+            tipo_lugar_key = key(tipo_de_lugar)
+
+            if tipo_lugar_key in cache_tipo_lugar:
+                tipo_lugar_obj = cache_tipo_lugar[
+                    tipo_lugar_key
+                ]
+            else:
+                tipo_lugar_obj = (
+                    TipoLugar.objects
+                    .filter(
+                        tipo_de_lugar__iexact=tipo_de_lugar
+                    )
+                    .first()
+                )
+
+                if not tipo_lugar_obj:
+                    tipo_lugar_obj = TipoLugar.objects.create(
+                        tipo_de_lugar=tipo_de_lugar
+                    )
+
+                cache_tipo_lugar[
+                    tipo_lugar_key
+                ] = tipo_lugar_obj
+
+            lugar_key = (
+                key(lugar),
+                piso_obj.id,
+            )
+
+            if lugar_key in cache_lugar:
+                lugar_obj = cache_lugar[lugar_key]
+            else:
+                lugar_obj = (
+                    Lugar.objects
+                    .select_related("lugar_tipo_lugar")
+                    .filter(
+                        piso=piso_obj,
+                        nombre_del_lugar__iexact=lugar,
+                    )
+                    .first()
+                )
+
+                if lugar_obj:
+                    if (
+                        lugar_obj.lugar_tipo_lugar_id
+                        != tipo_lugar_obj.id
+                    ):
+                        raise ValueError(
+                            f'El lugar "{lugar}" ya existe en '
+                            f'Piso {piso_obj.piso} como tipo '
+                            f'"{lugar_obj.lugar_tipo_lugar.tipo_de_lugar}".'
+                        )
+                else:
+                    lugar_obj = Lugar.objects.create(
+                        nombre_del_lugar=lugar,
+                        piso=piso_obj,
+                        lugar_tipo_lugar=tipo_lugar_obj,
+                    )
+
+                cache_lugar[lugar_key] = lugar_obj
+
+            categoria_key = key(categoria)
+
+            if categoria_key in cache_categoria:
+                categoria_obj = cache_categoria[
+                    categoria_key
+                ]
+            else:
+                categoria_obj = (
+                    CategoriaObjeto.objects
+                    .filter(
+                        nombre_de_categoria__iexact=categoria
+                    )
+                    .first()
+                )
+
+                if not categoria_obj:
+                    categoria_obj = (
+                        CategoriaObjeto.objects.create(
+                            nombre_de_categoria=categoria
+                        )
+                    )
+
+                cache_categoria[
+                    categoria_key
+                ] = categoria_obj
+
+            objeto_key = key(objeto)
+
+            if objeto_key in cache_objeto:
+                objeto_obj = cache_objeto[objeto_key]
+            else:
+                objeto_obj = (
+                    Objeto.objects
+                    .select_related("objeto_categoria")
+                    .filter(
+                        nombre_del_objeto__iexact=objeto
+                    )
+                    .first()
+                )
+
+                if objeto_obj:
+                    if (
+                        objeto_obj.objeto_categoria_id
+                        != categoria_obj.id
+                    ):
+                        raise ValueError(
+                            f'El objeto "{objeto}" ya existe '
+                            f'en la categoría '
+                            f'"{objeto_obj.objeto_categoria.nombre_de_categoria}".'
+                        )
+                else:
+                    objeto_obj = Objeto.objects.create(
+                        nombre_del_objeto=objeto,
+                        objeto_categoria=categoria_obj,
+                    )
+
+                cache_objeto[
+                    objeto_key
+                ] = objeto_obj
+
+            if marca_excel or material_excel:
+                marca = normalizar_marca(marca_excel)
+                material = normalizar_material(
+                    material_excel
+                )
+            else:
+                marca, material = _split_tipo(
+                    tipo_objeto_str
+                )
+                marca = normalizar_marca(marca)
+                material = normalizar_material(material)
+
+            variante_key = (
+                objeto_obj.id,
+                key(marca),
+                key(material),
+            )
+
+            if variante_key in cache_variante:
+                tipo_obj = cache_variante[variante_key]
+            else:
+                tipo_obj = None
+
+                for existente in (
+                    TipoObjeto.objects
+                    .filter(objeto=objeto_obj)
+                ):
+                    marca_existente = normalizar_marca(
+                        existente.marca
+                    )
+                    material_existente = normalizar_material(
+                        existente.material
+                    )
+
+                    if (
+                        key(marca_existente)
+                        == key(marca)
+                        and key(material_existente)
+                        == key(material)
+                    ):
+                        tipo_obj = existente
+                        break
+
+                if not tipo_obj:
+                    tipo_obj = TipoObjeto.objects.create(
+                        objeto=objeto_obj,
+                        marca=marca or None,
+                        material=material or None,
+                    )
+
+                cache_variante[
+                    variante_key
+                ] = tipo_obj
+
+            obj_lugar_existente = (
+                ObjetoLugar.objects
+                .filter(
+                    lugar=lugar_obj,
+                    tipo_de_objeto=tipo_obj,
+                )
+                .order_by("id")
+                .first()
+            )
+
             if obj_lugar_existente:
                 obj_lugar_existente.cantidad = cantidad
-                obj_lugar_existente.cantidad_mala = cantidad_mala
-                obj_lugar_existente.cantidad_pendiente = cantidad_pendiente
-                obj_lugar_existente.minimo_operativo = minimo_operativo
+                obj_lugar_existente.cantidad_mala = (
+                    cantidad_mala
+                )
+                obj_lugar_existente.cantidad_pendiente = (
+                    cantidad_pendiente
+                )
+                obj_lugar_existente.minimo_operativo = (
+                    minimo_operativo
+                )
                 obj_lugar_existente.importancia = importancia
                 obj_lugar_existente.estado = estado
                 obj_lugar_existente.detalle = detalle
                 obj_lugar_existente.save()
+
                 updated_ol += 1
             else:
                 ObjetoLugar.objects.create(
-                    lugar=lug_obj,
+                    lugar=lugar_obj,
                     tipo_de_objeto=tipo_obj,
                     cantidad=cantidad,
                     cantidad_mala=cantidad_mala,
@@ -2512,8 +3256,13 @@ def import_from_rows(rows):
                     estado=estado,
                     detalle=detalle,
                 )
+
                 created_ol += 1
-    return {"created": created_ol, "updated": updated_ol}
+
+    return {
+        "created": created_ol,
+        "updated": updated_ol,
+    }
 
 @login_required
 @require_http_methods(["GET", "POST"])

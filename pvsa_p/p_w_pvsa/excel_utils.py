@@ -317,27 +317,65 @@ def build_excel_sectores(ubicaciones_qs):
     wb.save(bio)
     bio.seek(0)
     return bio.getvalue()
-
 def build_excel_plantilla_carga_masiva():
     wb = Workbook()
     ws = wb.active
     ws.title = "ObjetosLugar"
 
-    THIN = Side(style="thin", color="D1D5DB")
-    BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
+    THIN = Side(
+        style="thin",
+        color="D1D5DB",
+    )
+    BORDER = Border(
+        left=THIN,
+        right=THIN,
+        top=THIN,
+        bottom=THIN,
+    )
 
-    FILL_HDR = PatternFill("solid", fgColor="E5E7EB")
-    FILL_TITLE = PatternFill("solid", fgColor="CFE2F3")
-    FILL_HELP = PatternFill("solid", fgColor="FFF2CC")
-    FILL_REQ = PatternFill("solid", fgColor="FCE4D6")
+    FILL_HDR = PatternFill(
+        "solid",
+        fgColor="E5E7EB",
+    )
+    FILL_TITLE = PatternFill(
+        "solid",
+        fgColor="CFE2F3",
+    )
+    FILL_HELP = PatternFill(
+        "solid",
+        fgColor="FFF2CC",
+    )
+    FILL_REQ = PatternFill(
+        "solid",
+        fgColor="FCE4D6",
+    )
 
-    FONT_TITLE = Font(bold=True, size=13)
-    FONT_HDR = Font(bold=True, size=10)
-    FONT_CELL = Font(size=10)
-    FONT_HELP_TITLE = Font(bold=True, size=12)
+    FONT_TITLE = Font(
+        bold=True,
+        size=13,
+    )
+    FONT_HDR = Font(
+        bold=True,
+        size=10,
+    )
+    FONT_CELL = Font(
+        size=10,
+    )
+    FONT_HELP_TITLE = Font(
+        bold=True,
+        size=12,
+    )
 
-    CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
-    LEFT = Alignment(horizontal="left", vertical="top", wrap_text=True)
+    CENTER = Alignment(
+        horizontal="center",
+        vertical="center",
+        wrap_text=True,
+    )
+    LEFT = Alignment(
+        horizontal="left",
+        vertical="top",
+        wrap_text=True,
+    )
 
     headers = [
         "Sector",
@@ -347,10 +385,11 @@ def build_excel_plantilla_carga_masiva():
         "Lugar",
         "Categoría",
         "Objeto",
-        "Tipo",
+        "Marca",
+        "Material",
         "Cantidad total",
-        "Cantidad mala",
-        "Cantidad pendiente",
+        "Con falla",
+        "Por revisar",
         "Mínimo operativo",
         "Importancia",
         "Detalle",
@@ -361,38 +400,46 @@ def build_excel_plantilla_carga_masiva():
         "B": 24,
         "C": 10,
         "D": 18,
-        "E": 26,
-        "F": 18,
+        "E": 28,
+        "F": 20,
         "G": 24,
-        "H": 26,
-        "I": 16,
+        "H": 18,
+        "I": 18,
         "J": 16,
-        "K": 20,
-        "L": 18,
-        "M": 20,
-        "N": 38,
-        "P": 24,
+        "K": 14,
+        "L": 16,
+        "M": 18,
+        "N": 20,
+        "O": 38,
         "Q": 24,
         "R": 24,
         "S": 24,
         "T": 24,
         "U": 24,
         "V": 24,
+        "W": 24,
     }
 
     for col, width in widths.items():
         ws.column_dimensions[col].width = width
 
-    ws.merge_cells("A1:N1")
+    ws.merge_cells("A1:O1")
     ws["A1"] = "Plantilla · Carga Masiva"
     ws["A1"].font = FONT_TITLE
     ws["A1"].alignment = CENTER
     ws["A1"].fill = FILL_TITLE
 
-    hdr_row = 3
+    header_row = 3
 
-    for i, header in enumerate(headers, start=1):
-        cell = ws.cell(row=hdr_row, column=i, value=header)
+    for index, header in enumerate(
+        headers,
+        start=1,
+    ):
+        cell = ws.cell(
+            row=header_row,
+            column=index,
+            value=header,
+        )
         cell.font = FONT_HDR
         cell.alignment = CENTER
         cell.border = BORDER
@@ -415,15 +462,16 @@ def build_excel_plantilla_carga_masiva():
             1,
             "Baño",
             "Baño hombres principal",
-            "Sanitario",
+            "Sanitarios",
             "WC",
-            "Sin marca - Sin material",
+            "",
+            "Cerámica",
             5,
-            3,
+            1,
             0,
             3,
             "Alta / Crítica",
-            "Prueba: 3 WC malos de 5.",
+            "Un WC con falla.",
         ],
         [
             "Camino Costero",
@@ -431,47 +479,16 @@ def build_excel_plantilla_carga_masiva():
             1,
             "Baño",
             "Baño hombres principal",
-            "Infraestructura",
+            "Iluminación",
             "Luz",
-            "Sin marca - Sin material",
+            "Philips",
+            "LED",
             6,
             0,
             1,
             4,
             "Media",
-            "Una luz pendiente de revisión.",
-        ],
-        [
-            "Camino Costero",
-            "Módulos Camino Costero",
-            1,
-            "Oficina",
-            "Oficina administración",
-            "Climatización",
-            "Aire acondicionado",
-            "Sin marca - Sin material",
-            11,
-            2,
-            1,
-            3,
-            "Media",
-            "Aire acondicionado pendiente, importante en verano.",
-        ],
-        [
-            "Camino Costero",
-            "Módulos Camino Costero",
-            1,
-            "Oficina",
-            "Oficina administración",
-            "Mobiliario",
-            "Escritorio",
-            "Sin marca - Sin material",
-            4,
-            0,
-            0,
-            2,
-            "Media",
-            "Escritorios operativos.",
+            "Una unidad por revisar.",
         ],
         [
             "Terminal Costa",
@@ -481,61 +498,88 @@ def build_excel_plantilla_carga_masiva():
             "Sala bombas",
             "Equipo crítico",
             "Bomba principal",
-            "Sin marca - Sin material",
+            "",
+            "",
             2,
             1,
             0,
             2,
             "Alta / Crítica",
-            "Una bomba fuera de servicio. Mínimo requerido: 2.",
+            "Una bomba con falla.",
         ],
     ]
 
     start_row = 4
 
-    for row_index, row_data in enumerate(examples, start=start_row):
-        for col_index, value in enumerate(row_data, start=1):
-            cell = ws.cell(row=row_index, column=col_index, value=value)
+    for row_index, row_data in enumerate(
+        examples,
+        start=start_row,
+    ):
+        for col_index, value in enumerate(
+            row_data,
+            start=1,
+        ):
+            cell = ws.cell(
+                row=row_index,
+                column=col_index,
+                value=value,
+            )
             cell.font = FONT_CELL
             cell.border = BORDER
 
-            if col_index in (3, 9, 10, 11, 12, 13):
+            if col_index in (
+                3,
+                10,
+                11,
+                12,
+                13,
+                14,
+            ):
                 cell.alignment = CENTER
             else:
                 cell.alignment = LEFT
 
-    for row in range(start_row + len(examples), 2001):
-        for col in range(1, len(headers) + 1):
-            cell = ws.cell(row=row, column=col)
+    for row in range(
+        start_row + len(examples),
+        2001,
+    ):
+        for col in range(
+            1,
+            len(headers) + 1,
+        ):
+            cell = ws.cell(
+                row=row,
+                column=col,
+            )
             cell.border = BORDER
             cell.font = FONT_CELL
 
-    dv_cantidad_total = DataValidation(
+    dv_total = DataValidation(
         type="whole",
         operator="greaterThanOrEqual",
         formula1="1",
         allow_blank=False,
     )
-    ws.add_data_validation(dv_cantidad_total)
-    dv_cantidad_total.add("I4:I2000")
+    ws.add_data_validation(dv_total)
+    dv_total.add("J4:J2000")
 
-    dv_cantidad_mala = DataValidation(
+    dv_falla = DataValidation(
         type="whole",
         operator="greaterThanOrEqual",
         formula1="0",
         allow_blank=True,
     )
-    ws.add_data_validation(dv_cantidad_mala)
-    dv_cantidad_mala.add("J4:J2000")
+    ws.add_data_validation(dv_falla)
+    dv_falla.add("K4:K2000")
 
-    dv_cantidad_pendiente = DataValidation(
+    dv_revisar = DataValidation(
         type="whole",
         operator="greaterThanOrEqual",
         formula1="0",
         allow_blank=True,
     )
-    ws.add_data_validation(dv_cantidad_pendiente)
-    dv_cantidad_pendiente.add("K4:K2000")
+    ws.add_data_validation(dv_revisar)
+    dv_revisar.add("L4:L2000")
 
     dv_minimo = DataValidation(
         type="whole",
@@ -544,7 +588,7 @@ def build_excel_plantilla_carga_masiva():
         allow_blank=True,
     )
     ws.add_data_validation(dv_minimo)
-    dv_minimo.add("L4:L2000")
+    dv_minimo.add("M4:M2000")
 
     dv_importancia = DataValidation(
         type="list",
@@ -552,67 +596,68 @@ def build_excel_plantilla_carga_masiva():
         allow_blank=True,
     )
     ws.add_data_validation(dv_importancia)
-    dv_importancia.add("M4:M2000")
+    dv_importancia.add("N4:N2000")
 
     ws.freeze_panes = "A4"
-    ws.auto_filter.ref = "A3:N2000"
+    ws.auto_filter.ref = "A3:O2000"
 
-    ws.merge_cells("P1:V1")
-    ws["P1"] = "Ayuda rápida"
-    ws["P1"].font = FONT_HELP_TITLE
-    ws["P1"].fill = FILL_TITLE
-    ws["P1"].alignment = CENTER
+    ws.merge_cells("Q1:W1")
+    ws["Q1"] = "Ayuda rápida"
+    ws["Q1"].font = FONT_HELP_TITLE
+    ws["Q1"].fill = FILL_TITLE
+    ws["Q1"].alignment = CENTER
 
     help_text = (
-        "Una fila = 1 objeto en un lugar.\n\n"
-        "COLUMNAS OBLIGATORIAS:\n"
+        "Una fila = un objeto en un lugar.\n\n"
+        "OBLIGATORIO:\n"
         "• Sector\n"
         "• Ubicación\n"
         "• Lugar\n"
         "• Objeto\n"
         "• Cantidad total\n\n"
-        "COLUMNAS RECOMENDADAS:\n"
+        "OPCIONAL:\n"
         "• Piso\n"
         "• Tipo de lugar\n"
         "• Categoría\n"
-        "• Tipo\n"
-        "• Cantidad mala\n"
-        "• Cantidad pendiente\n"
+        "• Marca\n"
+        "• Material\n"
+        "• Con falla\n"
+        "• Por revisar\n"
         "• Mínimo operativo\n"
-        "• Importancia\n\n"
-        "IMPORTANTE:\n"
-        "• Ya no debes escribir Estado.\n"
-        "• La condición se calcula automáticamente:\n"
-        "  - Si hay cantidad mala: Con unidades malas.\n"
-        "  - Si no hay malas, pero hay pendientes: Con pendientes.\n"
-        "  - Si malas y pendientes son 0: Todo bueno.\n\n"
-        "IMPORTANCIA:\n"
-        "• Baja\n"
-        "• Media\n"
-        "• Alta / Crítica\n\n"
-        "COLUMNA TIPO:\n"
-        "Formato recomendado:\n"
-        "Marca - Material\n\n"
-        "Ejemplos:\n"
-        "• Sin marca - Sin material\n"
-        "• Philips - LED\n"
-        "• Sin marca - Plástico\n\n"
+        "• Importancia\n"
+        "• Detalle\n\n"
+        "ESTADO:\n"
+        "No se escribe manualmente.\n"
+        "PVSA lo calcula automáticamente:\n"
+        "• Si hay unidades con falla → Con falla.\n"
+        "• Si no hay fallas y hay unidades por revisar → Por revisar.\n"
+        "• Si ambos valores son 0 → Funcionando.\n\n"
+        "VARIANTES:\n"
+        "Marca y material permiten diferenciar variantes "
+        "del mismo objeto.\n"
+        "Puedes dejar ambos vacíos si no corresponde.\n\n"
         "No cambies los nombres de los encabezados."
     )
 
-    ws.merge_cells("P2:V24")
-    ws["P2"] = help_text
-    ws["P2"].font = FONT_CELL
-    ws["P2"].fill = FILL_HELP
-    ws["P2"].alignment = LEFT
+    ws.merge_cells("Q2:W27")
+    ws["Q2"] = help_text
+    ws["Q2"].font = FONT_CELL
+    ws["Q2"].fill = FILL_HELP
+    ws["Q2"].alignment = LEFT
 
-    for row in range(1, 25):
-        for col in range(16, 23):
-            ws.cell(row=row, column=col).border = BORDER
+    for row in range(1, 28):
+        for col in range(17, 24):
+            ws.cell(
+                row=row,
+                column=col,
+            ).border = BORDER
 
     for row in range(3, 2001):
-        for col in range(9, 14):
-            ws.cell(row=row, column=col).alignment = CENTER
+        for col in range(10, 15):
+            ws.cell(
+                row=row,
+                column=col,
+            ).alignment = CENTER
 
     bio = BytesIO()
     wb.save(bio)

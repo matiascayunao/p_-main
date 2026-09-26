@@ -1,164 +1,189 @@
 {% extends "base.html" %}
 
+{% block title %}{{ titulo }} · PVSA{% endblock %}
+
 {% block content %}
-<style>
-  .edit-page {
-    max-width: 860px;
-    margin: 0 auto;
-  }
+<div class="py-2 py-lg-3 edit-page">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-9 col-xl-7">
 
-  .edit-card {
-    border: 0;
-    border-radius: 18px;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-    overflow: hidden;
-  }
-
-  .edit-header {
-    background: #ffffff;
-    border-bottom: 1px solid #eef0f2;
-    padding: 1.25rem 1.5rem;
-  }
-
-  .edit-body {
-    padding: 1.5rem;
-  }
-
-  .form-row-custom {
-    margin-bottom: 1rem;
-  }
-
-  .form-row-custom label {
-    font-weight: 600;
-    font-size: 0.9rem;
-    margin-bottom: 0.35rem;
-    color: #343a40;
-  }
-
-  .form-row-custom input,
-  .form-row-custom select,
-  .form-row-custom textarea {
-    display: block;
-    width: 100%;
-    padding: 0.45rem 0.75rem;
-    font-size: 0.95rem;
-    line-height: 1.5;
-    color: #212529;
-    background-color: #fff;
-    border: 1px solid #ced4da;
-    border-radius: 0.55rem;
-  }
-
-  .form-row-custom input:focus,
-  .form-row-custom select:focus,
-  .form-row-custom textarea:focus {
-    border-color: #86b7fe;
-    outline: 0;
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
-  }
-
-  .help-text {
-    font-size: 0.78rem;
-    color: #6c757d;
-    margin-top: 0.25rem;
-  }
-
-  .field-error {
-    font-size: 0.8rem;
-    color: #dc3545;
-    margin-top: 0.25rem;
-  }
-
-  .required-mark {
-    color: #dc3545;
-    margin-left: 2px;
-  }
-
-  .edit-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    border-top: 1px solid #eef0f2;
-    padding-top: 1rem;
-    margin-top: 1.25rem;
-  }
-</style>
-
-<div class="container-fluid py-4 edit-page">
-
-  <div class="card edit-card">
-    <div class="edit-header">
-      <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
-        <div>
-          <h3 class="h5 fw-bold mb-1">
-            {{ titulo }}
-          </h3>
-          <div class="text-muted small">
-            Modifica los datos necesarios y luego guarda los cambios.
+      <div class="mb-4">
+        {% if cancel_url %}
+          <div class="mb-3">
+            <a href="{{ cancel_url }}" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-arrow-left me-1"></i>
+              Volver
+            </a>
           </div>
+        {% endif %}
+
+        <div class="d-inline-flex align-items-center gap-2 pvsa-section-badge mb-2">
+          <i class="bi bi-pencil-square"></i>
+          Edición
         </div>
 
-        <a class="btn btn-outline-secondary btn-sm" href="{{ cancel_url }}">
-          Cancelar
-        </a>
-      </div>
-    </div>
+        <h1 class="h3 fw-bold mb-1">{{ titulo }}</h1>
 
-    <div class="edit-body">
+        <div class="text-muted">
+          Modifica solo lo necesario y guarda los cambios.
+        </div>
+      </div>
+
       <form method="post" novalidate>
         {% csrf_token %}
 
         {% if form.non_field_errors %}
-          <div class="alert alert-danger rounded-4">
-            {% for error in form.non_field_errors %}
-              <div>{{ error }}</div>
-            {% endfor %}
+          <div class="alert alert-danger rounded-4 shadow-sm">
+            {{ form.non_field_errors }}
           </div>
         {% endif %}
 
-        {% for field in form %}
-          {% if field.is_hidden %}
-            {{ field }}
-          {% else %}
-            <div class="form-row-custom">
-              <label for="{{ field.id_for_label }}">
-                {{ field.label }}
-                {% if field.field.required %}
-                  <span class="required-mark">*</span>
-                {% endif %}
-              </label>
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
 
-              {{ field }}
+          <div class="card-body p-3 p-md-4 edit-form">
 
-              {% if field.help_text %}
-                <div class="help-text">
-                  {{ field.help_text }}
+            <div class="d-flex align-items-center gap-3 mb-4">
+              <div class="section-icon">
+                <i class="bi bi-pencil"></i>
+              </div>
+
+              <div>
+                <h2 class="h5 fw-bold mb-1">Datos del registro</h2>
+                <div class="small text-muted">
+                  Los campos que no cambies conservarán su valor actual.
                 </div>
-              {% endif %}
-
-              {% if field.errors %}
-                {% for error in field.errors %}
-                  <div class="field-error">
-                    {{ error }}
-                  </div>
-                {% endfor %}
-              {% endif %}
+              </div>
             </div>
-          {% endif %}
-        {% endfor %}
 
-        <div class="edit-actions">
-          <button class="btn btn-primary px-4" type="submit">
-            Guardar
-          </button>
+            <div class="row g-4">
+              {% for field in form %}
+                <div class="col-12">
 
-          <a class="btn btn-outline-secondary" href="{{ cancel_url }}">
-            Cancelar
-          </a>
+                  <label class="form-label fw-semibold" for="{{ field.id_for_label }}">
+                    {{ field.label }}
+                    {% if field.field.required %}
+                      <span class="text-danger">*</span>
+                    {% endif %}
+                  </label>
+
+                  {{ field }}
+
+                  {% if field.errors %}
+                    <div class="field-error mt-2">
+                      <i class="bi bi-exclamation-circle me-1"></i>
+                      {{ field.errors|striptags }}
+                    </div>
+                  {% endif %}
+
+                  {% if field.help_text %}
+                    <div class="form-text">
+                      {{ field.help_text }}
+                    </div>
+                  {% endif %}
+
+                </div>
+              {% endfor %}
+            </div>
+
+          </div>
+
+          <div class="card-footer bg-white border-top p-3 p-md-4">
+            <div class="d-flex flex-column-reverse flex-sm-row justify-content-end gap-2">
+
+              {% if cancel_url %}
+                <a href="{{ cancel_url }}" class="btn btn-outline-secondary">
+                  Cancelar
+                </a>
+              {% endif %}
+
+              <button type="submit" class="btn pvsa-btn px-4">
+                <i class="bi bi-check-circle me-1"></i>
+                Guardar cambios
+              </button>
+
+            </div>
+          </div>
+
         </div>
       </form>
+
     </div>
   </div>
-
 </div>
+
+<style>
+.edit-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.pvsa-section-badge {
+  color: var(--pvsa-accent);
+  background: rgba(6, 182, 185, .08);
+  border: 1px solid rgba(6, 182, 185, .20);
+  border-radius: 999px;
+  padding: .35rem .7rem;
+  font-size: .82rem;
+  font-weight: 700;
+}
+
+.section-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  background: rgba(6, 182, 185, .10);
+  color: var(--pvsa-accent);
+  font-size: 1.05rem;
+}
+
+.edit-form input:not([type="checkbox"]):not([type="radio"]),
+.edit-form select,
+.edit-form textarea {
+  display: block;
+  width: 100% !important;
+  max-width: none !important;
+  min-height: 38px;
+}
+
+.edit-form input:not([type="checkbox"]):not([type="radio"]):not(.form-control),
+.edit-form select:not(.form-select),
+.edit-form textarea:not(.form-control) {
+  padding: .55rem .75rem;
+  border: 1px solid #dee2e6;
+  border-radius: .6rem;
+  background: #fff;
+}
+
+.edit-form input:focus,
+.edit-form select:focus,
+.edit-form textarea:focus {
+  outline: 0;
+  border-color: rgba(6, 182, 185, .55);
+  box-shadow: 0 0 0 .2rem rgba(6, 182, 185, .14);
+}
+
+.edit-form input[type="checkbox"],
+.edit-form input[type="radio"] {
+  width: auto !important;
+  min-height: auto;
+}
+
+.field-error {
+  padding: .55rem .7rem;
+  border-radius: .65rem;
+  background: rgba(220, 53, 69, .08);
+  border: 1px solid rgba(220, 53, 69, .18);
+  color: #b02a37;
+  font-size: .8rem;
+}
+
+@media (max-width: 575.98px) {
+  .card-footer .btn {
+    width: 100%;
+  }
+}
+</style>
 {% endblock %}

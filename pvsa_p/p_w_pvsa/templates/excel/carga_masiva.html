@@ -1,23 +1,35 @@
 {% extends "base.html" %}
 
+{% block title %}Carga masiva · PVSA{% endblock %}
+
 {% block content %}
 <div class="container-xxl py-4" style="max-width: 1380px;">
-  <!-- Header -->
-  <div class="d-flex flex-wrap align-items-start align-items-md-center justify-content-between gap-2 mb-3">
+  <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3 mb-4">
     <div>
-      <h2 class="mb-1 fw-bold">Carga masiva</h2>
-      <div class="text-muted">Subir Excel → previsualizar/editar → guardar en el sistema</div>
+      <div class="d-inline-flex align-items-center gap-2 pvsa-section-badge mb-2">
+        <i class="bi bi-file-earmark-spreadsheet"></i>
+        Importación
+      </div>
+
+      <h1 class="h3 fw-bold mb-1">Carga masiva</h1>
+
+      <div class="text-muted">
+        Importa varios objetos desde un Excel y revisa los datos antes de guardarlos.
+      </div>
     </div>
 
-    <div class="d-flex gap-2">
-      <a href="javascript:history.back()" class="btn btn-outline-secondary">
-        ← Volver
-      </a>
+    <div class="d-flex flex-wrap gap-2">
       {% if step != "upload" %}
         <a href="{% url 'carga_masiva' %}" class="btn btn-outline-secondary">
-          Volver a subir
+          <i class="bi bi-arrow-counterclockwise me-1"></i>
+          Subir otro archivo
         </a>
       {% endif %}
+
+      <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>
+        Volver al inicio
+      </a>
     </div>
   </div>
 
@@ -33,7 +45,7 @@
           <span class="dot">2</span> Revisar / Editar
         </span>
         <span class="stepsep">→</span>
-        <span class="stepchip {% if step != 'upload' %}active{% endif %}">
+        <span class="stepchip">
           <span class="dot">3</span> Guardar
         </span>
 
@@ -54,6 +66,14 @@
   </div>
 
   <!-- Alerts -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-4" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
 
   {% if error %}
     <div class="alert alert-danger alert-dismissible fade show rounded-4" role="alert">
@@ -82,8 +102,7 @@
                   <div>
                     <h5 class="mb-1 fw-semibold">Sube tu Excel</h5>
                     <div class="text-muted">
-                      Puedes cargar <strong>plantilla normalizada</strong> o un <strong>Excel exportado por tu sistema</strong>.
-                      Luego podrás revisar/editar antes de guardar.
+                      Puedes usar la plantilla de PVSA o un Excel compatible. Antes de importar podrás revisar y corregir cada fila.
                     </div>
                   </div>
 
@@ -97,13 +116,13 @@
             <form method="post" enctype="multipart/form-data">
               {% csrf_token %}
 
-              <input type="file" id="id_archivo" name="archivo" accept=".xlsx,.xls" class="d-none">
+              <input type="file" id="id_archivo" name="archivo" accept=".xlsx" class="d-none">
 
               <div id="dropzone" class="dropzone rounded-4 mb-3" tabindex="0" role="button" aria-label="Subir Excel">
                 <div class="dz-inner">
                   <div class="dz-title">Haz click o arrastra tu archivo aquí</div>
                   <div class="dz-sub text-muted">
-                    Formatos: <code>.xlsx</code>, <code>.xls</code>
+                    Formato: <code>.xlsx</code>
                   </div>
 
                   <div class="dz-meta mt-3">
@@ -130,7 +149,7 @@
                   Cargar y previsualizar
                 </button>
                 <span class="text-muted small">
-                  Tip: si el Excel trae datos incompletos, puedes corregirlos en la previsualización antes de guardar.
+                  Nada se guarda todavía: primero verás una previsualización editable.
                 </span>
               </div>
             </form>
@@ -144,12 +163,10 @@
           <div class="card-body p-4">
             <h6 class="fw-bold mb-2">¿Cómo funciona la plantilla?</h6>
             <div class="text-muted small">
-              • Una fila = un objeto en un lugar.<br>
-              • Obligatorio: <b>Ubicación, Sector, Lugar, Objeto y Cantidad total</b>.<br>
-              • La condición se calcula según <b>malas</b> y <b>pendientes</b>.<br>
-              • Puedes indicar <b>mínimo operativo</b> e <b>importancia</b>.<br>
-              • “Tipo”: recomendado <b>Marca - Material</b>.<br><br>
-              La plantilla trae ejemplos para revisar antes de guardar.
+              <div class="help-step"><span>1</span><div><strong>Una fila</strong> representa un objeto registrado en un lugar.</div></div>
+              <div class="help-step"><span>2</span><div>Completa como mínimo <strong>Sector, Ubicación, Lugar, Objeto y Cantidad total</strong>.</div></div>
+              <div class="help-step"><span>3</span><div>Usa <strong>Con falla</strong> y <strong>Por revisar</strong>; el estado se calcula automáticamente.</div></div>
+              <div class="help-step"><span>4</span><div>Marca y material son opcionales y permiten diferenciar variantes del mismo objeto.</div></div>
             </div>
           </div>
         </div>
@@ -164,14 +181,14 @@
         <!-- Toolbar -->
         <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3">
           <div class="d-flex flex-wrap gap-2 align-items-center">
-            <div class="fw-semibold">Previsualización</div>
-            <span class="text-muted small">Edita lo necesario antes de guardar</span>
+            <div class="fw-semibold">Revisa antes de importar</div>
+            <span class="text-muted small">Corrige cualquier dato que no esté bien</span>
           </div>
 
           <div class="d-flex flex-wrap gap-2 align-items-center">
             <div class="input-group">
               <span class="input-group-text bg-white">🔎</span>
-              <input id="tableFilter" type="text" class="form-control" placeholder="Filtrar filas (ubicación, sector, objeto, etc.)">
+              <input id="tableFilter" type="text" class="form-control" placeholder="Buscar dentro de las filas...">
             </div>
 
             <!-- Columnas colapsables -->
@@ -195,6 +212,8 @@
           </div>
         </div>
 
+        <div id="previewValidationAlert" class="alert alert-danger rounded-4 d-none mb-3" role="alert"></div>
+
         <form id="importForm" method="post">
           {% csrf_token %}
           <input type="hidden" name="payload_json" id="payload_json">
@@ -211,81 +230,90 @@
                     <th class="th-med" data-col="lugar">Lugar</th>
                     <th class="th-med" data-col="categoria">Categoría</th>
                     <th class="th-med" data-col="objeto">Objeto</th>
-                    <th class="th-med" data-col="tipo_objeto">Tipo</th>
+                    <th class="th-med" data-col="marca">Marca</th>
+                    <th class="th-med" data-col="material">Material</th>
                     <th class="th-xs text-center" data-col="cantidad">Total</th>
-                    <th class="th-xs text-center" data-col="cantidad_mala">Malas</th>
-                    <th class="th-xs text-center" data-col="cantidad_pendiente">Pendientes</th>
+                    <th class="th-xs text-center" data-col="cantidad_mala">Con falla</th>
+                    <th class="th-xs text-center" data-col="cantidad_pendiente">Por revisar</th>
                     <th class="th-xs text-center" data-col="minimo_operativo">Mínimo</th>
                     <th class="th-sm" data-col="importancia">Importancia</th>
-                    <th class="th-sm" data-col="estado">Condición</th>
-                    <th class="th-lg" data-col="detalle">Detalle</th>
+                    <th class="th-sm" data-col="estado">Estado</th>
+                    <th class="th-lg" data-col="detalle">Observación</th>
                   </tr>
                 </thead>
 
                 <tbody>
                   {% for r in payload.objetos_lugar %}
                     <tr class="rowedit">
-                      <td data-col="sector">
+                      <td data-col="sector" data-label="Sector">
                         <input class="form-control form-control-sm inputflat" data-k="sector"
                                value="{{ r.sector|default_if_none:'' }}">
                       </td>
 
-                      <td data-col="ubicacion">
+                      <td data-col="ubicacion" data-label="Ubicación">
                         <input class="form-control form-control-sm inputflat" data-k="ubicacion"
                                value="{{ r.ubicacion|default_if_none:'' }}">
                       </td>
 
-                      <td data-col="piso">
+                      <td data-col="piso" data-label="Piso">
                         <input class="form-control form-control-sm inputflat" data-k="piso"
                                value="{{ r.piso|default_if_none:'' }}">
                       </td>
 
-                      <td data-col="tipo_de_lugar">
+                      <td data-col="tipo_de_lugar" data-label="Tipo de lugar">
                         <input class="form-control form-control-sm inputflat" data-k="tipo_de_lugar"
                                value="{{ r.tipo_de_lugar|default_if_none:'' }}">
                       </td>
 
-                      <td data-col="lugar">
+                      <td data-col="lugar" data-label="Lugar">
                         <input class="form-control form-control-sm inputflat" data-k="lugar"
                                value="{{ r.lugar|default_if_none:'' }}">
                       </td>
 
-                      <td data-col="categoria">
+                      <td data-col="categoria" data-label="Categoría">
                         <input class="form-control form-control-sm inputflat" data-k="categoria"
                                value="{{ r.categoria|default_if_none:'' }}">
                       </td>
 
-                      <td data-col="objeto">
+                      <td data-col="objeto" data-label="Objeto">
                         <input class="form-control form-control-sm inputflat" data-k="objeto"
                                value="{{ r.objeto|default_if_none:'' }}">
                       </td>
 
-                      <td data-col="tipo_objeto">
-                        <input class="form-control form-control-sm inputflat" data-k="tipo_objeto"
-                               value="{{ r.tipo_objeto|default_if_none:'' }}">
+                      <input type="hidden" data-k="tipo_objeto"
+                             value="{{ r.tipo_objeto|default_if_none:'' }}">
+
+                      <td data-col="marca" data-label="Marca">
+                        <input class="form-control form-control-sm inputflat" data-k="marca"
+                               value="{{ r.marca|default_if_none:'' }}">
                       </td>
 
-                      <td data-col="cantidad">
+                      <td data-col="material" data-label="Material">
+                        <input class="form-control form-control-sm inputflat" data-k="material"
+                               value="{{ r.material|default_if_none:'' }}">
+                      </td>
+
+                      <td data-col="cantidad" data-label="Cantidad total">
                         <input class="form-control form-control-sm inputflat text-center cantidadTotal" data-k="cantidad"
                                type="number" min="0" value="{{ r.cantidad|default_if_none:0 }}">
                       </td>
 
-                      <td data-col="cantidad_mala">
+                      <td data-col="cantidad_mala" data-label="Con falla">
                         <input class="form-control form-control-sm inputflat text-center cantidadMala" data-k="cantidad_mala"
                                type="number" min="0" value="{{ r.cantidad_mala|default_if_none:0 }}">
                       </td>
 
-                      <td data-col="cantidad_pendiente">
+                      <td data-col="cantidad_pendiente" data-label="Por revisar">
                         <input class="form-control form-control-sm inputflat text-center cantidadPendiente" data-k="cantidad_pendiente"
                                type="number" min="0" value="{{ r.cantidad_pendiente|default_if_none:0 }}">
                       </td>
 
-                      <td data-col="minimo_operativo">
+                      <td data-col="minimo_operativo" data-label="Mínimo operativo">
                         <input class="form-control form-control-sm inputflat text-center minimoOperativo" data-k="minimo_operativo"
                                type="number" min="1" value="{{ r.minimo_operativo|default_if_none:1 }}">
                       </td>
 
-                      <td data-col="importancia">
+                      <td data-col="importancia" data-label="Importancia">
                         <select class="form-select form-select-sm inputflat importanciaSel" data-k="importancia">
                           {% with imp=r.importancia|default_if_none:1 %}
                             <option value="1" {% if imp == 1 or imp == "1" %}selected{% endif %}>Baja</option>
@@ -295,17 +323,17 @@
                         </select>
                       </td>
 
-                      <td data-col="estado">
-                        <select class="form-select form-select-sm inputflat estadoSel" data-k="estado">
+                      <td data-col="estado" data-label="Estado">
+                        <select class="form-select form-select-sm inputflat estadoSel" data-k="estado" disabled>
                           {% with est=r.estado|default_if_none:'B' %}
-                            <option value="B" {% if est == "B" or est == "Bueno" %}selected{% endif %}>Todo bueno</option>
-                            <option value="P" {% if est == "P" or est == "Pendiente" %}selected{% endif %}>Con pendientes</option>
-                            <option value="M" {% if est == "M" or est == "Malo" %}selected{% endif %}>Con unidades malas</option>
+                            <option value="B" {% if est == "B" or est == "Bueno" %}selected{% endif %}>Funcionando</option>
+                            <option value="P" {% if est == "P" or est == "Pendiente" %}selected{% endif %}>Por revisar</option>
+                            <option value="M" {% if est == "M" or est == "Malo" %}selected{% endif %}>Con falla</option>
                           {% endwith %}
                         </select>
                       </td>
 
-                      <td data-col="detalle">
+                      <td data-col="detalle" data-label="Observación">
                         <input class="form-control form-control-sm inputflat" data-k="detalle"
                                value="{{ r.detalle|default_if_none:'' }}">
                       </td>
@@ -323,8 +351,8 @@
                 Volver a subir
               </a>
 
-              <button type="button" id="btnGuardar" class="btn btn-success px-4">
-                <span class="btnLabel">Guardar en sistema</span>
+              <button type="button" id="btnGuardar" class="btn pvsa-btn px-4">
+                <span class="btnLabel">Importar {{ payload.objetos_lugar|length }} filas</span>
                 <span class="spinner-border spinner-border-sm ms-2 d-none" id="saveSpinner" role="status" aria-hidden="true"></span>
               </button>
             </div>
@@ -339,14 +367,58 @@
 <style>
   .rounded-4 { border-radius: 1rem !important; }
 
+  .pvsa-section-badge{
+    color:var(--pvsa-accent);
+    background:rgba(6,182,185,.08);
+    border:1px solid rgba(6,182,185,.20);
+    border-radius:999px;
+    padding:.35rem .7rem;
+    font-size:.82rem;
+    font-weight:700;
+  }
+
+  .help-step{
+    display:flex;
+    gap:.65rem;
+    align-items:flex-start;
+    margin-bottom:.8rem;
+  }
+
+  .help-step:last-child{
+    margin-bottom:0;
+  }
+
+  .help-step > span{
+    width:24px;
+    height:24px;
+    border-radius:50%;
+    display:grid;
+    place-items:center;
+    flex:0 0 auto;
+    background:rgba(6,182,185,.10);
+    color:var(--pvsa-accent);
+    font-weight:800;
+    font-size:.75rem;
+  }
+
+  .row-invalid{
+    background:rgba(220,53,69,.06)!important;
+  }
+
+  .row-invalid input,
+  .row-invalid select{
+    border-color:rgba(220,53,69,.45)!important;
+  }
+
+
   .iconwrap{
     width: 42px;
     height: 42px;
     border-radius: 12px;
     display: grid;
     place-items: center;
-    background: rgba(13,110,253,.10);
-    color: #0d6efd;
+    background: rgba(6,182,185,.10);
+    color: var(--pvsa-accent);
     flex: 0 0 auto;
   }
 
@@ -377,15 +449,15 @@
   }
 
   .stepchip.active{
-    color: #0b5ed7;
-    border-color: rgba(13,110,253,.35);
-    background: rgba(13,110,253,.06);
+    color: var(--pvsa-accent);
+    border-color: rgba(6,182,185,.35);
+    background: rgba(6,182,185,.06);
   }
 
   .stepchip.active .dot{
-    color: #0b5ed7;
-    border-color: rgba(13,110,253,.35);
-    background: rgba(13,110,253,.10);
+    color: var(--pvsa-accent);
+    border-color: rgba(6,182,185,.35);
+    background: rgba(6,182,185,.10);
   }
 
   .stepsep{
@@ -411,12 +483,12 @@
 
   .dropzone:focus{
     outline: none;
-    box-shadow: 0 0 0 .25rem rgba(13,110,253,.18);
+    box-shadow: 0 0 0 .25rem rgba(6,182,185,.18);
   }
 
   .dropzone.dragover{
-    border-color: rgba(13,110,253,.7);
-    background: rgba(13,110,253,.08);
+    border-color: rgba(6,182,185,.7);
+    background: rgba(6,182,185,.08);
   }
 
   .dz-inner{
@@ -483,7 +555,7 @@
   }
 
   .rowedit:focus-within{
-    background: rgba(13,110,253,.06) !important;
+    background: rgba(6,182,185,.06) !important;
   }
 
   .inputflat{
@@ -492,8 +564,8 @@
   }
 
   .inputflat:focus{
-    border-color: rgba(13,110,253,.55) !important;
-    box-shadow: 0 0 0 .2rem rgba(13,110,253,.14) !important;
+    border-color: rgba(6,182,185,.55) !important;
+    box-shadow: 0 0 0 .2rem rgba(6,182,185,.14) !important;
   }
 
   .th-xs{
@@ -534,6 +606,90 @@
   .col-hidden{
     display: none !important;
   }
+
+  @media (max-width: 767.98px){
+    .stepsep{
+      display:none;
+    }
+
+    .stepchip{
+      font-size:.8rem;
+      padding:.35rem .55rem;
+    }
+
+    .stepchip .dot{
+      width:22px;
+      height:22px;
+      font-size:.72rem;
+    }
+
+    .dropzone{
+      min-height:220px;
+      padding:18px;
+    }
+
+    .tablewrap{
+      border:0!important;
+      background:transparent;
+      overflow:visible;
+    }
+
+    .table-responsive{
+      overflow:visible!important;
+      max-height:none!important;
+    }
+
+    #tablaObjetosLugar,
+    #tablaObjetosLugar tbody,
+    #tablaObjetosLugar tr,
+    #tablaObjetosLugar td{
+      display:block;
+      width:100%;
+    }
+
+    #tablaObjetosLugar{
+      border:0;
+    }
+
+    #tablaObjetosLugar thead{
+      display:none;
+    }
+
+    #tablaObjetosLugar tbody tr{
+      margin-bottom:1rem;
+      padding:.75rem;
+      border:1px solid #e5e7eb;
+      border-radius:1rem;
+      background:#fff;
+      box-shadow:0 .25rem .8rem rgba(0,0,0,.04);
+    }
+
+    #tablaObjetosLugar tbody td{
+      display:grid;
+      grid-template-columns:110px minmax(0,1fr);
+      gap:.7rem;
+      align-items:center;
+      padding:.42rem 0;
+      border:0;
+    }
+
+    #tablaObjetosLugar tbody td::before{
+      content:attr(data-label);
+      font-size:.74rem;
+      color:#6c757d;
+      font-weight:700;
+    }
+
+    #tablaObjetosLugar tbody td.col-hidden{
+      display:none!important;
+    }
+
+    #tablaObjetosLugar .inputflat{
+      min-width:0;
+      width:100%;
+    }
+  }
+
 </style>
 
 <script>
@@ -627,6 +783,26 @@
   const rowsShown = document.getElementById("rowsShown");
   const filterStatus = document.getElementById("filterStatus");
 
+  function completarVarianteLegada(tr){
+    if (!tr) return;
+
+    const tipo = tr.querySelector('[data-k="tipo_objeto"]');
+    const marca = tr.querySelector('[data-k="marca"]');
+    const material = tr.querySelector('[data-k="material"]');
+
+    if (!tipo || !marca || !material) return;
+    if ((marca.value || "").trim() || (material.value || "").trim()) return;
+
+    const texto = (tipo.value || "").trim();
+    if (!texto) return;
+
+    if (texto.includes(" - ")) {
+      const partes = texto.split(" - ");
+      marca.value = (partes.shift() || "").trim();
+      material.value = partes.join(" - ").trim();
+    }
+  }
+
   function paintEstado(select){
     if (!select) return;
 
@@ -708,6 +884,7 @@
 
   if (tabla){
     tabla.querySelectorAll("tbody tr").forEach(tr => {
+      completarVarianteLegada(tr);
       recalcularEstadoFila(tr);
     });
 
@@ -872,14 +1049,15 @@
     {k:"lugar", label:"Lugar"},
     {k:"categoria", label:"Categoría"},
     {k:"objeto", label:"Objeto"},
-    {k:"tipo_objeto", label:"Tipo"},
+    {k:"marca", label:"Marca"},
+    {k:"material", label:"Material"},
     {k:"cantidad", label:"Total"},
-    {k:"cantidad_mala", label:"Malas"},
-    {k:"cantidad_pendiente", label:"Pendientes"},
+    {k:"cantidad_mala", label:"Con falla"},
+    {k:"cantidad_pendiente", label:"Por revisar"},
     {k:"minimo_operativo", label:"Mínimo operativo"},
     {k:"importancia", label:"Importancia"},
-    {k:"estado", label:"Condición"},
-    {k:"detalle", label:"Detalle"},
+    {k:"estado", label:"Estado"},
+    {k:"detalle", label:"Observación"},
   ];
 
   function loadColsState(){
@@ -971,15 +1149,71 @@
 
   if (btnGuardar && tabla && payloadInput && form) {
     btnGuardar.addEventListener("click", () => {
+      const trs = Array.from(tabla.querySelectorAll("tbody tr"));
+      const validationAlert = document.getElementById("previewValidationAlert");
+      let filasInvalidas = 0;
+
+      trs.forEach(tr => {
+        tr.classList.remove("row-invalid");
+
+        const sector = (tr.querySelector('[data-k="sector"]')?.value || "").trim();
+        const ubicacion = (tr.querySelector('[data-k="ubicacion"]')?.value || "").trim();
+        const lugar = (tr.querySelector('[data-k="lugar"]')?.value || "").trim();
+        const objeto = (tr.querySelector('[data-k="objeto"]')?.value || "").trim();
+        const total = parseInt(tr.querySelector('[data-k="cantidad"]')?.value || "0", 10);
+        const falla = parseInt(tr.querySelector('[data-k="cantidad_mala"]')?.value || "0", 10);
+        const revisar = parseInt(tr.querySelector('[data-k="cantidad_pendiente"]')?.value || "0", 10);
+        const minimo = parseInt(tr.querySelector('[data-k="minimo_operativo"]')?.value || "1", 10);
+
+        const invalida =
+          !sector ||
+          !ubicacion ||
+          !lugar ||
+          !objeto ||
+          !Number.isFinite(total) ||
+          total <= 0 ||
+          falla < 0 ||
+          revisar < 0 ||
+          falla + revisar > total ||
+          minimo < 1 ||
+          minimo > total;
+
+        if (invalida) {
+          filasInvalidas += 1;
+          tr.classList.add("row-invalid");
+        }
+      });
+
+      if (filasInvalidas) {
+        if (validationAlert) {
+          validationAlert.innerHTML =
+            '<i class="bi bi-exclamation-circle-fill me-1"></i>' +
+            'Hay <strong>' + filasInvalidas + '</strong> fila(s) que necesitan revisión. ' +
+            'Comprueba Sector, Ubicación, Lugar, Objeto, Cantidad total, Con falla, Por revisar y Mínimo operativo.';
+          validationAlert.classList.remove("d-none");
+          validationAlert.scrollIntoView({behavior:"smooth", block:"center"});
+        }
+        return;
+      }
+
+      if (validationAlert) {
+        validationAlert.classList.add("d-none");
+        validationAlert.innerHTML = "";
+      }
+
+      if (!window.confirm("Se importarán " + trs.length + " filas al sistema. ¿Continuar?")) {
+        return;
+      }
+
       btnGuardar.disabled = true;
 
       if (spinner) spinner.classList.remove("d-none");
-      if (btnLabel) btnLabel.textContent = "Guardando...";
+      if (btnLabel) btnLabel.textContent = "Importando...";
 
       const rows = [];
-      const trs = tabla.querySelectorAll("tbody tr");
 
       trs.forEach(tr => {
+        completarVarianteLegada(tr);
         recalcularEstadoFila(tr);
 
         const obj = {};

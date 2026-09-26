@@ -1,150 +1,368 @@
 {% extends "base.html" %}
+
+{% block title %}Crear lugar · PVSA{% endblock %}
+
 {% block content %}
-<div class="container-xxl py-4" style="max-width: 980px;">
+<div class="py-2 py-lg-3 form-page">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-9 col-xl-7">
 
-  <!-- Header + breadcrumb -->
-  <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
-    <div>
-      <nav aria-label="breadcrumb" class="small">
-        <ol class="breadcrumb mb-2">
-          <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
-          <li class="breadcrumb-item"><a href="{% url 'lista_lugares' %}">Lugares</a></li>
-          <li class="breadcrumb-item active" aria-current="page">Crear</li>
-        </ol>
-      </nav>
-      <h2 class="h4 fw-bold mb-1">Crear lugar</h2>
-      <div class="text-muted">Define el nombre, piso y tipo de lugar.</div>
-    </div>
+      <div class="mb-4">
+        <div class="mb-3">
+          {% if piso_preseleccionado %}
+            <a href="{% url 'detalle_piso' piso_id=piso_preseleccionado.id %}" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-arrow-left me-1"></i>
+              Volver al piso
+            </a>
+          {% else %}
+            <a href="{% url 'lista_lugares' %}" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-arrow-left me-1"></i>
+              Volver a lugares
+            </a>
+          {% endif %}
+        </div>
 
-    <a class="btn btn-outline-secondary" href="{% url 'lista_lugares' %}">
-      Volver
-    </a>
-  </div>
+        <div class="d-inline-flex align-items-center gap-2 pvsa-section-badge mb-2">
+          <i class="bi bi-building"></i>
+          Nuevo lugar
+        </div>
 
-  <div class="row g-3">
-    <!-- Guía rápida -->
-    <div class="col-12 col-lg-4">
-      <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body p-3 p-md-4">
-          <div class="fw-semibold mb-1">Recomendación</div>
-          <div class="text-muted small mb-3">
-            Usa nombres consistentes para facilitar búsqueda y reportes.
-          </div>
+        <h1 class="h3 fw-bold mb-1">Crear lugar</h1>
 
-          <div class="p-3 bg-light rounded-4 small">
-            <div class="fw-semibold mb-2">Ejemplos:</div>
-            <ul class="mb-0 ps-3">
-              <li>Sala de bombas</li>
-              <li>Comedor personal</li>
-              <li>Baño administración</li>
-              <li>Camarín hombres</li>
-            </ul>
-          </div>
-
-          <div class="alert alert-info mt-3 mb-0 rounded-4 small">
-            Tip: el piso y el tipo de lugar determinan cómo se organiza el inventario.
-          </div>
+        <div class="text-muted">
+          {% if piso_preseleccionado %}
+            Registra un espacio en
+            <strong>{{ piso_preseleccionado.ubicacion.ubicacion }} · Piso {{ piso_preseleccionado.piso }}</strong>.
+          {% else %}
+            Registra un espacio físico dentro de un piso.
+          {% endif %}
         </div>
       </div>
-    </div>
 
-    <!-- Formulario -->
-    <div class="col-12 col-lg-8">
-      <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body p-3 p-md-4">
+      <form method="post" novalidate id="crearLugarForm">
+        {% csrf_token %}
 
-          <form method="post" novalidate>
-            {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger rounded-4 shadow-sm">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
 
-            {% if form.non_field_errors %}
-              <div class="alert alert-danger rounded-4">
-                {{ form.non_field_errors }}
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+          <div class="card-body p-3 p-md-4">
+
+            <div class="d-flex align-items-center gap-3 mb-4">
+              <div class="section-icon">
+                <i class="bi bi-geo-alt"></i>
               </div>
-            {% endif %}
 
-            <!-- Nombre -->
-            <div class="mb-3">
-              <label class="form-label small text-muted mb-1" for="{{ form.nombre_del_lugar.id_for_label }}">
-                Nombre del lugar
-              </label>
-              <input
-                type="text"
-                name="{{ form.nombre_del_lugar.name }}"
-                id="{{ form.nombre_del_lugar.id_for_label }}"
-                value="{{ form.nombre_del_lugar.value|default_if_none:'' }}"
-                class="form-control {% if form.nombre_del_lugar.errors %}is-invalid{% endif %}"
-                placeholder="Ej: Sala de bombas"
-                required
-              >
-              {% if form.nombre_del_lugar.errors %}
-                <div class="invalid-feedback">
-                  {{ form.nombre_del_lugar.errors|striptags }}
+              <div>
+                <h2 class="h5 fw-bold mb-1">¿Dónde está?</h2>
+                <div class="small text-muted">
+                  Selecciona primero el sector, ubicación y piso correspondientes.
                 </div>
-              {% endif %}
+              </div>
             </div>
 
-            <!-- Piso -->
-            <div class="mb-3">
-              <label class="form-label small text-muted mb-1" for="{{ form.piso.id_for_label }}">
+            <div class="mb-4">
+              <label class="form-label fw-semibold" for="{{ form.piso.id_for_label }}">
                 Piso
               </label>
-              <select
-                name="{{ form.piso.name }}"
-                id="{{ form.piso.id_for_label }}"
-                class="form-select {% if form.piso.errors %}is-invalid{% endif %}"
-                required
-              >
-                {% for option in form.piso.field.choices %}
-                  <option value="{{ option.0 }}"
-                    {% if form.piso.value|stringformat:"s" == option.0|stringformat:"s" %}selected{% endif %}>
-                    {{ option.1 }}
-                  </option>
-                {% endfor %}
-              </select>
+
+              {{ form.piso }}
+
               {% if form.piso.errors %}
-                <div class="invalid-feedback">
+                <div class="text-danger small mt-1">
                   {{ form.piso.errors|striptags }}
                 </div>
               {% endif %}
-            </div>
 
-            <!-- Tipo de lugar -->
-            <div class="mb-3">
-              <label class="form-label small text-muted mb-1" for="{{ form.lugar_tipo_lugar.id_for_label }}">
-                Tipo de lugar
-              </label>
-              <select
-                name="{{ form.lugar_tipo_lugar.name }}"
-                id="{{ form.lugar_tipo_lugar.id_for_label }}"
-                class="form-select {% if form.lugar_tipo_lugar.errors %}is-invalid{% endif %}"
-                required
-              >
-                {% for option in form.lugar_tipo_lugar.field.choices %}
-                  <option value="{{ option.0 }}"
-                    {% if form.lugar_tipo_lugar.value|stringformat:"s" == option.0|stringformat:"s" %}selected{% endif %}>
-                    {{ option.1 }}
-                  </option>
-                {% endfor %}
-              </select>
-              {% if form.lugar_tipo_lugar.errors %}
-                <div class="invalid-feedback">
-                  {{ form.lugar_tipo_lugar.errors|striptags }}
-                </div>
-              {% endif %}
+              <div id="selectedFloorInfo" class="selected-floor-info d-none mt-2"></div>
+
+              <div class="form-text">
+                La lista muestra Sector · Ubicación · Piso para evitar confusiones.
+              </div>
             </div>
 
             <hr class="my-4">
 
-            <div class="d-flex flex-wrap gap-2">
-              <button class="btn btn-primary" type="submit">Guardar</button>
-              <a class="btn btn-outline-secondary" href="{% url 'lista_lugares' %}">Cancelar</a>
-            </div>
-          </form>
+            <div class="d-flex align-items-center gap-3 mb-4">
+              <div class="section-icon">
+                <i class="bi bi-door-open"></i>
+              </div>
 
+              <div>
+                <h2 class="h5 fw-bold mb-1">¿Qué lugar es?</h2>
+                <div class="small text-muted">
+                  Indica el tipo de espacio y un nombre fácil de reconocer.
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold" for="{{ form.lugar_tipo_lugar.id_for_label }}">
+                Tipo de lugar
+              </label>
+
+              {{ form.lugar_tipo_lugar }}
+
+              {% if form.lugar_tipo_lugar.errors %}
+                <div class="text-danger small mt-1">
+                  {{ form.lugar_tipo_lugar.errors|striptags }}
+                </div>
+              {% endif %}
+
+              <div class="form-text">
+                Ejemplo: Baño, Oficina, Bodega o Sala técnica.
+              </div>
+            </div>
+
+            <div>
+              <label class="form-label fw-semibold" for="{{ form.nombre_del_lugar.id_for_label }}">
+                Nombre del lugar
+              </label>
+
+              {{ form.nombre_del_lugar }}
+
+              {% if form.nombre_del_lugar.errors %}
+                <div class="text-danger small mt-1">
+                  {{ form.nombre_del_lugar.errors|striptags }}
+                </div>
+              {% endif %}
+
+              <div id="lugarDuplicateAlert" class="duplicate-alert d-none mt-2"></div>
+              <div id="lugarSimilarAlert" class="similar-alert d-none mt-2"></div>
+
+              <div class="form-text">
+                Ejemplo: Baño hombres principal, Oficina mantención o Bodega eléctrica.
+              </div>
+            </div>
+
+          </div>
+
+          <div class="card-footer bg-white border-top p-3 p-md-4">
+            <div class="d-flex flex-column flex-sm-row justify-content-end gap-2">
+              {% if piso_preseleccionado %}
+                <a href="{% url 'detalle_piso' piso_id=piso_preseleccionado.id %}" class="btn btn-outline-secondary">
+                  Cancelar
+                </a>
+              {% else %}
+                <a href="{% url 'lista_lugares' %}" class="btn btn-outline-secondary">
+                  Cancelar
+                </a>
+              {% endif %}
+
+              <button id="crearLugarBtn" type="submit" class="btn pvsa-btn px-4">
+                <i class="bi bi-check-circle me-1"></i>
+                Crear lugar
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      </form>
+
+      {{ lugares_existentes|json_script:"lugares-existentes-data" }}
+
     </div>
   </div>
-
 </div>
+
+<style>
+.form-page{max-width:1200px;margin:0 auto}
+.pvsa-section-badge{color:var(--pvsa-accent);background:rgba(6,182,185,.08);border:1px solid rgba(6,182,185,.20);border-radius:999px;padding:.35rem .7rem;font-size:.82rem;font-weight:700}
+.section-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:0 0 auto;background:rgba(6,182,185,.10);color:var(--pvsa-accent);font-size:1.05rem}
+form input,form select,form textarea{width:100%;min-height:38px}
+.duplicate-alert,.similar-alert{padding:.7rem .8rem;border-radius:.8rem;font-size:.82rem;line-height:1.45}
+.duplicate-alert{background:rgba(220,53,69,.08);border:1px solid rgba(220,53,69,.20);color:#b02a37}
+.similar-alert{background:rgba(255,193,7,.12);border:1px solid rgba(255,193,7,.28);color:#6f5600}
+.similar-item{display:flex;align-items:flex-start;gap:.45rem;margin-top:.35rem}
+.selected-floor-info{padding:.65rem .8rem;border-radius:.75rem;background:#f8f9fa;border:1px solid #e9ecef;color:#495057;font-size:.82rem}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const pisoSelect = document.getElementById("{{ form.piso.id_for_label }}");
+  const tipoSelect = document.getElementById("{{ form.lugar_tipo_lugar.id_for_label }}");
+  const nombreInput = document.getElementById("{{ form.nombre_del_lugar.id_for_label }}");
+  const duplicateAlert = document.getElementById("lugarDuplicateAlert");
+  const similarAlert = document.getElementById("lugarSimilarAlert");
+  const submitBtn = document.getElementById("crearLugarBtn");
+  const floorInfo = document.getElementById("selectedFloorInfo");
+
+  const data = JSON.parse(
+    document.getElementById("lugares-existentes-data").textContent
+  );
+
+  function normalizar(valor) {
+    return String(valor || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .replace(/\s+/g, " ")
+      .toLocaleLowerCase("es");
+  }
+
+  function distanciaLevenshtein(a, b) {
+    a = normalizar(a);
+    b = normalizar(b);
+
+    const filas = a.length + 1;
+    const columnas = b.length + 1;
+
+    const matriz = Array.from({ length: filas }, function () {
+      return Array(columnas).fill(0);
+    });
+
+    for (let i = 0; i < filas; i++) matriz[i][0] = i;
+    for (let j = 0; j < columnas; j++) matriz[0][j] = j;
+
+    for (let i = 1; i < filas; i++) {
+      for (let j = 1; j < columnas; j++) {
+        const costo = a[i - 1] === b[j - 1] ? 0 : 1;
+
+        matriz[i][j] = Math.min(
+          matriz[i - 1][j] + 1,
+          matriz[i][j - 1] + 1,
+          matriz[i - 1][j - 1] + costo
+        );
+      }
+    }
+
+    return matriz[a.length][b.length];
+  }
+
+  function pareceDuplicado(nuevo, existente) {
+    const a = normalizar(nuevo);
+    const b = normalizar(existente);
+
+    if (!a || !b || a === b) return false;
+    if (Math.min(a.length, b.length) < 4) return false;
+
+    const distancia = distanciaLevenshtein(a, b);
+    const largoMayor = Math.max(a.length, b.length);
+
+    if (largoMayor <= 8) return distancia === 1;
+    if (largoMayor <= 16) return distancia <= 2;
+    if (distancia <= 3) return true;
+
+    return (
+      Math.abs(a.length - b.length) <= 2 &&
+      (a.includes(b) || b.includes(a))
+    );
+  }
+
+  function actualizarPiso() {
+    if (!floorInfo || !pisoSelect || !pisoSelect.value) {
+      if (floorInfo) floorInfo.classList.add("d-none");
+      return;
+    }
+
+    const option = pisoSelect.options[pisoSelect.selectedIndex];
+
+    floorInfo.innerHTML =
+      '<i class="bi bi-geo-alt me-1"></i>' +
+      '<strong>Seleccionado:</strong> ' +
+      option.textContent.trim();
+
+    floorInfo.classList.remove("d-none");
+  }
+
+  function verificar() {
+    const pisoId = Number(pisoSelect?.value || 0);
+    const nombre = normalizar(nombreInput?.value);
+
+    const mismoPiso = data.filter(function (item) {
+      return Number(item.piso_id) === pisoId;
+    });
+
+    const exacto = mismoPiso.find(function (item) {
+      return normalizar(item.nombre_del_lugar) === nombre;
+    });
+
+    const duplicado = Boolean(pisoId && nombre && exacto);
+
+    if (duplicateAlert) {
+      duplicateAlert.classList.toggle("d-none", !duplicado);
+
+      duplicateAlert.innerHTML = duplicado
+        ? '<i class="bi bi-x-circle-fill me-1"></i>' +
+          'Ya existe <strong>' + exacto.nombre_del_lugar +
+          '</strong> en este mismo piso. Usa ese lugar en vez de crear otro.'
+        : "";
+    }
+
+    if (nombreInput) {
+      nombreInput.classList.toggle("is-invalid", duplicado);
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = duplicado;
+    }
+
+    if (!similarAlert) return;
+
+    if (!pisoId || !nombre || duplicado) {
+      similarAlert.classList.add("d-none");
+      similarAlert.innerHTML = "";
+      return;
+    }
+
+    const parecidos = mismoPiso
+      .filter(function (item) {
+        return pareceDuplicado(nombre, item.nombre_del_lugar);
+      })
+      .slice(0, 3);
+
+    if (!parecidos.length) {
+      similarAlert.classList.add("d-none");
+      similarAlert.innerHTML = "";
+      return;
+    }
+
+    let contenido =
+      '<div class="fw-semibold">' +
+      '<i class="bi bi-exclamation-triangle-fill me-1"></i>' +
+      'Revisa el nombre antes de crear el lugar.' +
+      '</div>' +
+      '<div class="mt-1">En este piso ya existen nombres muy parecidos:</div>';
+
+    parecidos.forEach(function (item) {
+      contenido +=
+        '<div class="similar-item">' +
+        '<i class="bi bi-arrow-right-short"></i>' +
+        '<div><strong>' + item.nombre_del_lugar + '</strong>' +
+        ' · ' + item.lugar_tipo_lugar__tipo_de_lugar +
+        '</div>' +
+        '</div>';
+    });
+
+    contenido +=
+      '<div class="mt-2 small">' +
+      'Si realmente es otro lugar, puedes continuar y crearlo.' +
+      '</div>';
+
+    similarAlert.innerHTML = contenido;
+    similarAlert.classList.remove("d-none");
+  }
+
+  if (pisoSelect) {
+    pisoSelect.addEventListener("change", function () {
+      actualizarPiso();
+      verificar();
+    });
+  }
+
+  if (tipoSelect) {
+    tipoSelect.addEventListener("change", verificar);
+  }
+
+  if (nombreInput) {
+    nombreInput.addEventListener("input", verificar);
+    nombreInput.addEventListener("blur", verificar);
+  }
+
+  actualizarPiso();
+  verificar();
+});
+</script>
 {% endblock %}

@@ -1,72 +1,348 @@
 {% extends "base.html" %}
-{% block content %}
-<div class="container-xxl py-4" style="max-width: 1280px;">
 
-  <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
+{% block title %}Pisos · PVSA{% endblock %}
+
+{% block content %}
+<div class="py-2 py-lg-3 pisos-page">
+
+  <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3 mb-4">
     <div>
-      <h1 class="h4 fw-bold mb-1">Pisos</h1>
-      <div class="text-muted">Listado de pisos. Filtra por ubicación si lo necesitas.</div>
+      <div class="d-inline-flex align-items-center gap-2 pvsa-section-badge mb-2">
+        <i class="bi bi-layers"></i>
+        Estructura física
+      </div>
+
+      <h1 class="h3 fw-bold mb-1">Pisos</h1>
+
+      <div class="text-muted">
+        Busca un piso y entra para ver los lugares registrados en él.
+      </div>
     </div>
-    <a href="{% url 'crear_piso' %}" class="btn btn-primary">+ Crear piso</a>
+
+    <a href="{% url 'crear_piso' %}" class="btn pvsa-btn">
+      <i class="bi bi-plus-circle me-1"></i>
+      Crear piso
+    </a>
   </div>
 
-  <div class="card border-0 shadow-sm rounded-4 mb-3">
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
     <div class="card-body p-3 p-md-4">
-      <form method="get" class="row g-2 align-items-end">
-        <div class="col-12 col-md-7 col-lg-5">
-          <label for="id_ubicacion_filtro" class="form-label small text-muted mb-1">Filtrar por ubicación</label>
-          <select
-            name="ubicacion"
-            id="id_ubicacion_filtro"
-            class="form-select"
-            onchange="this.form.submit()"
-          >
+
+      <form method="get" class="row g-3 align-items-center" id="pisosFilterForm">
+
+        <div class="col-12 col-lg">
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="bi bi-search text-muted"></i>
+            </span>
+
+            <input
+              id="buscarPiso"
+              type="search"
+              class="form-control border-start-0 ps-0"
+              placeholder="Buscar por piso, ubicación o sector..."
+              autocomplete="off"
+            >
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-auto">
+          <select name="ubicacion" id="ubicacionFilter" class="form-select">
             <option value="">Todas las ubicaciones</option>
-            {% for u in ubicaciones %}
-              <option value="{{ u.id }}"
-                      {% if ubicacion_actual == u.id|stringformat:'s' %}selected{% endif %}>
-                {{ u.ubicacion }} ({{ u.sector.sector }})
+
+            {% for ubicacion in ubicaciones %}
+              <option
+                value="{{ ubicacion.id }}"
+                {% if ubicacion_actual == ubicacion.id|stringformat:'s' %}selected{% endif %}
+              >
+                {{ ubicacion.ubicacion }} · {{ ubicacion.sector.sector }}
               </option>
             {% endfor %}
           </select>
-          <div class="form-text">Al seleccionar una ubicación, la lista se filtra automáticamente.</div>
         </div>
 
-        <div class="col-12 col-md-auto">
-          <a class="btn btn-outline-secondary" href="{% url 'lista_pisos' %}">
-            Limpiar filtro
-          </a>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-    <div class="card-body p-0">
-      {% if pisos %}
-        <div class="list-group list-group-flush">
-          {% for p in pisos %}
-            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-               href="{% url 'detalle_piso' piso_id=p.id %}">
-              <div>
-                <div class="fw-semibold">Piso {{ p.piso }}</div>
-                <div class="text-muted small">
-                  Ubicación: {{ p.ubicacion.ubicacion }} · Sector: {{ p.ubicacion.sector.sector }}
-                </div>
-              </div>
-              <span class="text-muted">Ver &raquo;</span>
-            </a>
-          {% endfor %}
-        </div>
-      {% else %}
-        <div class="p-4">
-          <div class="alert alert-secondary mb-0 rounded-4">
-            No hay pisos registrados{% if ubicacion_actual %} para la ubicación seleccionada{% endif %}.
+        <div class="col-12 col-md-6 col-lg-auto">
+          <div class="result-count">
+            <i class="bi bi-layers me-1"></i>
+            <span id="pisosVisibles">{{ pisos|length }}</span>
+            de {{ pisos|length }} pisos
           </div>
         </div>
+
+      </form>
+
+      {% if ubicacion_actual %}
+        <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+          <span class="small text-muted">Filtro aplicado:</span>
+
+          {% for ubicacion in ubicaciones %}
+            {% if ubicacion_actual == ubicacion.id|stringformat:'s' %}
+              <span class="active-filter-chip">
+                <i class="bi bi-geo-alt"></i>
+                {{ ubicacion.ubicacion }}
+              </span>
+            {% endif %}
+          {% endfor %}
+
+          <a href="{% url 'lista_pisos' %}" class="btn btn-link btn-sm text-decoration-none p-0">
+            Limpiar
+          </a>
+        </div>
       {% endif %}
+
     </div>
   </div>
 
+  {% if pisos %}
+
+    <div id="pisosGrid" class="row g-3">
+      {% for piso in pisos %}
+        <div
+          class="col-12 col-md-6 col-xl-4 piso-item"
+          data-piso="{{ piso.piso }}"
+          data-ubicacion="{{ piso.ubicacion.ubicacion|lower|escape }}"
+          data-sector="{{ piso.ubicacion.sector.sector|lower|escape }}"
+        >
+          <a
+            href="{% url 'detalle_piso' piso_id=piso.id %}"
+            class="piso-link text-decoration-none text-reset d-block h-100"
+          >
+            <div class="card piso-card border-0 shadow-sm rounded-4 h-100">
+              <div class="card-body p-3 p-md-4">
+
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                  <div class="d-flex align-items-center gap-3 min-w-0">
+                    <div class="piso-icon">
+                      <i class="bi bi-layers"></i>
+                    </div>
+
+                    <div class="min-w-0">
+                      <div class="small text-muted mb-1">
+                        {{ piso.ubicacion.ubicacion }}
+                      </div>
+
+                      <h2 class="h5 fw-bold mb-0">
+                        Piso {{ piso.piso }}
+                      </h2>
+                    </div>
+                  </div>
+
+                  <div class="open-icon">
+                    <i class="bi bi-chevron-right"></i>
+                  </div>
+                </div>
+
+                <div class="small text-muted mt-3">
+                  {{ piso.ubicacion.sector.sector }}
+                </div>
+
+                <div class="small text-muted mt-1">
+                  Ver lugares registrados en este piso
+                </div>
+
+              </div>
+            </div>
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div id="sinResultadosPiso" class="d-none">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body text-center py-5">
+          <i class="bi bi-search fs-2 text-muted"></i>
+          <div class="fw-semibold mt-2">No encontramos pisos</div>
+          <div class="small text-muted">
+            Prueba con otro número, ubicación o sector.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  {% else %}
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-body text-center py-5">
+        <div class="empty-icon mx-auto mb-3">
+          <i class="bi bi-layers"></i>
+        </div>
+
+        <h2 class="h5 fw-bold">No hay pisos para mostrar</h2>
+
+        <div class="text-muted mb-3">
+          {% if ubicacion_actual %}
+            Esta ubicación todavía no tiene pisos registrados.
+          {% else %}
+            Todavía no hay pisos registrados.
+          {% endif %}
+        </div>
+
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+          {% if ubicacion_actual %}
+            <a href="{% url 'lista_pisos' %}" class="btn btn-outline-secondary">
+              Ver todos
+            </a>
+          {% endif %}
+
+          <a href="{% url 'crear_piso' %}" class="btn pvsa-btn">
+            <i class="bi bi-plus-circle me-1"></i>
+            Crear piso
+          </a>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
 </div>
+
+<style>
+  .pisos-page {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .pvsa-section-badge {
+    color: var(--pvsa-accent);
+    background: rgba(6, 182, 185, .08);
+    border: 1px solid rgba(6, 182, 185, .20);
+    border-radius: 999px;
+    padding: .35rem .7rem;
+    font-size: .82rem;
+    font-weight: 700;
+  }
+
+  .result-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: .45rem .75rem;
+    border: 1px solid #dee2e6;
+    border-radius: .6rem;
+    background: #f8f9fa;
+    color: #6c757d;
+    font-size: .82rem;
+    white-space: nowrap;
+  }
+
+  .active-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .35rem .65rem;
+    border: 1px solid #dee2e6;
+    border-radius: 999px;
+    background: #fff;
+    font-size: .78rem;
+  }
+
+  .piso-card {
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+
+  .piso-link:hover .piso-card,
+  .piso-link:focus .piso-card {
+    transform: translateY(-2px);
+    box-shadow: 0 .7rem 1.5rem rgba(0, 0, 0, .08) !important;
+  }
+
+  .piso-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    background: rgba(6, 182, 185, .10);
+    color: var(--pvsa-accent);
+    font-size: 1.1rem;
+  }
+
+  .open-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    color: #6c757d;
+    background: #f8f9fa;
+  }
+
+  .empty-icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+    background: rgba(6, 182, 185, .10);
+    color: var(--pvsa-accent);
+    font-size: 1.45rem;
+  }
+
+  .min-w-0 {
+    min-width: 0;
+  }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const searchInput = document.getElementById("buscarPiso");
+  const grid = document.getElementById("pisosGrid");
+  const visibleCount = document.getElementById("pisosVisibles");
+  const emptySearch = document.getElementById("sinResultadosPiso");
+  const ubicacionFilter = document.getElementById("ubicacionFilter");
+
+  function normalizar(texto) {
+    return String(texto || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+  }
+
+  function filtrarBusqueda() {
+    if (!grid) return;
+
+    const consulta = normalizar(searchInput?.value);
+    const items = Array.from(grid.querySelectorAll(".piso-item"));
+    let visibles = 0;
+
+    items.forEach(function (item) {
+      const texto = normalizar(
+        "piso " +
+        (item.dataset.piso || "") + " " +
+        (item.dataset.ubicacion || "") + " " +
+        (item.dataset.sector || "")
+      );
+
+      const mostrar = !consulta || texto.includes(consulta);
+      item.classList.toggle("d-none", !mostrar);
+
+      if (mostrar) {
+        visibles += 1;
+      }
+    });
+
+    if (visibleCount) {
+      visibleCount.textContent = visibles;
+    }
+
+    if (emptySearch) {
+      emptySearch.classList.toggle("d-none", visibles !== 0);
+    }
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener("input", filtrarBusqueda);
+  }
+
+  if (ubicacionFilter) {
+    ubicacionFilter.addEventListener("change", function () {
+      document.getElementById("pisosFilterForm").submit();
+    });
+  }
+
+  filtrarBusqueda();
+});
+</script>
 {% endblock %}

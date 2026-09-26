@@ -1,429 +1,456 @@
 {% extends "base.html" %}
 
+{% block title %}Historial de cambios · PVSA{% endblock %}
+
 {% block content %}
-<style>
-  .hist-page {
-    max-width: 1550px;
-    margin: 0 auto;
-  }
+<div class="py-2 py-lg-3 historicos-page">
 
-  .card-soft {
-    border: 0;
-    border-radius: 18px;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-    overflow: hidden;
-  }
-
-  .filters-card {
-    position: sticky;
-    top: 80px;
-  }
-
-  .tabla-historicos {
-    width: 100%;
-    table-layout: fixed;
-  }
-
-  .tabla-historicos th {
-    font-size: 0.8rem;
-    color: #495057;
-    white-space: nowrap;
-    vertical-align: middle;
-  }
-
-  .tabla-historicos td {
-    font-size: 0.86rem;
-    vertical-align: middle;
-    white-space: normal;
-    word-break: normal;
-    overflow-wrap: break-word;
-  }
-
-  .col-info {
-    width: 31%;
-  }
-
-  .col-cantidades {
-    width: 14%;
-  }
-
-  .col-condicion {
-    width: 13%;
-  }
-
-  .col-importancia {
-    width: 12%;
-  }
-
-  .col-detalle {
-    width: 15%;
-  }
-
-  .col-fecha {
-    width: 7%;
-  }
-
-  .col-acciones {
-    width: 8%;
-  }
-
-  .info-title {
-    font-weight: 700;
-  }
-
-  .info-sub {
-    color: #6c757d;
-    font-size: 0.8rem;
-  }
-
-  .cantidades-resumen {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    max-width: 135px;
-  }
-
-  .cantidad-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    line-height: 1.1;
-  }
-
-  .cantidad-label {
-    font-size: 0.75rem;
-    color: #6c757d;
-    white-space: nowrap;
-  }
-
-  .cantidad-value {
-    font-size: 0.9rem;
-    font-weight: 700;
-    min-width: 26px;
-    text-align: right;
-  }
-
-  .acciones-wrap {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-    justify-content: flex-end;
-    align-items: center;
-  }
-
-  .btn-mini {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.76rem;
-    white-space: nowrap;
-  }
-
-  @media (max-width: 1199px) {
-    .filters-card {
-      position: static;
-    }
-
-    .tabla-historicos,
-    .tabla-historicos thead,
-    .tabla-historicos tbody,
-    .tabla-historicos th,
-    .tabla-historicos td,
-    .tabla-historicos tr {
-      display: block;
-      width: 100%;
-    }
-
-    .tabla-historicos thead {
-      display: none;
-    }
-
-    .tabla-historicos tr {
-      padding: 1rem;
-      border-bottom: 1px solid #dee2e6;
-    }
-
-    .tabla-historicos td {
-      border: 0;
-      padding: 0.35rem 0;
-    }
-
-    .acciones-wrap {
-      justify-content: flex-start;
-    }
-  }
-</style>
-
-<div class="container-fluid py-4 hist-page">
-
-  <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-4">
+  <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3 mb-4">
     <div>
-      <h2 class="h4 fw-bold mb-1">Históricos</h2>
+      <div class="d-inline-flex align-items-center gap-2 pvsa-section-badge mb-2">
+        <i class="bi bi-clock-history"></i>
+        Seguimiento
+      </div>
+
+      <h1 class="h3 fw-bold mb-1">Historial de cambios</h1>
+
       <div class="text-muted">
-        Cambios anteriores registrados en objetos del lugar.
+        Revisa cómo estaban anteriormente los objetos registrados en los lugares.
       </div>
     </div>
 
-    <div class="d-flex gap-2">
-      <a href="{% url 'lista_historicos' %}" class="btn btn-outline-secondary btn-sm">
-        Limpiar filtros
-      </a>
+    <button
+      type="button"
+      class="btn btn-outline-secondary"
+      data-bs-toggle="modal"
+      data-bs-target="#filtrosHistoricoModal"
+    >
+      <i class="bi bi-funnel me-1"></i>
+      Filtros
+      {% if lugar_actual or objeto_actual or tipo_actual or estado_actual %}
+        <span class="badge rounded-pill pvsa-bg text-white ms-1">Activo</span>
+      {% endif %}
+    </button>
+  </div>
 
-      <span class="badge rounded-pill text-bg-light border px-3 py-2">
-        Registros: <strong class="ms-1">{{ historicos|length }}</strong>
-      </span>
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-3 p-md-4">
+      <div class="row g-3 align-items-center">
+        <div class="col-12 col-lg">
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="bi bi-search text-muted"></i>
+            </span>
+
+            <input
+              id="buscarHistorico"
+              type="search"
+              class="form-control border-start-0 ps-0"
+              placeholder="Buscar objeto, lugar, ubicación o sector..."
+              autocomplete="off"
+            >
+          </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-auto">
+          <select id="ordenHistoricos" class="form-select">
+            <option value="reciente">Más reciente</option>
+            <option value="antiguo">Más antiguo</option>
+            <option value="objeto">Por objeto</option>
+            <option value="lugar">Por lugar</option>
+          </select>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-auto">
+          <div class="result-count">
+            <i class="bi bi-clock-history me-1"></i>
+            <span id="historicosVisibles">{{ historicos|length }}</span>
+            de {{ historicos|length }} registros
+          </div>
+        </div>
+      </div>
+
+      {% if lugar_actual or objeto_actual or tipo_actual or estado_actual %}
+        <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+          <span class="small text-muted">Filtros aplicados</span>
+          <a
+            href="{% url 'lista_historicos' %}"
+            class="btn btn-link btn-sm text-decoration-none p-0"
+          >
+            Limpiar
+          </a>
+        </div>
+      {% endif %}
     </div>
   </div>
 
-  <div class="row g-4">
+  {% if historicos %}
+    <div id="historicosGrid" class="row g-3">
+      {% for h in historicos %}
+        <div
+          class="col-12 col-xl-6 historico-item"
+          data-fecha="{{ h.fecha_anterior|date:'Y-m-d' }}"
+          data-objeto="{{ h.objeto_del_lugar.tipo_de_objeto.objeto.nombre_del_objeto|lower|escape }}"
+          data-lugar="{{ h.objeto_del_lugar.lugar.nombre_del_lugar|lower|escape }}"
+          data-search="{{ h.objeto_del_lugar.tipo_de_objeto.objeto.nombre_del_objeto|lower|escape }} {{ h.objeto_del_lugar.tipo_de_objeto.marca|default:''|lower|escape }} {{ h.objeto_del_lugar.tipo_de_objeto.material|default:''|lower|escape }} {{ h.objeto_del_lugar.lugar.nombre_del_lugar|lower|escape }} {{ h.objeto_del_lugar.lugar.piso.ubicacion.ubicacion|lower|escape }} {{ h.objeto_del_lugar.lugar.piso.ubicacion.sector.sector|lower|escape }}"
+        >
+          <a
+            href="{% url 'detalle_historico' historico_id=h.id %}"
+            class="historico-link text-decoration-none text-reset d-block h-100"
+          >
+            <div class="card historico-card border-0 shadow-sm rounded-4 h-100">
+              <div class="card-body p-3 p-md-4">
 
-    <!-- Filtros -->
-    <div class="col-12 col-xl-3 col-xxl-2">
-      <div class="card card-soft filters-card">
-        <div class="card-body p-3">
-          <div class="fw-semibold mb-1">Filtros</div>
-          <div class="text-muted small mb-3">
-            Refina la búsqueda y ubica el cambio rápidamente.
-          </div>
+                <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                  <div class="d-flex align-items-start gap-3 min-w-0">
+                    <div class="history-icon">
+                      <i class="bi bi-clock-history"></i>
+                    </div>
 
-          <form method="get" class="vstack gap-3">
+                    <div class="min-w-0">
+                      <div class="small text-muted mb-1">
+                        {{ h.fecha_anterior|date:"d/m/Y" }}
+                      </div>
 
-            <div>
-              <label for="id_filtro_lugar" class="form-label small text-muted mb-1">
-                Lugar
-              </label>
+                      <h2 class="h6 fw-bold mb-1 text-break">
+                        {{ h.objeto_del_lugar.tipo_de_objeto.objeto.nombre_del_objeto }}
+                      </h2>
 
-              <select id="id_filtro_lugar" name="lugar" class="form-select form-select-sm">
-                <option value="">Todos</option>
-
-                {% for l in lugares %}
-                  <option value="{{ l.id }}" {% if lugar_actual == l.id|stringformat:'s' %}selected{% endif %}>
-                    {{ l.nombre_del_lugar }} · Piso {{ l.piso.piso }} · {{ l.piso.ubicacion.ubicacion }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <div>
-              <label for="id_filtro_objeto" class="form-label small text-muted mb-1">
-                Objeto
-              </label>
-
-              <select id="id_filtro_objeto" name="objeto" class="form-select form-select-sm">
-                <option value="">Todos</option>
-
-                {% for obj in objetos_catalogo %}
-                  <option value="{{ obj.id }}" {% if objeto_actual == obj.id|stringformat:'s' %}selected{% endif %}>
-                    {{ obj.nombre_del_objeto }} · {{ obj.objeto_categoria.nombre_de_categoria }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <div>
-              <label for="id_filtro_tipo" class="form-label small text-muted mb-1">
-                Tipo de objeto
-              </label>
-
-              <select id="id_filtro_tipo" name="tipo" class="form-select form-select-sm">
-                <option value="">Todos</option>
-
-                {% for t in tipos %}
-                  <option value="{{ t.id }}" {% if tipo_actual == t.id|stringformat:'s' %}selected{% endif %}>
-                    {{ t.objeto.nombre_del_objeto }} · {{ t.marca }} {{ t.material }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <div>
-              <label for="id_filtro_estado" class="form-label small text-muted mb-1">
-                Condición anterior
-              </label>
-
-              <select id="id_filtro_estado" name="estado" class="form-select form-select-sm">
-                <option value="">Todas</option>
-
-                {% for value, label in estados %}
-                  <option value="{{ value }}" {% if estado_actual == value|stringformat:'s' %}selected{% endif %}>
-                    {% if value == "B" %}
-                      Todo bueno
-                    {% elif value == "P" %}
-                      Con pendientes
-                    {% else %}
-                      Con unidades malas
-                    {% endif %}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100">
-              Aplicar
-            </button>
-
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!-- Resultados -->
-    <div class="col-12 col-xl-9 col-xxl-10">
-      <div class="card card-soft">
-
-        <div class="card-body p-0">
-          {% if historicos %}
-
-            <table class="table table-hover tabla-historicos align-middle mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th class="col-info">Lugar / Objeto</th>
-                  <th class="col-cantidades">Unidades anteriores</th>
-                  <th class="col-condicion">Condición anterior</th>
-                  <th class="col-importancia">Importancia</th>
-                  <th class="col-detalle">Detalle anterior</th>
-                  <th class="col-fecha">Fecha</th>
-                  <th class="col-acciones text-end">Acciones</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {% for h in historicos %}
-                  <tr>
-                    <td>
-                      <div class="info-title">
+                      <div class="small text-muted text-break">
                         {{ h.objeto_del_lugar.lugar.nombre_del_lugar }}
-                      </div>
-
-                      <div class="info-sub">
-                        {{ h.objeto_del_lugar.lugar.piso.ubicacion.sector.sector }}
-                        · {{ h.objeto_del_lugar.lugar.piso.ubicacion.ubicacion }}
                         · Piso {{ h.objeto_del_lugar.lugar.piso.piso }}
+                        · {{ h.objeto_del_lugar.lugar.piso.ubicacion.ubicacion }}
                       </div>
+                    </div>
+                  </div>
 
-                      <div class="small mt-1">
-                        <strong>{{ h.objeto_del_lugar.tipo_de_objeto.objeto.nombre_del_objeto }}</strong>
-                        · {{ h.objeto_del_lugar.tipo_de_objeto.objeto.objeto_categoria.nombre_de_categoria }}
-                      </div>
+                  <i class="bi bi-chevron-right text-muted"></i>
+                </div>
 
-                      <div class="info-sub">
-                        {% if h.objeto_del_lugar.tipo_de_objeto.marca %}
-                          {{ h.objeto_del_lugar.tipo_de_objeto.marca }}
-                        {% else %}
-                          Sin marca
-                        {% endif %}
-                        /
-                        {% if h.objeto_del_lugar.tipo_de_objeto.material %}
-                          {{ h.objeto_del_lugar.tipo_de_objeto.material }}
-                        {% else %}
-                          Sin material
-                        {% endif %}
-                      </div>
-                    </td>
+                <div class="history-summary">
+                  <div>
+                    <span class="small text-muted d-block">Estado anterior</span>
 
-                    <td>
-                      <div class="cantidades-resumen">
-                        <div class="cantidad-row">
-                          <span class="cantidad-label">Total</span>
-                          <span class="cantidad-value">{{ h.cantidad_anterior }}</span>
-                        </div>
+                    {% if h.estado_anterior == "M" %}
+                      <span class="status-pill status-bad">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        Con falla
+                      </span>
+                    {% elif h.estado_anterior == "P" %}
+                      <span class="status-pill status-pending">
+                        <i class="bi bi-clock-fill me-1"></i>
+                        Por revisar
+                      </span>
+                    {% else %}
+                      <span class="status-pill status-good">
+                        <i class="bi bi-check-circle-fill me-1"></i>
+                        Funcionando
+                      </span>
+                    {% endif %}
+                  </div>
 
-                        <div class="cantidad-row">
-                          <span class="cantidad-label">Unid. malas</span>
-                          <span class="cantidad-value {% if h.cantidad_mala_anterior > 0 %}text-danger{% endif %}">
-                            {{ h.cantidad_mala_anterior }}
-                          </span>
-                        </div>
+                  <div>
+                    <span class="small text-muted d-block">Cantidad anterior</span>
+                    <span class="fw-semibold">{{ h.cantidad_anterior }}</span>
+                  </div>
 
-                        <div class="cantidad-row">
-                          <span class="cantidad-label">Unid. pendientes</span>
-                          <span class="cantidad-value {% if h.cantidad_pendiente_anterior > 0 %}text-warning{% endif %}">
-                            {{ h.cantidad_pendiente_anterior }}
-                          </span>
-                        </div>
+                  <div>
+                    <span class="small text-muted d-block">Con falla</span>
+                    <span class="fw-semibold">{{ h.cantidad_mala_anterior }}</span>
+                  </div>
 
-                        <div class="cantidad-row">
-                          <span class="cantidad-label">Mínimo</span>
-                          <span class="cantidad-value">{{ h.minimo_operativo_anterior }}</span>
-                        </div>
-                      </div>
-                    </td>
+                  <div>
+                    <span class="small text-muted d-block">Por revisar</span>
+                    <span class="fw-semibold">{{ h.cantidad_pendiente_anterior }}</span>
+                  </div>
+                </div>
 
-                    <td>
-                      {% if h.estado_anterior == "B" %}
-                        <span class="badge bg-success">Todo bueno</span>
-                      {% elif h.estado_anterior == "P" %}
-                        <span class="badge bg-warning text-dark">Con pendientes</span>
-                      {% else %}
-                        <span class="badge bg-danger">Con unidades malas</span>
-                      {% endif %}
-                    </td>
-
-                    <td>
-                      {% if h.importancia_anterior == 3 %}
-                        <span class="fw-semibold">Alta / Crítica</span>
-                      {% elif h.importancia_anterior == 2 %}
-                        <span class="fw-semibold">Media</span>
-                      {% else %}
-                        <span class="fw-semibold">Baja</span>
-                      {% endif %}
-                    </td>
-
-                    <td class="text-muted">
-                      {% if h.detalle_anterior %}
-                        {{ h.detalle_anterior }}
-                      {% else %}
-                        —
-                      {% endif %}
-                    </td>
-
-                    <td>
-                      {{ h.fecha_anterior|date:"d/m/Y" }}
-                    </td>
-
-                    <td class="text-end">
-                      <div class="acciones-wrap">
-                        <a class="btn btn-outline-primary btn-mini"
-                           href="{% url 'detalle_historico' historico_id=h.id %}">
-                          Ver
-                        </a>
-
-                        <a class="btn btn-outline-secondary btn-mini"
-                           href="{% url 'editar_historico' historico_id=h.id %}">
-                          Editar
-                        </a>
-
-                        <a class="btn btn-outline-danger btn-mini"
-                           href="{% url 'borrar_historico' historico_id=h.id %}">
-                          Borrar
-                        </a>
-
-                        <a class="btn btn-outline-dark btn-mini"
-                           href="{% url 'detalle_objeto_lugar' h.objeto_del_lugar.id %}">
-                          Objeto
-                        </a>
-                      </div>
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-
-          {% else %}
-            <div class="p-4">
-              <div class="alert alert-secondary mb-0 rounded-4">
-                No hay históricos
-                {% if lugar_actual or objeto_actual or tipo_actual or estado_actual %}
-                  para el filtro seleccionado
-                {% endif %}.
               </div>
             </div>
-          {% endif %}
+          </a>
         </div>
+      {% endfor %}
+    </div>
 
+    <div id="sinResultadosHistorico" class="d-none">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body text-center py-5">
+          <i class="bi bi-search fs-2 text-muted"></i>
+          <div class="fw-semibold mt-2">No encontramos registros</div>
+          <div class="small text-muted">
+            Prueba con otra búsqueda o cambia los filtros.
+          </div>
+        </div>
       </div>
     </div>
 
+  {% else %}
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-body text-center py-5">
+        <div class="empty-icon mx-auto mb-3">
+          <i class="bi bi-clock-history"></i>
+        </div>
+
+        <h2 class="h5 fw-bold">No hay registros históricos</h2>
+
+        <div class="text-muted">
+          {% if lugar_actual or objeto_actual or tipo_actual or estado_actual %}
+            No hay cambios que coincidan con los filtros aplicados.
+          {% else %}
+            Los cambios guardados en los objetos aparecerán aquí.
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+
+<div
+  class="modal fade"
+  id="filtrosHistoricoModal"
+  tabindex="-1"
+  aria-labelledby="filtrosHistoricoLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable filtros-modal-dialog">
+    <div class="modal-content border-0 rounded-4 shadow">
+
+      <form method="get">
+
+        <div class="modal-header border-bottom">
+          <div>
+            <h2 class="modal-title h5 fw-bold mb-1" id="filtrosHistoricoLabel">
+              Filtrar historial
+            </h2>
+
+            <div class="small text-muted">
+              Usa solo los filtros que necesites.
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Cerrar"
+          ></button>
+        </div>
+
+        <div class="modal-body p-3 p-md-4">
+
+          <div class="mb-3">
+            <label for="filtroLugar" class="form-label fw-semibold">
+              Lugar
+            </label>
+
+            <select name="lugar" id="filtroLugar" class="form-select">
+              <option value="">Todos los lugares</option>
+
+              {% for lugar in lugares %}
+                <option
+                  value="{{ lugar.id }}"
+                  {% if lugar_actual == lugar.id|stringformat:'s' %}selected{% endif %}
+                >
+                  {{ lugar.nombre_del_lugar }}
+                  · {{ lugar.piso.ubicacion.ubicacion }}
+                  · Piso {{ lugar.piso.piso }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="filtroObjeto" class="form-label fw-semibold">
+              Objeto
+            </label>
+
+            <select name="objeto" id="filtroObjeto" class="form-select">
+              <option value="">Todos los objetos</option>
+
+              {% for objeto in objetos_catalogo %}
+                <option
+                  value="{{ objeto.id }}"
+                  {% if objeto_actual == objeto.id|stringformat:'s' %}selected{% endif %}
+                >
+                  {{ objeto.nombre_del_objeto }}
+                  · {{ objeto.objeto_categoria.nombre_de_categoria }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="filtroTipo" class="form-label fw-semibold">
+              Variante
+            </label>
+
+            <select name="tipo" id="filtroTipo" class="form-select">
+              <option value="">Todas las variantes</option>
+
+              {% for tipo in tipos %}
+                <option
+                  value="{{ tipo.id }}"
+                  {% if tipo_actual == tipo.id|stringformat:'s' %}selected{% endif %}
+                >
+                  {{ tipo.objeto.nombre_del_objeto }}
+                  · {{ tipo.marca|default:"Sin marca" }}
+                  · {{ tipo.material|default:"Sin material" }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label for="filtroEstado" class="form-label fw-semibold">
+              Estado anterior
+            </label>
+
+            <select name="estado" id="filtroEstado" class="form-select">
+              <option value="">Todos los estados</option>
+
+              {% for valor, etiqueta in estados %}
+                <option
+                  value="{{ valor }}"
+                  {% if estado_actual == valor %}selected{% endif %}
+                >
+                  {% if valor == "M" %}
+                    Con falla
+                  {% elif valor == "P" %}
+                    Por revisar
+                  {% else %}
+                    Funcionando
+                  {% endif %}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+        </div>
+
+        <div class="modal-footer border-top">
+          <a href="{% url 'lista_historicos' %}" class="btn btn-outline-secondary">
+            Limpiar
+          </a>
+
+          <button type="submit" class="btn pvsa-btn px-4">
+            <i class="bi bi-funnel me-1"></i>
+            Aplicar filtros
+          </button>
+        </div>
+
+      </form>
+    </div>
   </div>
 </div>
+
+<style>
+.historicos-page{max-width:1400px;margin:0 auto}
+.pvsa-section-badge{color:var(--pvsa-accent);background:rgba(6,182,185,.08);border:1px solid rgba(6,182,185,.20);border-radius:999px;padding:.35rem .7rem;font-size:.82rem;font-weight:700}
+.pvsa-bg{background:var(--pvsa-accent)!important}
+.result-count{display:flex;align-items:center;justify-content:center;min-height:38px;padding:.45rem .75rem;border:1px solid #dee2e6;border-radius:.6rem;background:#f8f9fa;color:#6c757d;font-size:.82rem;white-space:nowrap}
+.historico-card{transition:transform .15s ease,box-shadow .15s ease}
+.historico-link:hover .historico-card,.historico-link:focus .historico-card{transform:translateY(-2px);box-shadow:0 .7rem 1.5rem rgba(0,0,0,.08)!important}
+.history-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:0 0 auto;background:rgba(6,182,185,.10);color:var(--pvsa-accent)}
+.history-summary{display:grid;grid-template-columns:1.4fr repeat(3,minmax(0,1fr));gap:.75rem;padding-top:.9rem;border-top:1px solid #edf0f2}
+.status-pill{display:inline-flex;align-items:center;border-radius:999px;padding:.28rem .55rem;font-size:.76rem;font-weight:700;margin-top:.2rem}
+.status-good{background:rgba(25,135,84,.10);color:#146c43}
+.status-pending{background:rgba(255,193,7,.16);color:#725b00}
+.status-bad{background:rgba(220,53,69,.10);color:#b02a37}
+.empty-icon{width:58px;height:58px;border-radius:18px;display:grid;place-items:center;background:rgba(6,182,185,.10);color:var(--pvsa-accent);font-size:1.45rem}
+.min-w-0{min-width:0}
+.filtros-modal-dialog{width:calc(100% - 3rem);max-width:720px;height:calc(100dvh - 6rem);margin:3rem auto}
+.filtros-modal-dialog .modal-content{max-height:100%}
+@media (max-width:767.98px){
+  .history-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:575.98px){
+  .filtros-modal-dialog{width:100%;max-width:none;height:100dvh;margin:0}
+  .filtros-modal-dialog .modal-content{height:100%;max-height:none;border-radius:0!important}
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const grid = document.getElementById("historicosGrid");
+  const searchInput = document.getElementById("buscarHistorico");
+  const orderSelect = document.getElementById("ordenHistoricos");
+  const count = document.getElementById("historicosVisibles");
+  const empty = document.getElementById("sinResultadosHistorico");
+
+  function normalizar(texto) {
+    return String(texto || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+  }
+
+  function items() {
+    return grid ? Array.from(grid.querySelectorAll(".historico-item")) : [];
+  }
+
+  function ordenar() {
+    if (!grid || !orderSelect) return;
+
+    const criterio = orderSelect.value;
+
+    items()
+      .sort(function (a, b) {
+        if (criterio === "antiguo") {
+          return (a.dataset.fecha || "").localeCompare(b.dataset.fecha || "");
+        }
+
+        if (criterio === "objeto") {
+          return normalizar(a.dataset.objeto).localeCompare(
+            normalizar(b.dataset.objeto),
+            "es"
+          );
+        }
+
+        if (criterio === "lugar") {
+          return normalizar(a.dataset.lugar).localeCompare(
+            normalizar(b.dataset.lugar),
+            "es"
+          );
+        }
+
+        return (b.dataset.fecha || "").localeCompare(a.dataset.fecha || "");
+      })
+      .forEach(function (item) {
+        grid.appendChild(item);
+      });
+  }
+
+  function filtrar() {
+    const consulta = normalizar(searchInput?.value);
+    let visibles = 0;
+
+    items().forEach(function (item) {
+      const mostrar =
+        !consulta ||
+        normalizar(item.dataset.search).includes(consulta);
+
+      item.classList.toggle("d-none", !mostrar);
+
+      if (mostrar) visibles += 1;
+    });
+
+    if (count) count.textContent = visibles;
+    if (empty) empty.classList.toggle("d-none", visibles !== 0);
+  }
+
+  if (searchInput) searchInput.addEventListener("input", filtrar);
+
+  if (orderSelect) {
+    orderSelect.addEventListener("change", function () {
+      ordenar();
+      filtrar();
+    });
+  }
+
+  ordenar();
+  filtrar();
+});
+</script>
 {% endblock %}

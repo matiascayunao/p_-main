@@ -1,97 +1,251 @@
 {% extends "base.html" %}
+
+{% block title %}Crear variante · PVSA{% endblock %}
+
 {% block content %}
-<div class="container-xxl py-4" style="max-width: 980px;">
+<div class="py-2 py-lg-3 form-page">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8 col-xl-6">
 
-  <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
-    <div>
-      <nav aria-label="breadcrumb" class="small">
-        <ol class="breadcrumb mb-2">
-          <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
-          <li class="breadcrumb-item"><a href="{% url 'lista_tipos_objeto' %}">Tipos de objeto</a></li>
-          <li class="breadcrumb-item active" aria-current="page">Crear</li>
-        </ol>
-      </nav>
-      <h2 class="h4 fw-bold mb-1">Crear tipo de objeto</h2>
-      <div class="text-muted">Asocia un objeto y define marca/material si aplica.</div>
-    </div>
+      <div class="mb-4">
+        <div class="mb-3">
+          {% if objeto_preseleccionado %}
+            <a
+              href="{% url 'detalle_objeto' objeto_id=objeto_preseleccionado.id %}"
+              class="btn btn-outline-secondary btn-sm"
+            >
+              <i class="bi bi-arrow-left me-1"></i>
+              Volver al objeto
+            </a>
+          {% else %}
+            <a href="{% url 'lista_tipos_objeto' %}" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-arrow-left me-1"></i>
+              Volver a variantes
+            </a>
+          {% endif %}
+        </div>
 
-    <a class="btn btn-outline-secondary" href="{% url 'lista_tipos_objeto' %}">Volver</a>
-  </div>
+        <div class="d-inline-flex align-items-center gap-2 pvsa-section-badge mb-2">
+          <i class="bi bi-box"></i>
+          Nueva variante
+        </div>
 
-  <div class="card border-0 shadow-sm rounded-4">
-    <div class="card-body p-3 p-md-4">
+        <h1 class="h3 fw-bold mb-1">Crear variante</h1>
 
-      <form method="post" novalidate>
+        <div class="text-muted">
+          {% if objeto_preseleccionado %}
+            Agrega una variante de
+            <strong>{{ objeto_preseleccionado.nombre_del_objeto }}</strong>.
+          {% else %}
+            Indica qué objeto es y, si corresponde, su marca y material.
+          {% endif %}
+        </div>
+      </div>
+
+      <form method="post" novalidate id="crearVarianteForm">
         {% csrf_token %}
 
         {% if form.non_field_errors %}
-          <div class="alert alert-danger rounded-4">{{ form.non_field_errors }}</div>
+          <div class="alert alert-danger rounded-4 shadow-sm">
+            {{ form.non_field_errors }}
+          </div>
         {% endif %}
 
-        <div class="mb-3">
-          <label class="form-label small text-muted mb-1" for="{{ form.objeto.id_for_label }}">Objeto</label>
-          <select
-            name="{{ form.objeto.name }}"
-            id="{{ form.objeto.id_for_label }}"
-            class="form-select {% if form.objeto.errors %}is-invalid{% endif %}"
-            required
-          >
-            {% for option in form.objeto.field.choices %}
-              <option value="{{ option.0 }}"
-                {% if form.objeto.value|stringformat:"s" == option.0|stringformat:"s" %}selected{% endif %}>
-                {{ option.1 }}
-              </option>
-            {% endfor %}
-          </select>
-          {% if form.objeto.errors %}
-            <div class="invalid-feedback">{{ form.objeto.errors|striptags }}</div>
-          {% endif %}
-          <div class="form-text">Este es el “objeto base”. Luego se diferencia por marca/material.</div>
-        </div>
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+          <div class="card-body p-3 p-md-4">
 
-        <div class="row g-3">
-          <div class="col-md-6">
-            <label class="form-label small text-muted mb-1" for="{{ form.marca.id_for_label }}">Marca (opcional)</label>
-            <input
-              type="text"
-              name="{{ form.marca.name }}"
-              id="{{ form.marca.id_for_label }}"
-              value="{{ form.marca.value|default_if_none:'' }}"
-              class="form-control {% if form.marca.errors %}is-invalid{% endif %}"
-              placeholder="Ej: Siemens"
-            >
-            {% if form.marca.errors %}
-              <div class="invalid-feedback">{{ form.marca.errors|striptags }}</div>
-            {% endif %}
+            <div class="d-flex align-items-center gap-3 mb-4">
+              <div class="section-icon">
+                <i class="bi bi-box"></i>
+              </div>
+
+              <div>
+                <h2 class="h5 fw-bold mb-1">Datos de la variante</h2>
+                <div class="small text-muted">
+                  Marca y material son opcionales.
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold" for="{{ form.objeto.id_for_label }}">
+                Objeto
+              </label>
+
+              {{ form.objeto }}
+
+              {% if form.objeto.errors %}
+                <div class="text-danger small mt-1">
+                  {{ form.objeto.errors|striptags }}
+                </div>
+              {% endif %}
+
+              <div class="form-text">
+                Elige el objeto general al que pertenece esta variante.
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold" for="{{ form.marca.id_for_label }}">
+                  Marca
+                  <span class="text-muted fw-normal">(opcional)</span>
+                </label>
+
+                {{ form.marca }}
+
+                {% if form.marca.errors %}
+                  <div class="text-danger small mt-1">
+                    {{ form.marca.errors|striptags }}
+                  </div>
+                {% endif %}
+
+                <div class="form-text">
+                  Ejemplo: Fanaloza, Briggs o Schneider.
+                </div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold" for="{{ form.material.id_for_label }}">
+                  Material
+                  <span class="text-muted fw-normal">(opcional)</span>
+                </label>
+
+                {{ form.material }}
+
+                {% if form.material.errors %}
+                  <div class="text-danger small mt-1">
+                    {{ form.material.errors|striptags }}
+                  </div>
+                {% endif %}
+
+                <div class="form-text">
+                  Ejemplo: Cerámica, acero o plástico.
+                </div>
+              </div>
+            </div>
+
+            <div id="varianteDuplicateAlert" class="duplicate-alert d-none mt-3"></div>
+
+            <div class="info-note mt-4">
+              <i class="bi bi-info-circle me-1"></i>
+              Si no necesitas diferenciar marca o material, puedes dejar ambos campos vacíos.
+            </div>
+
           </div>
 
-          <div class="col-md-6">
-            <label class="form-label small text-muted mb-1" for="{{ form.material.id_for_label }}">Material (opcional)</label>
-            <input
-              type="text"
-              name="{{ form.material.name }}"
-              id="{{ form.material.id_for_label }}"
-              value="{{ form.material.value|default_if_none:'' }}"
-              class="form-control {% if form.material.errors %}is-invalid{% endif %}"
-              placeholder="Ej: Acero inoxidable"
-            >
-            {% if form.material.errors %}
-              <div class="invalid-feedback">{{ form.material.errors|striptags }}</div>
-            {% endif %}
+          <div class="card-footer bg-white border-top p-3 p-md-4">
+            <div class="d-flex flex-column-reverse flex-sm-row justify-content-end gap-2">
+              {% if objeto_preseleccionado %}
+                <a
+                  href="{% url 'detalle_objeto' objeto_id=objeto_preseleccionado.id %}"
+                  class="btn btn-outline-secondary"
+                >
+                  Cancelar
+                </a>
+              {% else %}
+                <a href="{% url 'lista_tipos_objeto' %}" class="btn btn-outline-secondary">
+                  Cancelar
+                </a>
+              {% endif %}
+
+              <button id="crearVarianteBtn" type="submit" class="btn pvsa-btn px-4">
+                <i class="bi bi-check-circle me-1"></i>
+                Crear variante
+              </button>
+            </div>
           </div>
         </div>
-
-        <hr class="my-4">
-
-        <div class="d-flex flex-wrap gap-2">
-          <button class="btn btn-primary" type="submit">Guardar</button>
-          <a class="btn btn-outline-secondary" href="{% url 'lista_tipos_objeto' %}">Cancelar</a>
-        </div>
-
       </form>
+
+      {{ variantes_existentes|json_script:"variantes-existentes-data" }}
 
     </div>
   </div>
-
 </div>
+
+<style>
+.form-page{max-width:1200px;margin:0 auto}
+.pvsa-section-badge{color:var(--pvsa-accent);background:rgba(6,182,185,.08);border:1px solid rgba(6,182,185,.20);border-radius:999px;padding:.35rem .7rem;font-size:.82rem;font-weight:700}
+.section-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:0 0 auto;background:rgba(6,182,185,.10);color:var(--pvsa-accent);font-size:1.05rem}
+form input,form select,form textarea{width:100%;min-height:38px}
+.duplicate-alert{padding:.7rem .8rem;border-radius:.8rem;background:rgba(220,53,69,.08);border:1px solid rgba(220,53,69,.20);color:#b02a37;font-size:.82rem;line-height:1.45}
+.info-note{padding:.75rem .85rem;border-radius:.8rem;background:#f8f9fa;color:#495057;font-size:.84rem}
+@media (max-width:575.98px){
+  .card-footer .btn{width:100%}
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const objeto = document.getElementById("{{ form.objeto.id_for_label }}");
+  const marca = document.getElementById("{{ form.marca.id_for_label }}");
+  const material = document.getElementById("{{ form.material.id_for_label }}");
+  const alertBox = document.getElementById("varianteDuplicateAlert");
+  const submitBtn = document.getElementById("crearVarianteBtn");
+  const data = JSON.parse(
+    document.getElementById("variantes-existentes-data").textContent
+  );
+
+  function normalizar(valor) {
+    return String(valor || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .replace(/\s+/g, " ")
+      .toLocaleLowerCase("es");
+  }
+
+  function verificar() {
+    const objetoId = Number(objeto?.value || 0);
+    const marcaValor = normalizar(marca?.value);
+    const materialValor = normalizar(material?.value);
+
+    const exacta = data.find(function (item) {
+      return Number(item.objeto_id) === objetoId &&
+             normalizar(item.marca) === marcaValor &&
+             normalizar(item.material) === materialValor;
+    });
+
+    const duplicada = Boolean(objetoId && exacta);
+
+    if (alertBox) {
+      alertBox.classList.toggle("d-none", !duplicada);
+
+      if (duplicada) {
+        const marcaTexto = exacta.marca || "Sin marca";
+        const materialTexto = exacta.material || "Sin material";
+
+        alertBox.innerHTML =
+          '<i class="bi bi-x-circle-fill me-1"></i>' +
+          'Esta variante ya existe: <strong>' +
+          exacta.objeto__nombre_del_objeto +
+          '</strong> · ' +
+          marcaTexto +
+          ' · ' +
+          materialTexto +
+          '.';
+      } else {
+        alertBox.innerHTML = "";
+      }
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = duplicada;
+    }
+
+    if (marca) marca.classList.toggle("is-invalid", duplicada);
+    if (material) material.classList.toggle("is-invalid", duplicada);
+  }
+
+  [objeto, marca, material].forEach(function (campo) {
+    if (!campo) return;
+    campo.addEventListener("input", verificar);
+    campo.addEventListener("change", verificar);
+    campo.addEventListener("blur", verificar);
+  });
+
+  verificar();
+});
+</script>
 {% endblock %}

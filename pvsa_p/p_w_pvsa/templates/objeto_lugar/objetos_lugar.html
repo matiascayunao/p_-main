@@ -1,687 +1,1302 @@
-{# templates/objeto_lugar/objetos_lugar.html #}
 {% extends "base.html" %}
 
+{% block title %}Objetos registrados · PVSA{% endblock %}
+
 {% block content %}
-<style>
-  .page-wrap {
-    max-width: 1750px;
-    margin: 0 auto;
-  }
+<div class="py-2 py-lg-3 objetos-page">
 
-  .card-soft {
-    border: 0;
-    border-radius: 18px;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-    overflow: hidden;
-  }
-
-  .filters-card {
-    position: sticky;
-    top: 80px;
-  }
-
-  .help-chip {
-    border-radius: 999px;
-    padding: 0.35rem 0.65rem;
-    font-size: 0.76rem;
-    font-weight: 600;
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    color: #343a40;
-  }
-
-  .tabla-objetos {
-    width: 100%;
-    table-layout: fixed;
-  }
-
-  .tabla-objetos th {
-    font-size: 0.8rem;
-    color: #495057;
-    white-space: nowrap;
-    vertical-align: middle;
-  }
-
-  .tabla-objetos td {
-    font-size: 0.86rem;
-    vertical-align: middle;
-    white-space: normal;
-    word-break: normal;
-    overflow-wrap: break-word;
-  }
-
-  .col-lugar {
-    width: 20%;
-  }
-
-  .col-objeto {
-    width: 22%;
-  }
-
-  .col-cantidad {
-    width: 13%;
-  }
-
-  .col-importancia {
-    width: 11%;
-  }
-
-  .col-operatividad {
-    width: 16%;
-  }
-
-  .col-fecha {
-    width: 9%;
-  }
-
-  .col-acciones {
-    width: 11%;
-  }
-
-  .location-title,
-  .obj-title {
-    font-weight: 700;
-  }
-
-  .location-sub,
-  .obj-sub {
-    color: #6c757d;
-    font-size: 0.8rem;
-  }
-
-  .cantidades-resumen {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    max-width: 135px;
-  }
-
-  .cantidad-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    line-height: 1.1;
-  }
-
-  .cantidad-label {
-    font-size: 0.75rem;
-    color: #6c757d;
-    white-space: nowrap;
-  }
-
-  .cantidad-value {
-    font-size: 0.9rem;
-    font-weight: 700;
-    min-width: 26px;
-    text-align: right;
-  }
-
-  .barra-wrap {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-width: 0;
-  }
-
-  .barra-mini {
-    height: 10px;
-    min-width: 0;
-    background: #e9ecef;
-    border-radius: 999px;
-    overflow: hidden;
-    flex: 1;
-  }
-
-  .barra-mini-fill {
-    height: 100%;
-    width: 0%;
-    border-radius: 999px;
-  }
-
-  .badge-operatividad {
-    min-width: 64px;
-    display: inline-block;
-    font-size: 0.76rem;
-  }
-
-  .estado-small {
-    font-size: 0.78rem;
-    font-weight: 700;
-    margin-top: 4px;
-  }
-
-  .fecha-text {
-    white-space: nowrap;
-  }
-
-  .btn-mini {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.76rem;
-    white-space: nowrap;
-  }
-
-  .acciones-wrap {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    gap: 0.4rem;
-    justify-content: flex-end;
-    align-items: center;
-    padding-left: 8px;
-  }
-
-  .fecha-text {
-    white-space: nowrap;
-    display: inline-block;
-    padding-right: 12px;
-  }
-
-  @media (max-width: 1199px) {
-    .filters-card {
-      position: static;
-    }
-
-    .tabla-objetos,
-    .tabla-objetos thead,
-    .tabla-objetos tbody,
-    .tabla-objetos th,
-    .tabla-objetos td,
-    .tabla-objetos tr {
-      display: block;
-      width: 100%;
-    }
-
-    .tabla-objetos thead {
-      display: none;
-    }
-
-    .tabla-objetos tr {
-      padding: 1rem;
-      border-bottom: 1px solid #dee2e6;
-    }
-
-    .tabla-objetos td {
-      border: 0;
-      padding: 0.35rem 0;
-    }
-
-    .cantidades-resumen {
-      max-width: 240px;
-    }
-
-    .acciones-wrap {
-      justify-content: flex-start;
-      max-width: 180px;
-    }
-  }
-</style>
-
-<div class="container-fluid py-4 page-wrap">
-
-  <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+  <div class="d-flex flex-column flex-xl-row align-items-xl-end justify-content-between gap-3 mb-4">
     <div>
-      <h1 class="h3 fw-bold mb-1">Objetos del lugar</h1>
+      <div class="d-inline-flex align-items-center gap-2 pvsa-section-badge mb-2">
+        <i class="bi bi-box-seam"></i>
+        Inventario
+      </div>
+
+      <h1 class="h3 fw-bold mb-1">Objetos registrados</h1>
+
       <div class="text-muted">
-        Vista general de objetos registrados, fallas, pendientes y operatividad.
+        Revisa qué está funcionando, qué necesita revisión y dónde existen fallas.
       </div>
     </div>
 
-    <div class="d-flex flex-wrap gap-2">
-      <span class="help-chip">Verde: operativo</span>
-      <span class="help-chip">Amarillo: observación</span>
-      <span class="help-chip">Rojo: crítico</span>
-      <a href="{% url 'lista_objetos_lugar' %}" class="btn btn-outline-secondary btn-sm">
-        Limpiar filtros
-      </a>
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+      <span class="status-chip">
+        <span class="status-dot bg-success"></span>
+        Operativo
+      </span>
+
+      <span class="status-chip">
+        <span class="status-dot bg-warning"></span>
+        Requiere atención
+      </span>
+
+      <span class="status-chip">
+        <span class="status-dot bg-danger"></span>
+        Crítico
+      </span>
+
+      <button
+        type="button"
+        class="btn pvsa-btn"
+        data-bs-toggle="modal"
+        data-bs-target="#filtrosObjetosModal"
+      >
+        <i class="bi bi-funnel-fill me-1"></i>
+        Filtros
+        <span id="filterCountBadge" class="badge rounded-pill bg-white text-dark ms-1 d-none">0</span>
+      </button>
     </div>
   </div>
 
-  <div class="row g-4">
+  <div id="activeFilters" class="d-flex flex-wrap gap-2 mb-3"></div>
 
-    <div class="col-12 col-xl-3 col-xxl-2">
-      <div class="card card-soft filters-card">
-        <div class="card-header bg-white border-0 p-3">
-          <div class="fw-bold">Filtros</div>
-          <div class="text-muted small">Busca por ubicación, lugar, objeto o condición</div>
-        </div>
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-3 p-md-4">
+      <div class="row g-3 align-items-center">
 
-        <div class="card-body p-3">
-          <form method="get" class="vstack gap-3">
-
-            <div>
-              <label class="form-label small text-muted mb-1" for="id_filtro_sector">Sector</label>
-              <select id="id_filtro_sector" name="sector" class="form-select form-select-sm">
-                <option value="">Todos los sectores</option>
-                {% for s in sectores %}
-                  <option value="{{ s.id }}" {% if sector_actual == s.id|stringformat:'s' %}selected{% endif %}>
-                    {{ s.sector }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <div>
-              <label class="form-label small text-muted mb-1" for="id_filtro_ubicacion">Ubicación</label>
-              <select id="id_filtro_ubicacion" name="ubicacion" class="form-select form-select-sm">
-                <option value="">Todas las ubicaciones</option>
-                {% for u in ubicaciones %}
-                  <option value="{{ u.id }}" {% if ubicacion_actual == u.id|stringformat:'s' %}selected{% endif %}>
-                    {{ u.ubicacion }} · {{ u.sector.sector }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <div>
-              <label class="form-label small text-muted mb-1" for="id_filtro_piso">Piso</label>
-              <select id="id_filtro_piso" name="piso" class="form-select form-select-sm">
-                <option value="">Todos los pisos</option>
-                {% for p in pisos %}
-                  <option value="{{ p.id }}" {% if piso_actual == p.id|stringformat:'s' %}selected{% endif %}>
-                    Piso {{ p.piso }} · {{ p.ubicacion.ubicacion }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <div>
-              <label class="form-label small text-muted mb-1" for="id_filtro_tipo_lugar">Tipo de lugar</label>
-              <select id="id_filtro_tipo_lugar" name="tipo_lugar" class="form-select form-select-sm">
-                <option value="">Todos los tipos</option>
-                {% for tl in tipos_lugar %}
-                  <option value="{{ tl.id }}" {% if tipo_lugar_actual == tl.id|stringformat:'s' %}selected{% endif %}>
-                    {{ tl.tipo_de_lugar }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <div>
-              <label class="form-label small text-muted mb-1" for="id_filtro_lugar">Lugar</label>
-              <select id="id_filtro_lugar" name="lugar" class="form-select form-select-sm">
-                <option value="">Todos los lugares</option>
-                {% for l in lugares %}
-                  <option value="{{ l.id }}" {% if lugar_actual == l.id|stringformat:'s' %}selected{% endif %}>
-                    {{ l.nombre_del_lugar }} · Piso {{ l.piso.piso }} · {{ l.piso.ubicacion.ubicacion }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <hr class="my-1">
-
-            <div>
-              <label class="form-label small text-muted mb-1" for="id_filtro_categoria">Categoría</label>
-              <select id="id_filtro_categoria" name="categoria" class="form-select form-select-sm">
-                <option value="">Todas las categorías</option>
-                {% for c in categorias %}
-                  <option value="{{ c.id }}" {% if categoria_actual == c.id|stringformat:'s' %}selected{% endif %}>
-                    {{ c.nombre_de_categoria }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <div>
-              <label class="form-label small text-muted mb-1" for="id_filtro_objeto">Objeto</label>
-              <select id="id_filtro_objeto" name="objeto" class="form-select form-select-sm">
-                <option value="">Todos los objetos</option>
-                {% for obj in objetos_catalogo %}
-                  <option value="{{ obj.id }}" {% if objeto_actual == obj.id|stringformat:'s' %}selected{% endif %}>
-                    {{ obj.nombre_del_objeto }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <div>
-              <label class="form-label small text-muted mb-1" for="id_filtro_tipo">Tipo de objeto</label>
-              <select id="id_filtro_tipo" name="tipo" class="form-select form-select-sm">
-                <option value="">Todos los tipos</option>
-                {% for t in tipos %}
-                  <option value="{{ t.id }}" {% if tipo_actual == t.id|stringformat:'s' %}selected{% endif %}>
-                    {{ t.objeto.nombre_del_objeto }} ·
-                    {% if t.marca %}{{ t.marca }}{% else %}Sin marca{% endif %}
-                    /
-                    {% if t.material %}{{ t.material }}{% else %}Sin material{% endif %}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <div>
-              <label class="form-label small text-muted mb-1" for="id_filtro_marca">Marca</label>
-              <select id="id_filtro_marca" name="marca" class="form-select form-select-sm">
-                <option value="">Todas las marcas</option>
-                {% for m in marcas %}
-                  {% if m %}
-                    <option value="{{ m }}" {% if marca_actual == m %}selected{% endif %}>
-                      {{ m }}
-                    </option>
-                  {% endif %}
-                {% endfor %}
-              </select>
-            </div>
-
-            <div>
-              <label class="form-label small text-muted mb-1" for="id_filtro_material">Material</label>
-              <select id="id_filtro_material" name="material" class="form-select form-select-sm">
-                <option value="">Todos los materiales</option>
-                {% for mat in materiales %}
-                  {% if mat %}
-                    <option value="{{ mat }}" {% if material_actual == mat %}selected{% endif %}>
-                      {{ mat }}
-                    </option>
-                  {% endif %}
-                {% endfor %}
-              </select>
-            </div>
-
-            <hr class="my-1">
-
-            <div>
-              <label class="form-label small text-muted mb-1" for="id_filtro_estado">Condición de unidades</label>
-              <select id="id_filtro_estado" name="estado" class="form-select form-select-sm">
-                <option value="">Todas las condiciones</option>
-                {% for value, label in estados %}
-                  <option value="{{ value }}" {% if estado_actual == value|stringformat:'s' %}selected{% endif %}>
-                    {% if value == "B" %}
-                      Todo bueno
-                    {% elif value == "P" %}
-                      Con pendientes
-                    {% else %}
-                      Con unidades malas
-                    {% endif %}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <div>
-              <label class="form-label small text-muted mb-1" for="id_filtro_importancia">Importancia</label>
-              <select id="id_filtro_importancia" name="importancia" class="form-select form-select-sm">
-                <option value="">Todas las importancias</option>
-                {% for value, label in importancias %}
-                  <option value="{{ value }}" {% if importancia_actual == value|stringformat:'s' %}selected{% endif %}>
-                    {{ label }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <div>
-              <label class="form-label small text-muted mb-1" for="id_filtro_operatividad">Operatividad</label>
-              <select id="id_filtro_operatividad" name="operatividad" class="form-select form-select-sm">
-                <option value="">Todas</option>
-                <option value="critico" {% if operatividad_actual == "critico" %}selected{% endif %}>
-                  Crítico menor a 50%
-                </option>
-                <option value="observacion" {% if operatividad_actual == "observacion" %}selected{% endif %}>
-                  Observación 50% a 79%
-                </option>
-                <option value="operativo" {% if operatividad_actual == "operativo" %}selected{% endif %}>
-                  Operativo 80% a 100%
-                </option>
-              </select>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100">
-              Aplicar filtros
-            </button>
-
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-xl-9 col-xxl-10">
-      <div class="card card-soft">
-
-        <div class="card-header bg-white border-0 p-3 p-md-4">
-          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-            <div>
-              <div class="fw-bold">Resultados</div>
-              <div class="text-muted small">
-                {% if sector_actual or ubicacion_actual or piso_actual or tipo_lugar_actual or lugar_actual or categoria_actual or objeto_actual or tipo_actual or estado_actual or importancia_actual or operatividad_actual or marca_actual or material_actual %}
-                  Mostrando registros según los filtros seleccionados.
-                {% else %}
-                  Mostrando todos los objetos registrados.
-                {% endif %}
-              </div>
-            </div>
-
-            <span class="badge rounded-pill text-bg-light border px-3 py-2">
-              Registros: <strong class="ms-1">{{ objetos|length }}</strong>
+        <div class="col-12 col-lg">
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="bi bi-search text-muted"></i>
             </span>
+
+            <input
+              id="buscarObjeto"
+              type="search"
+              class="form-control border-start-0 ps-0"
+              placeholder="Buscar por objeto, lugar, sector, marca o material..."
+              autocomplete="off"
+            >
           </div>
         </div>
 
-        <div class="card-body p-0">
-          {% if objetos %}
-            <table class="table table-hover tabla-objetos align-middle mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th class="col-lugar">Lugar</th>
-                  <th class="col-objeto">Objeto</th>
-                  <th class="col-cantidad">Cantidades</th>
-                  <th class="col-importancia">Importancia</th>
-                  <th class="col-operatividad">Operatividad</th>
-                  <th class="col-fecha">Fecha</th>
-                  <th class="col-acciones text-end">Acciones</th>
-                </tr>
-              </thead>
+        <div class="col-12 col-md-6 col-lg-auto">
+          <select id="vistaRapida" class="form-select">
+            <option value="todos">Todos los estados</option>
+            <option value="atencion">Solo requieren atención</option>
+            <option value="falla">Con unidades con falla</option>
+            <option value="revision">Con unidades por revisar</option>
+            <option value="operativo">Solo operativos</option>
+          </select>
+        </div>
 
-              <tbody>
-                {% for o in objetos %}
-                <tr>
-                  <td>
-                    <div class="location-title">
-                      {% if o.lugar %}
-                        {{ o.lugar.nombre_del_lugar }}
-                      {% else %}
-                        Sin lugar
-                      {% endif %}
-                    </div>
+        <div class="col-12 col-md-6 col-lg-auto">
+          <select id="ordenObjetos" class="form-select">
+            <option value="criticos">Críticos primero</option>
+            <option value="fallas">Más fallas primero</option>
+            <option value="pendientes">Más pendientes primero</option>
+            <option value="importancia">Mayor importancia</option>
+            <option value="recientes">Más recientes</option>
+            <option value="objeto_az">Objeto A → Z</option>
+            <option value="lugar_az">Lugar A → Z</option>
+            <option value="operativos">Operativos primero</option>
+          </select>
+        </div>
 
-                    <div class="location-sub">
-                      {% if o.lugar %}
-                        {{ o.lugar.piso.ubicacion.sector.sector }}
-                        · {{ o.lugar.piso.ubicacion.ubicacion }}
-                        · Piso {{ o.lugar.piso.piso }}
-                      {% else %}
-                        —
-                      {% endif %}
-                    </div>
-                  </td>
-
-                  <td>
-                    <div class="obj-title">
-                      {% if o.tipo_de_objeto and o.tipo_de_objeto.objeto %}
-                        {{ o.tipo_de_objeto.objeto.nombre_del_objeto }}
-                      {% else %}
-                        —
-                      {% endif %}
-                    </div>
-
-                    <div class="obj-sub">
-                      {% if o.tipo_de_objeto and o.tipo_de_objeto.objeto and o.tipo_de_objeto.objeto.objeto_categoria %}
-                        {{ o.tipo_de_objeto.objeto.objeto_categoria.nombre_de_categoria }}
-                      {% else %}
-                        Sin categoría
-                      {% endif %}
-                    </div>
-
-                    <div class="obj-sub">
-                      {% if o.tipo_de_objeto %}
-                        {% if o.tipo_de_objeto.marca %}{{ o.tipo_de_objeto.marca }}{% else %}Sin marca{% endif %}
-                        /
-                        {% if o.tipo_de_objeto.material %}{{ o.tipo_de_objeto.material }}{% else %}Sin material{% endif %}
-                      {% endif %}
-                    </div>
-
-                    {% if o.detalle %}
-                      <div class="small mt-1">
-                        {{ o.detalle }}
-                      </div>
-                    {% endif %}
-                  </td>
-
-                  <td>
-                    <div class="cantidades-resumen">
-                      <div class="cantidad-row">
-                        <span class="cantidad-label">Total</span>
-                        <span class="cantidad-value">{{ o.cantidad }}</span>
-                      </div>
-
-                      <div class="cantidad-row">
-                        <span class="cantidad-label">Buenas</span>
-                        <span class="cantidad-value">{{ o.cantidad_buena }}</span>
-                      </div>
-
-                      <div class="cantidad-row">
-                        <span class="cantidad-label">Malas</span>
-                        <span class="cantidad-value {% if o.cantidad_mala > 0 %}text-danger{% endif %}">
-                          {{ o.cantidad_mala }}
-                        </span>
-                      </div>
-
-                      <div class="cantidad-row">
-                        <span class="cantidad-label">Pendientes</span>
-                        <span class="cantidad-value {% if o.cantidad_pendiente > 0 %}text-warning{% endif %}">
-                          {{ o.cantidad_pendiente }}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-
-                  <td>
-                    {{ o.get_importancia_display }}
-                    <div class="obj-sub">
-                      Mínimo: {{ o.minimo_operativo }}
-                    </div>
-                  </td>
-
-                  <td>
-                    <div class="barra-wrap">
-                      <div class="barra-mini">
-                        <div
-                          class="barra-mini-fill barra-operatividad"
-                          data-operatividad="{{ o.operatividad_objeto }}"
-                        ></div>
-                      </div>
-
-                      <span class="badge badge-operatividad rounded-pill bg-primary">
-                        {{ o.operatividad_objeto }}%
-                      </span>
-                    </div>
-
-                    {% if o.operatividad_objeto < 50 %}
-                      <div class="estado-small text-danger">Crítico</div>
-                    {% elif o.operatividad_objeto < 80 %}
-                      <div class="estado-small text-warning">Con observación</div>
-                    {% else %}
-                      <div class="estado-small text-success">Operativo</div>
-                    {% endif %}
-
-                    {% if o.cantidad_mala > 0 or o.cantidad_pendiente > 0 %}
-                      <div class="obj-sub mt-1">
-                        {% if o.cantidad_mala > 0 %}
-                          {{ o.cantidad_mala }} mala{% if o.cantidad_mala > 1 %}s{% endif %}
-                        {% endif %}
-
-                        {% if o.cantidad_mala > 0 and o.cantidad_pendiente > 0 %}
-                          ·
-                        {% endif %}
-
-                        {% if o.cantidad_pendiente > 0 %}
-                          {{ o.cantidad_pendiente }} pendiente{% if o.cantidad_pendiente > 1 %}s{% endif %}
-                        {% endif %}
-                      </div>
-                    {% endif %}
-                  </td>
-
-                  <td>
-                    <span class="fecha-text">{{ o.fecha|date:"d/m/Y" }}</span>
-                  </td>
-
-                  <td class="text-end">
-                    <div class="acciones-wrap">
-                      <a class="btn btn-outline-primary btn-mini" href="{% url 'detalle_objeto_lugar' objeto_lugar_id=o.id %}">
-                        Ver
-                      </a>
-
-                      <a class="btn btn-outline-secondary btn-mini" href="{% url 'editar_objeto_lugar' objeto_lugar_id=o.id %}">
-                        Editar
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          {% else %}
-            <div class="p-4">
-              <div class="alert alert-secondary mb-0 rounded-4">
-                No hay registros para mostrar.
-              </div>
-            </div>
-          {% endif %}
+        <div class="col-12 col-lg-auto">
+          <div class="result-count">
+            <i class="bi bi-box-seam me-1"></i>
+            <span id="objetosVisibles">{{ objetos|length }}</span>
+            de {{ objetos|length }} registros
+          </div>
         </div>
 
       </div>
     </div>
-
   </div>
+
+  {% if objetos %}
+
+    <div id="objetosContainer">
+
+      <div class="d-none d-lg-block">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 objetos-table-simple">
+              <thead class="table-light">
+                <tr>
+                  <th>Objeto</th>
+                  <th>Ubicación</th>
+                  <th>Estado</th>
+                  <th class="text-end">Acción</th>
+                </tr>
+              </thead>
+
+              <tbody id="objetosTableBody">
+                {% for o in objetos %}
+                  <tr
+                    class="objeto-item clickable-row"
+                    data-url="{% url 'detalle_objeto_lugar' objeto_lugar_id=o.id %}"
+                    data-nombre="{% if o.tipo_de_objeto and o.tipo_de_objeto.objeto %}{{ o.tipo_de_objeto.objeto.nombre_del_objeto|lower|escape }}{% endif %}"
+                    data-lugar="{% if o.lugar %}{{ o.lugar.nombre_del_lugar|lower|escape }}{% endif %}"
+                    data-sector="{% if o.lugar %}{{ o.lugar.piso.ubicacion.sector.sector|lower|escape }}{% endif %}"
+                    data-ubicacion="{% if o.lugar %}{{ o.lugar.piso.ubicacion.ubicacion|lower|escape }}{% endif %}"
+                    data-marca="{% if o.tipo_de_objeto %}{{ o.tipo_de_objeto.marca|default:''|lower|escape }}{% endif %}"
+                    data-material="{% if o.tipo_de_objeto %}{{ o.tipo_de_objeto.material|default:''|lower|escape }}{% endif %}"
+                    data-operatividad="{{ o.operatividad_objeto }}"
+                    data-fallas="{{ o.cantidad_mala|default:0 }}"
+                    data-pendientes="{{ o.cantidad_pendiente|default:0 }}"
+                    data-importancia="{{ o.importancia|default:1 }}"
+                    data-fecha="{{ o.fecha|date:'Y-m-d' }}"
+                  >
+                    <td>
+                      <div class="d-flex align-items-start gap-3">
+                        <div class="object-icon">
+                          <i class="bi bi-box-seam"></i>
+                        </div>
+
+                        <div class="min-w-0">
+                          <a
+                            href="{% url 'detalle_objeto_lugar' objeto_lugar_id=o.id %}"
+                            class="fw-bold text-dark text-decoration-none object-name-link"
+                          >
+                            {% if o.tipo_de_objeto and o.tipo_de_objeto.objeto %}
+                              {{ o.tipo_de_objeto.objeto.nombre_del_objeto }}
+                            {% else %}
+                              Objeto no especificado
+                            {% endif %}
+                          </a>
+
+                          <div class="small text-muted mt-1">
+                            {{ o.cantidad }} unidad{% if o.cantidad != 1 %}es{% endif %}
+                          </div>
+
+                          {% if o.importancia == 3 %}
+                            <span class="priority-chip priority-high mt-2">
+                              <i class="bi bi-exclamation-circle-fill"></i>
+                              Prioridad alta
+                            </span>
+                          {% elif o.importancia == 2 %}
+                            <span class="priority-chip priority-medium mt-2">
+                              Prioridad media
+                            </span>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </td>
+
+                    <td>
+                      {% if o.lugar %}
+                        <div class="fw-semibold">{{ o.lugar.nombre_del_lugar }}</div>
+                        <div class="small text-muted mt-1">
+                          {{ o.lugar.piso.ubicacion.ubicacion }} · Piso {{ o.lugar.piso.piso }}
+                        </div>
+                        <div class="small text-muted">
+                          {{ o.lugar.piso.ubicacion.sector.sector }}
+                        </div>
+                      {% else %}
+                        <span class="text-muted">Sin lugar</span>
+                      {% endif %}
+                    </td>
+
+                    <td>
+                      {% if o.operatividad_objeto < 50 %}
+                        <span class="status-badge status-critical">
+                          <i class="bi bi-exclamation-octagon-fill"></i>
+                          Crítico · {{ o.operatividad_objeto }}%
+                        </span>
+                      {% elif o.operatividad_objeto < 80 %}
+                        <span class="status-badge status-warning">
+                          <i class="bi bi-exclamation-triangle-fill"></i>
+                          Requiere atención · {{ o.operatividad_objeto }}%
+                        </span>
+                      {% else %}
+                        <span class="status-badge status-ok">
+                          <i class="bi bi-check-circle-fill"></i>
+                          Operativo · {{ o.operatividad_objeto }}%
+                        </span>
+                      {% endif %}
+
+                      <div class="status-summary mt-2">
+                        {% if o.cantidad_mala > 0 %}
+                          <span class="text-danger fw-semibold">
+                            {{ o.cantidad_mala }} con falla
+                          </span>
+                        {% endif %}
+
+                        {% if o.cantidad_mala > 0 and o.cantidad_pendiente > 0 %}
+                          <span class="text-muted mx-1">·</span>
+                        {% endif %}
+
+                        {% if o.cantidad_pendiente > 0 %}
+                          <span class="text-warning fw-semibold">
+                            {{ o.cantidad_pendiente }} por revisar
+                          </span>
+                        {% endif %}
+
+                        {% if o.cantidad_mala == 0 and o.cantidad_pendiente == 0 %}
+                          <span class="text-success fw-semibold">
+                            {{ o.cantidad_buena }} funcionando
+                          </span>
+                        {% endif %}
+                      </div>
+                    </td>
+
+                    <td class="text-end">
+                      <a
+                        href="{% url 'detalle_objeto_lugar' objeto_lugar_id=o.id %}"
+                        class="btn btn-outline-primary"
+                      >
+                        Ver detalle
+                        <i class="bi bi-chevron-right ms-1"></i>
+                      </a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="objetosMobile" class="d-lg-none d-grid gap-3">
+        {% for o in objetos %}
+          <div
+            class="objeto-item objeto-mobile-card card border-0 shadow-sm rounded-4 clickable-card"
+            data-url="{% url 'detalle_objeto_lugar' objeto_lugar_id=o.id %}"
+            data-nombre="{% if o.tipo_de_objeto and o.tipo_de_objeto.objeto %}{{ o.tipo_de_objeto.objeto.nombre_del_objeto|lower|escape }}{% endif %}"
+            data-lugar="{% if o.lugar %}{{ o.lugar.nombre_del_lugar|lower|escape }}{% endif %}"
+            data-sector="{% if o.lugar %}{{ o.lugar.piso.ubicacion.sector.sector|lower|escape }}{% endif %}"
+            data-ubicacion="{% if o.lugar %}{{ o.lugar.piso.ubicacion.ubicacion|lower|escape }}{% endif %}"
+            data-marca="{% if o.tipo_de_objeto %}{{ o.tipo_de_objeto.marca|default:''|lower|escape }}{% endif %}"
+            data-material="{% if o.tipo_de_objeto %}{{ o.tipo_de_objeto.material|default:''|lower|escape }}{% endif %}"
+            data-operatividad="{{ o.operatividad_objeto }}"
+            data-fallas="{{ o.cantidad_mala|default:0 }}"
+            data-pendientes="{{ o.cantidad_pendiente|default:0 }}"
+            data-importancia="{{ o.importancia|default:1 }}"
+            data-fecha="{{ o.fecha|date:'Y-m-d' }}"
+          >
+            <div class="card-body p-3">
+              <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+                <div class="min-w-0">
+                  <div class="fw-bold fs-6">
+                    {% if o.tipo_de_objeto and o.tipo_de_objeto.objeto %}
+                      {{ o.tipo_de_objeto.objeto.nombre_del_objeto }}
+                    {% else %}
+                      Objeto no especificado
+                    {% endif %}
+                  </div>
+
+                  <div class="small text-muted mt-1">
+                    {{ o.cantidad }} unidad{% if o.cantidad != 1 %}es{% endif %}
+                  </div>
+                </div>
+
+                {% if o.importancia == 3 %}
+                  <span class="priority-chip priority-high flex-shrink-0">Prioridad alta</span>
+                {% elif o.importancia == 2 %}
+                  <span class="priority-chip priority-medium flex-shrink-0">Prioridad media</span>
+                {% endif %}
+              </div>
+
+              {% if o.lugar %}
+                <div class="location-compact mb-3">
+                  <i class="bi bi-geo-alt"></i>
+                  <div>
+                    <div class="fw-semibold">{{ o.lugar.nombre_del_lugar }}</div>
+                    <div class="small text-muted">
+                      {{ o.lugar.piso.ubicacion.ubicacion }} · Piso {{ o.lugar.piso.piso }}
+                    </div>
+                  </div>
+                </div>
+              {% endif %}
+
+              {% if o.operatividad_objeto < 50 %}
+                <div class="status-mobile-simple status-critical mb-3">
+                  <div>
+                    <div class="fw-bold">Crítico</div>
+                    <div class="small">
+                      {% if o.cantidad_mala > 0 %}{{ o.cantidad_mala }} con falla{% endif %}
+                      {% if o.cantidad_mala > 0 and o.cantidad_pendiente > 0 %} · {% endif %}
+                      {% if o.cantidad_pendiente > 0 %}{{ o.cantidad_pendiente }} por revisar{% endif %}
+                    </div>
+                  </div>
+                  <strong>{{ o.operatividad_objeto }}%</strong>
+                </div>
+              {% elif o.operatividad_objeto < 80 %}
+                <div class="status-mobile-simple status-warning mb-3">
+                  <div>
+                    <div class="fw-bold">Requiere atención</div>
+                    <div class="small">
+                      {% if o.cantidad_mala > 0 %}{{ o.cantidad_mala }} con falla{% endif %}
+                      {% if o.cantidad_mala > 0 and o.cantidad_pendiente > 0 %} · {% endif %}
+                      {% if o.cantidad_pendiente > 0 %}{{ o.cantidad_pendiente }} por revisar{% endif %}
+                    </div>
+                  </div>
+                  <strong>{{ o.operatividad_objeto }}%</strong>
+                </div>
+              {% else %}
+                <div class="status-mobile-simple status-ok mb-3">
+                  <div>
+                    <div class="fw-bold">Operativo</div>
+                    <div class="small">{{ o.cantidad_buena }} funcionando</div>
+                  </div>
+                  <strong>{{ o.operatividad_objeto }}%</strong>
+                </div>
+              {% endif %}
+
+              <a
+                href="{% url 'detalle_objeto_lugar' objeto_lugar_id=o.id %}"
+                class="btn pvsa-btn w-100"
+              >
+                Ver detalle
+                <i class="bi bi-chevron-right ms-1"></i>
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+    </div>
+
+    <div id="sinResultadosBusqueda" class="d-none">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body text-center py-5">
+          <i class="bi bi-search fs-2 text-muted"></i>
+          <div class="fw-semibold mt-2">No encontramos registros</div>
+          <div class="small text-muted">
+            Cambia la búsqueda, la vista rápida o los filtros.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  {% else %}
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-body text-center py-5">
+        <div class="empty-icon mx-auto mb-3">
+          <i class="bi bi-box-seam"></i>
+        </div>
+
+        <h2 class="h5 fw-bold">No hay objetos para mostrar</h2>
+
+        <div class="text-muted mb-3">
+          {% if sector_actual or ubicacion_actual or piso_actual or tipo_lugar_actual or lugar_actual or categoria_actual or objeto_actual or tipo_actual or estado_actual or importancia_actual or operatividad_actual or marca_actual or material_actual %}
+            No existen resultados con los filtros seleccionados.
+          {% else %}
+            Todavía no hay objetos registrados en los lugares.
+          {% endif %}
+        </div>
+
+        {% if sector_actual or ubicacion_actual or piso_actual or tipo_lugar_actual or lugar_actual or categoria_actual or objeto_actual or tipo_actual or estado_actual or importancia_actual or operatividad_actual or marca_actual or material_actual %}
+          <a href="{% url 'lista_objetos_lugar' %}" class="btn btn-outline-secondary">
+            Limpiar filtros
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="modal fade" id="filtrosObjetosModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
+      <div class="modal-content rounded-4">
+
+        <form method="get" id="filterForm">
+          <div class="modal-header">
+            <div>
+              <h5 class="modal-title fw-bold">
+                <i class="bi bi-funnel-fill me-2 pvsa-text"></i>
+                Filtrar inventario
+              </h5>
+
+              <div class="small text-muted">
+                Acota la información por ubicación, objeto o estado.
+              </div>
+            </div>
+
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+
+          <div class="modal-body">
+
+            <div class="filter-group mb-4">
+              <div class="filter-group-title">
+                <i class="bi bi-geo-alt"></i>
+                Dónde está
+              </div>
+
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold" for="id_filtro_sector">Sector</label>
+                  <select id="id_filtro_sector" name="sector" class="form-select">
+                    <option value="">Todos los sectores</option>
+                    {% for s in sectores %}
+                      <option value="{{ s.id }}" {% if sector_actual == s.id|stringformat:'s' %}selected{% endif %}>
+                        {{ s.sector }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold" for="id_filtro_ubicacion">Ubicación</label>
+                  <select id="id_filtro_ubicacion" name="ubicacion" class="form-select">
+                    <option value="">Todas las ubicaciones</option>
+                    {% for u in ubicaciones %}
+                      <option value="{{ u.id }}" {% if ubicacion_actual == u.id|stringformat:'s' %}selected{% endif %}>
+                        {{ u.ubicacion }} · {{ u.sector.sector }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold" for="id_filtro_piso">Piso</label>
+                  <select id="id_filtro_piso" name="piso" class="form-select">
+                    <option value="">Todos los pisos</option>
+                    {% for p in pisos %}
+                      <option value="{{ p.id }}" {% if piso_actual == p.id|stringformat:'s' %}selected{% endif %}>
+                        Piso {{ p.piso }} · {{ p.ubicacion.ubicacion }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold" for="id_filtro_tipo_lugar">Tipo de lugar</label>
+                  <select id="id_filtro_tipo_lugar" name="tipo_lugar" class="form-select">
+                    <option value="">Todos los tipos</option>
+                    {% for tl in tipos_lugar %}
+                      <option value="{{ tl.id }}" {% if tipo_lugar_actual == tl.id|stringformat:'s' %}selected{% endif %}>
+                        {{ tl.tipo_de_lugar }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label fw-semibold" for="id_filtro_lugar">Lugar</label>
+                  <select id="id_filtro_lugar" name="lugar" class="form-select">
+                    <option value="">Todos los lugares</option>
+                    {% for l in lugares %}
+                      <option value="{{ l.id }}" {% if lugar_actual == l.id|stringformat:'s' %}selected{% endif %}>
+                        {{ l.nombre_del_lugar }} · Piso {{ l.piso.piso }} · {{ l.piso.ubicacion.ubicacion }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="filter-group mb-4">
+              <div class="filter-group-title">
+                <i class="bi bi-box-seam"></i>
+                Qué objeto es
+              </div>
+
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold" for="id_filtro_categoria">Categoría</label>
+                  <select id="id_filtro_categoria" name="categoria" class="form-select">
+                    <option value="">Todas las categorías</option>
+                    {% for c in categorias %}
+                      <option value="{{ c.id }}" {% if categoria_actual == c.id|stringformat:'s' %}selected{% endif %}>
+                        {{ c.nombre_de_categoria }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold" for="id_filtro_objeto">Objeto</label>
+                  <select id="id_filtro_objeto" name="objeto" class="form-select">
+                    <option value="">Todos los objetos</option>
+                    {% for obj in objetos_catalogo %}
+                      <option value="{{ obj.id }}" {% if objeto_actual == obj.id|stringformat:'s' %}selected{% endif %}>
+                        {{ obj.nombre_del_objeto }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label fw-semibold" for="id_filtro_tipo">Variante</label>
+                  <select id="id_filtro_tipo" name="tipo" class="form-select">
+                    <option value="">Todos los tipos</option>
+                    {% for t in tipos %}
+                      <option value="{{ t.id }}" {% if tipo_actual == t.id|stringformat:'s' %}selected{% endif %}>
+                        {{ t.objeto.nombre_del_objeto }} ·
+                        {{ t.marca|default:"Sin marca" }}
+                        ·
+                        {{ t.material|default:"Sin material" }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold" for="id_filtro_marca">Marca</label>
+                  <select id="id_filtro_marca" name="marca" class="form-select">
+                    <option value="">Todas las marcas</option>
+                    {% for m in marcas %}
+                      {% if m %}
+                        <option value="{{ m }}" {% if marca_actual == m %}selected{% endif %}>
+                          {{ m }}
+                        </option>
+                      {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold" for="id_filtro_material">Material</label>
+                  <select id="id_filtro_material" name="material" class="form-select">
+                    <option value="">Todos los materiales</option>
+                    {% for mat in materiales %}
+                      {% if mat %}
+                        <option value="{{ mat }}" {% if material_actual == mat %}selected{% endif %}>
+                          {{ mat }}
+                        </option>
+                      {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="filter-group">
+              <div class="filter-group-title">
+                <i class="bi bi-activity"></i>
+                Cómo está
+              </div>
+
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label class="form-label fw-semibold" for="id_filtro_estado">Estado de las unidades</label>
+                  <select id="id_filtro_estado" name="estado" class="form-select">
+                    <option value="">Todas</option>
+                    {% for value, label in estados %}
+                      <option value="{{ value }}" {% if estado_actual == value|stringformat:'s' %}selected{% endif %}>
+                        {% if value == "B" %}
+                          Sin fallas ni pendientes
+                        {% elif value == "P" %}
+                          Por revisar
+                        {% else %}
+                          Con falla
+                        {% endif %}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label fw-semibold" for="id_filtro_importancia">Importancia</label>
+                  <select id="id_filtro_importancia" name="importancia" class="form-select">
+                    <option value="">Todas</option>
+                    {% for value, label in importancias %}
+                      <option value="{{ value }}" {% if importancia_actual == value|stringformat:'s' %}selected{% endif %}>
+                        {{ label }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label fw-semibold" for="id_filtro_operatividad">Estado operativo</label>
+                  <select id="id_filtro_operatividad" name="operatividad" class="form-select">
+                    <option value="">Todos</option>
+
+                    <option value="critico" {% if operatividad_actual == "critico" %}selected{% endif %}>
+                      Crítico · menos de 50%
+                    </option>
+
+                    <option value="observacion" {% if operatividad_actual == "observacion" %}selected{% endif %}>
+                      Requiere atención · 50% a 79%
+                    </option>
+
+                    <option value="operativo" {% if operatividad_actual == "operativo" %}selected{% endif %}>
+                      Operativo · 80% a 100%
+                    </option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="modal-footer">
+            <a href="{% url 'lista_objetos_lugar' %}" class="btn btn-outline-danger me-auto">
+              <i class="bi bi-arrow-counterclockwise me-1"></i>
+              Limpiar filtros
+            </a>
+
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              Cancelar
+            </button>
+
+            <button type="submit" class="btn pvsa-btn px-4">
+              <i class="bi bi-check-circle me-1"></i>
+              Aplicar
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
 </div>
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  function pintarBarra(elemento) {
-    let valor = elemento.getAttribute("data-operatividad") || "0";
-    valor = String(valor).replace(",", ".");
-    valor = parseFloat(valor);
+<style>
+  .objetos-page {
+    max-width: 1700px;
+    margin: 0 auto;
+  }
 
-    if (isNaN(valor)) {
-      valor = 0;
-    }
+  .pvsa-section-badge {
+    color: var(--pvsa-accent);
+    background: rgba(6, 182, 185, .08);
+    border: 1px solid rgba(6, 182, 185, .20);
+    border-radius: 999px;
+    padding: .35rem .7rem;
+    font-size: .82rem;
+    font-weight: 700;
+  }
 
-    if (valor < 0) {
-      valor = 0;
-    }
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .38rem .7rem;
+    border: 1px solid #dee2e6;
+    background: #fff;
+    border-radius: 999px;
+    font-size: .78rem;
+    font-weight: 600;
+  }
 
-    if (valor > 100) {
-      valor = 100;
-    }
+  .status-dot,
+  .mini-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex: 0 0 auto;
+  }
 
-    elemento.style.width = valor + "%";
+  .result-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: .45rem .75rem;
+    border: 1px solid #dee2e6;
+    border-radius: .6rem;
+    background: #f8f9fa;
+    color: #6c757d;
+    font-size: .82rem;
+    white-space: nowrap;
+  }
 
-    if (valor < 50) {
-      elemento.classList.add("bg-danger");
-    } else if (valor < 80) {
-      elemento.classList.add("bg-warning");
-    } else {
-      elemento.classList.add("bg-success");
-    }
+  .active-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .35rem .65rem;
+    border: 1px solid #dee2e6;
+    border-radius: 999px;
+    background: #fff;
+    font-size: .78rem;
+  }
 
-    const badge = elemento.closest(".barra-wrap")?.querySelector(".badge-operatividad");
+  .objetos-table {
+    min-width: 1120px;
+  }
 
-    if (badge) {
-      badge.classList.remove("bg-primary", "bg-success", "bg-warning", "bg-danger", "text-dark");
+  .objetos-table th {
+    padding: .8rem 1rem;
+    font-size: .76rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: .02em;
+    white-space: nowrap;
+  }
 
-      if (valor < 50) {
-        badge.classList.add("bg-danger");
-      } else if (valor < 80) {
-        badge.classList.add("bg-warning");
-        badge.classList.add("text-dark");
-      } else {
-        badge.classList.add("bg-success");
-      }
+  .objetos-table td {
+    padding: .9rem 1rem;
+    font-size: .86rem;
+    vertical-align: middle;
+  }
+
+  .object-info {
+    min-width: 220px;
+    max-width: 360px;
+  }
+
+  .detail-text {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    color: #495057;
+  }
+
+  .unit-summary {
+    display: grid;
+    gap: .32rem;
+  }
+
+  .unit-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .65rem;
+  }
+
+  .unit-label {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    color: #6c757d;
+    font-size: .76rem;
+    white-space: nowrap;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .48rem .7rem;
+    border-radius: 999px;
+    font-size: .78rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .status-ok {
+    color: #146c43;
+    background: rgba(25, 135, 84, .10);
+    border: 1px solid rgba(25, 135, 84, .20);
+  }
+
+  .status-warning {
+    color: #8a6500;
+    background: rgba(255, 193, 7, .13);
+    border: 1px solid rgba(255, 193, 7, .26);
+  }
+
+  .status-critical {
+    color: #b02a37;
+    background: rgba(220, 53, 69, .09);
+    border: 1px solid rgba(220, 53, 69, .20);
+  }
+
+  .location-box,
+  .detail-box {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+  }
+
+  .status-mobile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .85rem 1rem;
+    border-radius: .85rem;
+  }
+
+  .mobile-state-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+  }
+
+  .state-ok-icon {
+    color: #198754;
+    background: rgba(25, 135, 84, .10);
+  }
+
+  .state-warning-icon {
+    color: #8a6500;
+    background: rgba(255, 193, 7, .15);
+  }
+
+  .state-critical-icon {
+    color: #dc3545;
+    background: rgba(220, 53, 69, .10);
+  }
+
+  .mobile-metric {
+    height: 100%;
+    padding: .7rem .5rem;
+    border: 1px solid #e9ecef;
+    border-radius: .8rem;
+    background: #f8f9fa;
+  }
+
+  .metric-label {
+    color: #6c757d;
+    font-size: .73rem;
+    margin-bottom: .15rem;
+  }
+
+  .metric-value {
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  .filter-group {
+    padding: 1rem;
+    border: 1px solid #e9ecef;
+    border-radius: 1rem;
+    background: #fafbfc;
+  }
+
+  .filter-group-title {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  .empty-icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+    background: rgba(6, 182, 185, .10);
+    color: var(--pvsa-accent);
+    font-size: 1.45rem;
+  }
+
+  .min-w-0 {
+    min-width: 0;
+  }
+
+  .objeto-mobile-card {
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+
+  #filtrosObjetosModal .modal-dialog {
+    width: calc(100% - 3rem);
+    max-width: 760px;
+    height: calc(100dvh - 6rem);
+    max-height: calc(100dvh - 6rem);
+    margin: 3rem auto;
+  }
+
+  #filtrosObjetosModal .modal-content {
+    max-height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #filtrosObjetosModal form {
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #filtrosObjetosModal .modal-header,
+  #filtrosObjetosModal .modal-footer {
+    flex: 0 0 auto;
+    padding: .8rem 1rem;
+  }
+
+  #filtrosObjetosModal .modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 1rem;
+  }
+
+  @media (hover: hover) {
+    .objeto-mobile-card:hover {
+      transform: translateY(-2px);
     }
   }
 
-  document.querySelectorAll(".barra-operatividad").forEach(function (elemento) {
-    pintarBarra(elemento);
+  @media (max-width: 575.98px) {
+    .status-chip {
+      font-size: .72rem;
+      padding: .3rem .55rem;
+    }
+
+    #filtrosObjetosModal .modal-dialog {
+      margin: 0;
+      width: 100%;
+      max-width: none;
+      height: 100dvh;
+      max-height: 100dvh;
+    }
+
+    #filtrosObjetosModal .modal-content {
+      height: 100dvh;
+      max-height: 100dvh;
+      border-radius: 0 !important;
+    }
+
+    #filtrosObjetosModal .modal-footer {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .5rem;
+    }
+
+    #filtrosObjetosModal .modal-footer .me-auto {
+      grid-column: 1 / -1;
+      margin-right: 0 !important;
+      text-align: center;
+    }
+
+    .filter-group {
+      padding: .85rem;
+    }
+  }
+
+  .objetos-table-simple {
+    min-width: 860px;
+  }
+
+  .objetos-table-simple th {
+    padding: .8rem 1rem;
+    font-size: .76rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: .02em;
+    white-space: nowrap;
+  }
+
+  .objetos-table-simple td {
+    padding: 1rem;
+    vertical-align: middle;
+  }
+
+  .clickable-row,
+  .clickable-card {
+    cursor: pointer;
+  }
+
+  .object-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    color: var(--pvsa-accent);
+    background: rgba(6, 182, 185, .10);
+  }
+
+  .object-name-link:hover {
+    color: var(--pvsa-accent) !important;
+  }
+
+  .priority-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .25rem .5rem;
+    border-radius: 999px;
+    font-size: .68rem;
+    font-weight: 700;
+  }
+
+  .priority-high {
+    color: #b02a37;
+    background: rgba(220, 53, 69, .09);
+    border: 1px solid rgba(220, 53, 69, .18);
+  }
+
+  .priority-medium {
+    color: #8a6500;
+    background: rgba(255, 193, 7, .12);
+    border: 1px solid rgba(255, 193, 7, .22);
+  }
+
+  .status-summary {
+    font-size: .78rem;
+  }
+
+  .location-compact {
+    display: flex;
+    align-items: flex-start;
+    gap: .65rem;
+    padding: .75rem;
+    border-radius: .8rem;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+  }
+
+  .location-compact > i {
+    color: var(--pvsa-accent);
+    margin-top: .1rem;
+  }
+
+  .status-mobile-simple {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .8rem .9rem;
+    border-radius: .85rem;
+  }
+
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const searchInput = document.getElementById("buscarObjeto");
+  const quickView = document.getElementById("vistaRapida");
+  const orderSelect = document.getElementById("ordenObjetos");
+  const visibleCount = document.getElementById("objetosVisibles");
+  const emptySearch = document.getElementById("sinResultadosBusqueda");
+
+  function normalizar(texto) {
+    return String(texto || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+  }
+
+  function valorNumero(item, key) {
+    let value = String(item.dataset[key] || "0").replace(",", ".");
+    value = parseFloat(value);
+    return isNaN(value) ? 0 : value;
+  }
+
+  function allItems() {
+    return Array.from(document.querySelectorAll(".objeto-item"));
+  }
+
+  function textoItem(item) {
+    return normalizar([
+      item.dataset.nombre,
+      item.dataset.lugar,
+      item.dataset.sector,
+      item.dataset.ubicacion,
+      item.dataset.marca,
+      item.dataset.material
+    ].join(" "));
+  }
+
+  function coincideVista(item) {
+    const vista = quickView?.value || "todos";
+    const op = valorNumero(item, "operatividad");
+    const fallas = valorNumero(item, "fallas");
+    const pendientes = valorNumero(item, "pendientes");
+
+    if (vista === "atencion") return op < 80;
+    if (vista === "falla") return fallas > 0;
+    if (vista === "revision") return pendientes > 0;
+    if (vista === "operativo") return op >= 80;
+
+    return true;
+  }
+
+  function filtrar() {
+    const consulta = normalizar(searchInput?.value);
+    let visiblesDesktop = 0;
+
+    allItems().forEach(function (item) {
+      const coincideBusqueda = !consulta || textoItem(item).includes(consulta);
+      const mostrar = coincideBusqueda && coincideVista(item);
+
+      item.classList.toggle("d-none", !mostrar);
+
+      if (
+        mostrar &&
+        item.tagName.toLowerCase() === "tr"
+      ) {
+        visiblesDesktop += 1;
+      }
+    });
+
+    if (visibleCount) {
+      visibleCount.textContent = visiblesDesktop;
+    }
+
+    if (emptySearch) {
+      emptySearch.classList.toggle("d-none", visiblesDesktop !== 0);
+    }
+  }
+
+  function comparar(a, b, criterio) {
+    const nombreA = normalizar(a.dataset.nombre);
+    const nombreB = normalizar(b.dataset.nombre);
+    const lugarA = normalizar(a.dataset.lugar);
+    const lugarB = normalizar(b.dataset.lugar);
+    const opA = valorNumero(a, "operatividad");
+    const opB = valorNumero(b, "operatividad");
+    const fallasA = valorNumero(a, "fallas");
+    const fallasB = valorNumero(b, "fallas");
+    const pendientesA = valorNumero(a, "pendientes");
+    const pendientesB = valorNumero(b, "pendientes");
+    const importanciaA = valorNumero(a, "importancia");
+    const importanciaB = valorNumero(b, "importancia");
+    const fechaA = a.dataset.fecha || "";
+    const fechaB = b.dataset.fecha || "";
+
+    if (criterio === "fallas") {
+      return fallasB - fallasA || opA - opB || nombreA.localeCompare(nombreB, "es");
+    }
+
+    if (criterio === "pendientes") {
+      return pendientesB - pendientesA || opA - opB || nombreA.localeCompare(nombreB, "es");
+    }
+
+    if (criterio === "importancia") {
+      return importanciaB - importanciaA || opA - opB || nombreA.localeCompare(nombreB, "es");
+    }
+
+    if (criterio === "recientes") {
+      return fechaB.localeCompare(fechaA) || nombreA.localeCompare(nombreB, "es");
+    }
+
+    if (criterio === "objeto_az") {
+      return nombreA.localeCompare(nombreB, "es");
+    }
+
+    if (criterio === "lugar_az") {
+      return lugarA.localeCompare(lugarB, "es") || nombreA.localeCompare(nombreB, "es");
+    }
+
+    if (criterio === "operativos") {
+      return opB - opA || nombreA.localeCompare(nombreB, "es");
+    }
+
+    return opA - opB || fallasB - fallasA || nombreA.localeCompare(nombreB, "es");
+  }
+
+  function ordenarContenedor(selector, containerSelector) {
+    const container = document.querySelector(containerSelector);
+    if (!container || !orderSelect) return;
+
+    const items = Array.from(container.querySelectorAll(selector));
+    const criterio = orderSelect.value;
+
+    items
+      .sort(function (a, b) {
+        return comparar(a, b, criterio);
+      })
+      .forEach(function (item) {
+        container.appendChild(item);
+      });
+  }
+
+  function ordenar() {
+    ordenarContenedor("tr.objeto-item", "#objetosTableBody");
+    ordenarContenedor(".objeto-mobile-card.objeto-item", "#objetosMobile");
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener("input", filtrar);
+  }
+
+  if (quickView) {
+    const savedQuickView = localStorage.getItem("pvsa_objetos_vista_rapida");
+
+    if (
+      savedQuickView &&
+      ["todos", "atencion", "falla", "revision", "operativo"].includes(savedQuickView)
+    ) {
+      quickView.value = savedQuickView;
+    }
+
+    quickView.addEventListener("change", function () {
+      localStorage.setItem("pvsa_objetos_vista_rapida", quickView.value);
+      filtrar();
+    });
+  }
+
+  if (orderSelect) {
+    const savedOrder = localStorage.getItem("pvsa_objetos_orden");
+
+    if (
+      savedOrder &&
+      [
+        "criticos",
+        "fallas",
+        "pendientes",
+        "importancia",
+        "recientes",
+        "objeto_az",
+        "lugar_az",
+        "operativos"
+      ].includes(savedOrder)
+    ) {
+      orderSelect.value = savedOrder;
+    }
+
+    orderSelect.addEventListener("change", function () {
+      localStorage.setItem("pvsa_objetos_orden", orderSelect.value);
+      ordenar();
+      filtrar();
+    });
+  }
+
+  ordenar();
+  filtrar();
+
+  const filterForm = document.getElementById("filterForm");
+  const filterBadge = document.getElementById("filterCountBadge");
+  const activeFilters = document.getElementById("activeFilters");
+
+  const filterSelects = filterForm
+    ? Array.from(filterForm.querySelectorAll("select[name]"))
+    : [];
+
+  function actualizarFiltrosActivos() {
+    if (!activeFilters) return;
+
+    activeFilters.innerHTML = "";
+    let total = 0;
+
+    filterSelects.forEach(function (select) {
+      if (!select.value) return;
+
+      total += 1;
+
+      const label = filterForm.querySelector('label[for="' + select.id + '"]');
+      const option = select.options[select.selectedIndex];
+
+      const chip = document.createElement("span");
+      chip.className = "active-filter-chip";
+
+      chip.innerHTML =
+        '<i class="bi bi-funnel"></i><strong>' +
+        (label ? label.textContent.trim() : "Filtro") +
+        ":</strong> " +
+        option.textContent.trim();
+
+      activeFilters.appendChild(chip);
+    });
+
+    if (filterBadge) {
+      filterBadge.textContent = total;
+      filterBadge.classList.toggle("d-none", total === 0);
+    }
+
+    if (total > 0) {
+      const clear = document.createElement("a");
+      clear.href = "{% url 'lista_objetos_lugar' %}";
+      clear.className = "btn btn-link btn-sm text-decoration-none py-0";
+      clear.textContent = "Limpiar filtros";
+      activeFilters.appendChild(clear);
+    }
+  }
+
+  actualizarFiltrosActivos();
+
+  document.querySelectorAll(".clickable-row, .clickable-card").forEach(function (item) {
+    item.addEventListener("click", function (event) {
+      if (event.target.closest("a, button, input, select, textarea, label")) {
+        return;
+      }
+
+      const url = item.dataset.url;
+      if (url) {
+        window.location.href = url;
+      }
+    });
   });
 });
 </script>

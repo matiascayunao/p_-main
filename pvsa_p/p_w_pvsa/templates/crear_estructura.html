@@ -1,435 +1,717 @@
 {% extends "base.html" %}
 
+{% block title %}Registro completo · PVSA{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h3>Carga completa</h3>
-    <p class="text-muted">
-        Selecciona datos existentes o crea nuevos, y agrega los objetos del lugar en una sola operación.
-    </p>
+<div class="py-2 py-lg-3">
 
-    <form method="post" novalidate>
-        {% csrf_token %}
+  <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+    <div>
+      <div class="d-inline-flex align-items-center gap-2 pvsa-section-badge mb-2">
+        <i class="bi bi-ui-checks-grid"></i>
+        Registro completo
+      </div>
 
-        <!-- ================= DATOS BASE ================= -->
-        <div class="card mb-3">
-            <div class="card-header">Datos base</div>
-            <div class="card-body">
+      <h1 class="h3 fw-bold mb-1">Registro completo</h1>
+      <div class="text-muted">
+        Registra un lugar completo y sus objetos en una sola operación.
+      </div>
+    </div>
 
-                {% if form.non_field_errors %}
-                    <div class="alert alert-danger py-1">
-                        {{ form.non_field_errors }}
-                    </div>
-                {% endif %}
+    <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i>
+      Volver al inicio
+    </a>
+  </div>
 
-                <!-- Sector -->
-                <div class="row">
-                    <div class="col-md-6 mb-2">
-                        <label class="form-label">{{ form.sector_existente.label }}</label>
-                        {{ form.sector_existente }}
-                        {{ form.sector_existente.errors }}
-                        <small class="text-muted d-block">
-                            Elige un sector que ya exista.
-                        </small>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <label class="form-label">{{ form.sector_nuevo.label }}</label>
-                        {{ form.sector_nuevo }}
-                        {{ form.sector_nuevo.errors }}
-                        <small class="text-muted d-block">
-                            O escribe un nuevo sector.
-                        </small>
-                    </div>
-                </div>
+  <div class="alert pvsa-info-alert border-0 shadow-sm mb-4">
+    <div class="d-flex gap-3 align-items-start">
+      <i class="bi bi-info-circle-fill fs-5 pvsa-text"></i>
+      <div>
+        <div class="fw-semibold">Cómo completar este formulario</div>
+        <div class="small text-muted">
+          En cada nivel puedes elegir un registro existente o escribir uno nuevo.
+          Si seleccionas un tipo de lugar que tenga objetos habituales configurados, el sistema te ofrecerá agregarlos automáticamente.
+        </div>
+      </div>
+    </div>
+  </div>
 
-                <!-- Ubicación -->
-                <div class="row">
-                    <div class="col-md-6 mb-2">
-                        <label class="form-label">{{ form.ubicacion_existente.label }}</label>
-                        {{ form.ubicacion_existente }}
-                        {{ form.ubicacion_existente.errors }}
-                        <small class="text-muted d-block">
-                            Elige una ubicación ya creada ligada al sector.
-                        </small>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <label class="form-label">{{ form.ubicacion_nueva.label }}</label>
-                        {{ form.ubicacion_nueva }}
-                        {{ form.ubicacion_nueva.errors }}
-                        <small class="text-muted d-block">
-                            O escribe una nueva ubicación.
-                        </small>
-                    </div>
-                </div>
+  <form method="post" novalidate>
+    {% csrf_token %}
 
-                <!-- Piso -->
-                <div class="row">
-                    <div class="col-md-6 mb-2">
-                        <label class="form-label">{{ form.piso_existente.label }}</label>
-                        {{ form.piso_existente }}
-                        {{ form.piso_existente.errors }}
-                        <small class="text-muted d-block">
-                            Elige un piso ya registrado para esa ubicación.
-                        </small>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <label class="form-label">{{ form.piso_nuevo.label }}</label>
-                        {{ form.piso_nuevo }}
-                        {{ form.piso_nuevo.errors }}
-                        <small class="text-muted d-block">
-                            O indica un nuevo número de piso.
-                        </small>
-                    </div>
-                </div>
-
-                <!-- Tipo de lugar -->
-                <div class="row">
-                    <div class="col-md-6 mb-2">
-                        <label class="form-label">{{ form.tipo_lugar_existente.label }}</label>
-                        {{ form.tipo_lugar_existente }}
-                        {{ form.tipo_lugar_existente.errors }}
-                        <small class="text-muted d-block">
-                            Elige un tipo de lugar ya existente.
-                        </small>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <label class="form-label">{{ form.tipo_lugar_nuevo.label }}</label>
-                        {{ form.tipo_lugar_nuevo }}
-                        {{ form.tipo_lugar_nuevo.errors }}
-                        <small class="text-muted d-block">
-                            O escribe un nuevo tipo de lugar.
-                        </small>
-                    </div>
-                </div>
-
-                <!-- Nombre del lugar -->
-                <div class="row">
-                    <div class="col-md-6 mb-2">
-                        <label class="form-label">{{ form.lugar_existente.label }}</label>
-                        {{ form.lugar_existente }}
-                        {{ form.lugar_existente.errors }}
-                        <small class="text-muted d-block">
-                            Elige un lugar existente según sector, ubicación, piso y tipo de lugar.
-                        </small>
-                    </div>
-                    <div class="col-md-6 mb-2">
-                        <label class="form-label">{{ form.lugar_nuevo.label }}</label>
-                        {{ form.lugar_nuevo }}
-                        {{ form.lugar_nuevo.errors }}
-                        <small class="text-muted d-block">
-                            O escribe un nuevo lugar.
-                        </small>
-                    </div>
-                </div>
-
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+      <div class="card-header bg-white border-0 p-3 p-md-4 pb-md-2">
+        <div class="d-flex align-items-center gap-3">
+          <div class="section-icon">
+            <i class="bi bi-building"></i>
+          </div>
+          <div>
+            <h2 class="h5 fw-bold mb-1">Datos del lugar</h2>
+            <div class="text-muted small">
+              Define la ruta física donde quedarán registrados los objetos.
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body p-3 p-md-4">
+
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
+
+        <div class="hierarchy-stack">
+
+          <div class="hierarchy-row">
+            <div class="hierarchy-number">1</div>
+            <div class="hierarchy-content">
+              <div class="fw-semibold mb-2">Sector</div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label small text-muted mb-1">{{ form.sector_existente.label }}</label>
+                  {{ form.sector_existente }}
+                  {{ form.sector_existente.errors }}
+                  <div class="form-text">Selecciona un sector ya registrado.</div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label small text-muted mb-1">{{ form.sector_nuevo.label }}</label>
+                  {{ form.sector_nuevo }}
+                  {{ form.sector_nuevo.errors }}
+                  <div class="form-text">O escribe el nombre de un nuevo sector.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hierarchy-row">
+            <div class="hierarchy-number">2</div>
+            <div class="hierarchy-content">
+              <div class="fw-semibold mb-2">Ubicación</div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label small text-muted mb-1">{{ form.ubicacion_existente.label }}</label>
+                  {{ form.ubicacion_existente }}
+                  {{ form.ubicacion_existente.errors }}
+                  <div class="form-text">Se filtra según el sector seleccionado.</div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label small text-muted mb-1">{{ form.ubicacion_nueva.label }}</label>
+                  {{ form.ubicacion_nueva }}
+                  {{ form.ubicacion_nueva.errors }}
+                  <div class="form-text">O crea una nueva ubicación dentro del sector.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hierarchy-row">
+            <div class="hierarchy-number">3</div>
+            <div class="hierarchy-content">
+              <div class="fw-semibold mb-2">Piso</div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label small text-muted mb-1">{{ form.piso_existente.label }}</label>
+                  {{ form.piso_existente }}
+                  {{ form.piso_existente.errors }}
+                  <div class="form-text">Se filtra según la ubicación seleccionada.</div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label small text-muted mb-1">{{ form.piso_nuevo.label }}</label>
+                  {{ form.piso_nuevo }}
+                  {{ form.piso_nuevo.errors }}
+                  <div class="form-text">O indica un nuevo número de piso.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hierarchy-row">
+            <div class="hierarchy-number">4</div>
+            <div class="hierarchy-content">
+              <div class="fw-semibold mb-2">Tipo de lugar</div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label small text-muted mb-1">{{ form.tipo_lugar_existente.label }}</label>
+                  {{ form.tipo_lugar_existente }}
+                  {{ form.tipo_lugar_existente.errors }}
+                  <div class="form-text">Al elegirlo pueden aparecer objetos habituales sugeridos.</div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label small text-muted mb-1">{{ form.tipo_lugar_nuevo.label }}</label>
+                  {{ form.tipo_lugar_nuevo }}
+                  {{ form.tipo_lugar_nuevo.errors }}
+                  <div class="form-text">O crea una nueva variante de lugar.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hierarchy-row hierarchy-row-last">
+            <div class="hierarchy-number">5</div>
+            <div class="hierarchy-content">
+              <div class="fw-semibold mb-2">Lugar</div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label small text-muted mb-1">{{ form.lugar_existente.label }}</label>
+                  {{ form.lugar_existente }}
+                  {{ form.lugar_existente.errors }}
+                  <div class="form-text">Se filtra según piso y tipo de lugar.</div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label small text-muted mb-1">{{ form.lugar_nuevo.label }}</label>
+                  {{ form.lugar_nuevo }}
+                  {{ form.lugar_nuevo.errors }}
+                  <div class="form-text">O escribe el nombre de un nuevo lugar.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+      <div class="card-header bg-white border-0 p-3 p-md-4 pb-md-2">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="section-icon">
+              <i class="bi bi-box-seam"></i>
+            </div>
+            <div>
+              <h2 class="h5 fw-bold mb-1">Objetos del lugar</h2>
+              <div class="text-muted small">
+                Agrega los activos y registra su condición actual.
+              </div>
+            </div>
+          </div>
+
+          <button id="add-obj-btn" class="btn pvsa-btn btn-sm" type="button">
+            <i class="bi bi-plus-circle me-1"></i>
+            Agregar objeto
+          </button>
+        </div>
+      </div>
+
+      <div class="card-body p-3 p-md-4">
+
+        <div class="object-help rounded-4 p-3 mb-4">
+          <div class="d-flex gap-3">
+            <i class="bi bi-lightbulb fs-5 pvsa-text"></i>
+            <div class="small text-muted">
+              Para cada objeto: selecciona o crea su <strong>categoría</strong>, luego el
+              <strong>objeto</strong>, después su <strong>variante</strong> y finalmente registra
+              cantidades, importancia, mínimo operativo y detalle.
+              El estado se calcula automáticamente.
+            </div>
+          </div>
         </div>
 
-        <!-- ================= OBJETOS DEL LUGAR ================= -->
-        <div class="card mb-3">
-            <div class="card-header">Objetos del lugar</div>
-            <div class="card-body">
+        {{ objetos_formset.management_form }}
 
-                <p class="small text-muted mb-3">
-                    En cada bloque sigue estos pasos:
-                    <br>1) Elige o crea la <strong>categoría</strong>.
-                    <br>2) Elige o crea el <strong>objeto</strong> dentro de esa categoría.
-                    <br>3) Elige un <strong>tipo de objeto</strong> existente, o crea uno nuevo escribiendo marca y material.
-                    <br>4) Indica <strong>cantidad total</strong>, <strong>cantidad mala</strong>, <strong>cantidad pendiente</strong>,
-                    <strong>importancia</strong>, <strong>mínimo operativo</strong> y <strong>detalle</strong>.
-                    <br><br>
-                    El estado se calcula automáticamente. Si no necesitas un bloque, puedes dejarlo completamente en blanco.
-                </p>
-
-                {{ objetos_formset.management_form }}
-
-                <div id="objetos-container">
-                    {% for f in objetos_formset %}
-                        <div class="border rounded p-3 mb-3 objeto-form">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="mb-0 objeto-title">Objeto {{ forloop.counter }}</h6>
-                                <button type="button" class="btn btn-outline-danger btn-sm remove-obj-btn">
-                                    Quitar
-                                </button>
-                            </div>
-
-                            <!-- Paso 1: Categoría -->
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold small d-block">
-                                    1. Categoría
-                                </label>
-                                <div class="row">
-                                    <div class="col-md-6 mb-2">
-                                        <small class="text-muted d-block mb-1">
-                                            Categoría existente
-                                        </small>
-                                        {{ f.categoria_existente }}
-                                        {{ f.categoria_existente.errors }}
-                                    </div>
-                                    <div class="col-md-6 mb-2">
-                                        <small class="text-muted d-block mb-1">
-                                            O escribe una nueva categoría
-                                        </small>
-                                        {{ f.categoria_nueva }}
-                                        {{ f.categoria_nueva.errors }}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Paso 2: Objeto -->
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold small d-block">
-                                    2. Objeto
-                                </label>
-                                <div class="row">
-                                    <div class="col-md-6 mb-2">
-                                        <small class="text-muted d-block mb-1">
-                                            Objeto existente ligado a la categoría
-                                        </small>
-                                        {{ f.objeto_existente }}
-                                        {{ f.objeto_existente.errors }}
-                                    </div>
-                                    <div class="col-md-6 mb-2">
-                                        <small class="text-muted d-block mb-1">
-                                            O escribe el nombre del nuevo objeto
-                                        </small>
-                                        {{ f.objeto_nuevo }}
-                                        {{ f.objeto_nuevo.errors }}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Paso 3: Tipo de objeto -->
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold small d-block">
-                                    3. Tipo de objeto
-                                </label>
-                                <div class="row">
-                                    <div class="col-md-6 mb-2">
-                                        <small class="text-muted d-block mb-1">
-                                            Tipo de objeto existente
-                                        </small>
-                                        {{ f.tipo_objeto_existente }}
-                                        {{ f.tipo_objeto_existente.errors }}
-                                    </div>
-                                    <div class="col-md-6 mb-2">
-                                        <small class="text-muted d-block mb-1">
-                                            O crea un nuevo tipo de objeto
-                                        </small>
-                                        <div class="row">
-                                            <div class="col-sm-6 mb-2">
-                                                <span class="small d-block mb-1">Marca</span>
-                                                {{ f.marca }}
-                                                {{ f.marca.errors }}
-                                            </div>
-                                            <div class="col-sm-6 mb-2">
-                                                <span class="small d-block mb-1">Material y/o observación</span>
-                                                {{ f.material }}
-                                                {{ f.material.errors }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Paso 4: Datos en este lugar -->
-                            <div class="mb-1">
-                                <label class="form-label fw-semibold small d-block">
-                                    4. Datos en este lugar
-                                </label>
-
-                                <div class="row">
-                                    <div class="col-md-3 mb-2">
-                                        <span class="small d-block mb-1">Cantidad total</span>
-                                        {{ f.cantidad }}
-                                        {{ f.cantidad.errors }}
-                                    </div>
-
-                                    <div class="col-md-3 mb-2">
-                                        <span class="small d-block mb-1">Cantidad mala</span>
-                                        {{ f.cantidad_mala }}
-                                        {{ f.cantidad_mala.errors }}
-                                    </div>
-
-                                    <div class="col-md-3 mb-2">
-                                        <span class="small d-block mb-1">Cantidad pendiente</span>
-                                        {{ f.cantidad_pendiente }}
-                                        {{ f.cantidad_pendiente.errors }}
-                                    </div>
-
-                                    <div class="col-md-3 mb-2">
-                                        <span class="small d-block mb-1">Mínimo operativo</span>
-                                        {{ f.minimo_operativo }}
-                                        {{ f.minimo_operativo.errors }}
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-3 mb-2">
-                                        <span class="small d-block mb-1">Importancia</span>
-                                        {{ f.importancia }}
-                                        {{ f.importancia.errors }}
-                                    </div>
-
-                                    <div class="col-md-9 mb-2">
-                                        <span class="small d-block mb-1">Detalle opcional</span>
-                                        {{ f.detalle }}
-                                        {{ f.detalle.errors }}
-                                    </div>
-                                </div>
-
-                                <small class="text-muted d-block">
-                                    El estado se calcula automáticamente según las cantidades ingresadas.
-                                </small>
-                            </div>
-
-                            {% if f.non_field_errors %}
-                                <div class="alert alert-warning py-1 mt-2 mb-0">
-                                    {{ f.non_field_errors }}
-                                </div>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
+        <div id="objetos-container">
+          {% for f in objetos_formset %}
+            <div class="objeto-form object-card rounded-4 p-3 p-md-4 mb-3">
+              <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="object-number">{{ forloop.counter }}</span>
+                  <h3 class="h6 fw-bold mb-0 objeto-title">Objeto {{ forloop.counter }}</h3>
                 </div>
 
-                <!-- Template oculto para nuevos objetos -->
-                <div id="empty-form" class="d-none">
-                    <div class="border rounded p-3 mb-3 objeto-form">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="mb-0 objeto-title">Objeto X</h6>
-                            <button type="button" class="btn btn-outline-danger btn-sm remove-obj-btn">
-                                Quitar
-                            </button>
-                        </div>
-
-                        <!-- Paso 1: Categoría -->
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold small d-block">
-                                1. Categoría
-                            </label>
-                            <div class="row">
-                                <div class="col-md-6 mb-2">
-                                    <small class="text-muted d-block mb-1">
-                                        Categoría existente
-                                    </small>
-                                    {{ objetos_formset.empty_form.categoria_existente }}
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <small class="text-muted d-block mb-1">
-                                        O escribe una nueva categoría
-                                    </small>
-                                    {{ objetos_formset.empty_form.categoria_nueva }}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Paso 2: Objeto -->
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold small d-block">
-                                2. Objeto
-                            </label>
-                            <div class="row">
-                                <div class="col-md-6 mb-2">
-                                    <small class="text-muted d-block mb-1">
-                                        Objeto existente ligado a la categoría
-                                    </small>
-                                    {{ objetos_formset.empty_form.objeto_existente }}
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <small class="text-muted d-block mb-1">
-                                        O escribe el nombre del nuevo objeto
-                                    </small>
-                                    {{ objetos_formset.empty_form.objeto_nuevo }}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Paso 3: Tipo de objeto -->
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold small d-block">
-                                3. Tipo de objeto
-                            </label>
-                            <div class="row">
-                                <div class="col-md-6 mb-2">
-                                    <small class="text-muted d-block mb-1">
-                                        Tipo de objeto existente
-                                    </small>
-                                    {{ objetos_formset.empty_form.tipo_objeto_existente }}
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <small class="text-muted d-block mb-1">
-                                        O crea un nuevo tipo de objeto
-                                    </small>
-                                    <div class="row">
-                                        <div class="col-sm-6 mb-2">
-                                            <span class="small d-block mb-1">Marca</span>
-                                            {{ objetos_formset.empty_form.marca }}
-                                        </div>
-                                        <div class="col-sm-6 mb-2">
-                                            <span class="small d-block mb-1">Material y/o observación</span>
-                                            {{ objetos_formset.empty_form.material }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Paso 4: Datos en este lugar -->
-                        <div class="mb-1">
-                            <label class="form-label fw-semibold small d-block">
-                                4. Datos en este lugar
-                            </label>
-
-                            <div class="row">
-                                <div class="col-md-3 mb-2">
-                                    <span class="small d-block mb-1">Cantidad total</span>
-                                    {{ objetos_formset.empty_form.cantidad }}
-                                </div>
-
-                                <div class="col-md-3 mb-2">
-                                    <span class="small d-block mb-1">Cantidad mala</span>
-                                    {{ objetos_formset.empty_form.cantidad_mala }}
-                                </div>
-
-                                <div class="col-md-3 mb-2">
-                                    <span class="small d-block mb-1">Cantidad pendiente</span>
-                                    {{ objetos_formset.empty_form.cantidad_pendiente }}
-                                </div>
-
-                                <div class="col-md-3 mb-2">
-                                    <span class="small d-block mb-1">Mínimo operativo</span>
-                                    {{ objetos_formset.empty_form.minimo_operativo }}
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-3 mb-2">
-                                    <span class="small d-block mb-1">Importancia</span>
-                                    {{ objetos_formset.empty_form.importancia }}
-                                </div>
-
-                                <div class="col-md-9 mb-2">
-                                    <span class="small d-block mb-1">Detalle opcional</span>
-                                    {{ objetos_formset.empty_form.detalle }}
-                                </div>
-                            </div>
-
-                            <small class="text-muted d-block">
-                                El estado se calcula automáticamente según las cantidades ingresadas.
-                            </small>
-                        </div>
-                    </div>
-                </div>
-
-                <button id="add-obj-btn" class="btn btn-outline-secondary btn-sm" type="button">
-                    + Agregar otro objeto
+                <button type="button" class="btn btn-outline-danger btn-sm remove-obj-btn">
+                  <i class="bi bi-trash3 me-1"></i>
+                  Quitar
                 </button>
+              </div>
 
+              <div class="object-step mb-4">
+                <div class="step-heading">
+                  <span>1</span>
+                  Categoría
+                </div>
+
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label small text-muted mb-1">Categoría existente</label>
+                    {{ f.categoria_existente }}
+                    {{ f.categoria_existente.errors }}
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label small text-muted mb-1">O crea una nueva categoría</label>
+                    {{ f.categoria_nueva }}
+                    {{ f.categoria_nueva.errors }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="object-step mb-4">
+                <div class="step-heading">
+                  <span>2</span>
+                  Objeto
+                </div>
+
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label small text-muted mb-1">Objeto existente</label>
+                    {{ f.objeto_existente }}
+                    {{ f.objeto_existente.errors }}
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label small text-muted mb-1">O crea un nuevo objeto</label>
+                    {{ f.objeto_nuevo }}
+                    {{ f.objeto_nuevo.errors }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="object-step mb-4">
+                <div class="step-heading">
+                  <span>3</span>
+                  Variante
+                </div>
+
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label small text-muted mb-1">Variante existente</label>
+                    {{ f.tipo_objeto_existente }}
+                    {{ f.tipo_objeto_existente.errors }}
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label small text-muted mb-1">O crea una nueva variante</label>
+                    <div class="row g-2">
+                      <div class="col-sm-6">
+                        <label class="form-label small text-muted mb-1">Marca</label>
+                        {{ f.marca }}
+                        {{ f.marca.errors }}
+                      </div>
+
+                      <div class="col-sm-6">
+                        <label class="form-label small text-muted mb-1">Material</label>
+                        {{ f.material }}
+                        {{ f.material.errors }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="object-step">
+                <div class="step-heading">
+                  <span>4</span>
+                  Condición en este lugar
+                </div>
+
+                <div class="row g-3">
+                  <div class="col-6 col-md-3">
+                    <label class="form-label small text-muted mb-1">Cantidad total</label>
+                    {{ f.cantidad }}
+                    {{ f.cantidad.errors }}
+                  </div>
+
+                  <div class="col-6 col-md-3">
+                    <label class="form-label small text-muted mb-1">Con falla</label>
+                    {{ f.cantidad_mala }}
+                    {{ f.cantidad_mala.errors }}
+                  </div>
+
+                  <div class="col-6 col-md-3">
+                    <label class="form-label small text-muted mb-1">Por revisar</label>
+                    {{ f.cantidad_pendiente }}
+                    {{ f.cantidad_pendiente.errors }}
+                  </div>
+
+                  <div class="col-6 col-md-3">
+                    <label class="form-label small text-muted mb-1">Mínimo operativo</label>
+                    {{ f.minimo_operativo }}
+                    {{ f.minimo_operativo.errors }}
+                  </div>
+
+                  <div class="col-md-3">
+                    <label class="form-label small text-muted mb-1">Importancia</label>
+                    {{ f.importancia }}
+                    {{ f.importancia.errors }}
+                  </div>
+
+                  <div class="col-md-9">
+                    <label class="form-label small text-muted mb-1">Detalle opcional</label>
+                    {{ f.detalle }}
+                    {{ f.detalle.errors }}
+                  </div>
+                </div>
+
+                <div class="form-text mt-2">
+                  La condición se calcula automáticamente a partir de las cantidades ingresadas.
+                </div>
+              </div>
+
+              {% if f.non_field_errors %}
+                <div class="alert alert-warning mt-3 mb-0">
+                  {{ f.non_field_errors }}
+                </div>
+              {% endif %}
             </div>
+          {% endfor %}
         </div>
 
-        <button type="submit" class="btn btn-primary">Guardar todo</button>
-    </form>
+        <div id="empty-form" class="d-none">
+          <div class="objeto-form object-card rounded-4 p-3 p-md-4 mb-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+              <div class="d-flex align-items-center gap-2">
+                <span class="object-number">+</span>
+                <h3 class="h6 fw-bold mb-0 objeto-title">Objeto X</h3>
+              </div>
+
+              <button type="button" class="btn btn-outline-danger btn-sm remove-obj-btn">
+                <i class="bi bi-trash3 me-1"></i>
+                Quitar
+              </button>
+            </div>
+
+            <div class="object-step mb-4">
+              <div class="step-heading">
+                <span>1</span>
+                Categoría
+              </div>
+
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label small text-muted mb-1">Categoría existente</label>
+                  {{ objetos_formset.empty_form.categoria_existente }}
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label small text-muted mb-1">O crea una nueva categoría</label>
+                  {{ objetos_formset.empty_form.categoria_nueva }}
+                </div>
+              </div>
+            </div>
+
+            <div class="object-step mb-4">
+              <div class="step-heading">
+                <span>2</span>
+                Objeto
+              </div>
+
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label small text-muted mb-1">Objeto existente</label>
+                  {{ objetos_formset.empty_form.objeto_existente }}
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label small text-muted mb-1">O crea un nuevo objeto</label>
+                  {{ objetos_formset.empty_form.objeto_nuevo }}
+                </div>
+              </div>
+            </div>
+
+            <div class="object-step mb-4">
+              <div class="step-heading">
+                <span>3</span>
+                Variante
+              </div>
+
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label small text-muted mb-1">Variante existente</label>
+                  {{ objetos_formset.empty_form.tipo_objeto_existente }}
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label small text-muted mb-1">O crea una nueva variante</label>
+                  <div class="row g-2">
+                    <div class="col-sm-6">
+                      <label class="form-label small text-muted mb-1">Marca</label>
+                      {{ objetos_formset.empty_form.marca }}
+                    </div>
+
+                    <div class="col-sm-6">
+                      <label class="form-label small text-muted mb-1">Material</label>
+                      {{ objetos_formset.empty_form.material }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="object-step">
+              <div class="step-heading">
+                <span>4</span>
+                Condición en este lugar
+              </div>
+
+              <div class="row g-3">
+                <div class="col-6 col-md-3">
+                  <label class="form-label small text-muted mb-1">Cantidad total</label>
+                  {{ objetos_formset.empty_form.cantidad }}
+                </div>
+
+                <div class="col-6 col-md-3">
+                  <label class="form-label small text-muted mb-1">Con falla</label>
+                  {{ objetos_formset.empty_form.cantidad_mala }}
+                </div>
+
+                <div class="col-6 col-md-3">
+                  <label class="form-label small text-muted mb-1">Por revisar</label>
+                  {{ objetos_formset.empty_form.cantidad_pendiente }}
+                </div>
+
+                <div class="col-6 col-md-3">
+                  <label class="form-label small text-muted mb-1">Mínimo operativo</label>
+                  {{ objetos_formset.empty_form.minimo_operativo }}
+                </div>
+
+                <div class="col-md-3">
+                  <label class="form-label small text-muted mb-1">Importancia</label>
+                  {{ objetos_formset.empty_form.importancia }}
+                </div>
+
+                <div class="col-md-9">
+                  <label class="form-label small text-muted mb-1">Detalle opcional</label>
+                  {{ objetos_formset.empty_form.detalle }}
+                </div>
+              </div>
+
+              <div class="form-text mt-2">
+                La condición se calcula automáticamente a partir de las cantidades ingresadas.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button id="add-obj-btn-bottom" class="btn btn-outline-secondary btn-sm mt-1" type="button">
+          <i class="bi bi-plus-circle me-1"></i>
+          Agregar otro objeto
+        </button>
+
+      </div>
+    </div>
+
+    <div class="save-bar card border-0 shadow-sm rounded-4">
+      <div class="card-body p-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+          <div class="fw-semibold">¿Todo listo?</div>
+          <div class="text-muted small">
+            Revisa los datos y guarda la estructura junto con sus objetos.
+          </div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+            Cancelar
+          </a>
+
+          <button type="submit" class="btn pvsa-btn px-4">
+            <i class="bi bi-check-circle me-1"></i>
+            Guardar registro
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </form>
+
+  {{ sectores_existentes|json_script:"estructura-sectores-data" }}
+  {{ ubicaciones_existentes|json_script:"estructura-ubicaciones-data" }}
+  {{ pisos_existentes|json_script:"estructura-pisos-data" }}
+  {{ tipos_lugar_existentes|json_script:"estructura-tipos-lugar-data" }}
+  {{ lugares_existentes|json_script:"estructura-lugares-data" }}
+  {{ categorias_existentes|json_script:"estructura-categorias-data" }}
+  {{ objetos_existentes|json_script:"estructura-objetos-data" }}
+
 </div>
+
+<style>
+  .pvsa-section-badge {
+    color: var(--pvsa-accent);
+    background: rgba(6, 182, 185, .08);
+    border: 1px solid rgba(6, 182, 185, .20);
+    border-radius: 999px;
+    padding: .35rem .7rem;
+    font-size: .82rem;
+    font-weight: 700;
+  }
+
+  .pvsa-info-alert {
+    background: rgba(6, 182, 185, .06);
+  }
+
+  .section-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    background: rgba(6, 182, 185, .10);
+    color: var(--pvsa-accent);
+    font-size: 1.15rem;
+  }
+
+  .hierarchy-stack {
+    position: relative;
+  }
+
+  .hierarchy-row {
+    display: flex;
+    gap: 1rem;
+    position: relative;
+    padding-bottom: 1.5rem;
+  }
+
+  .hierarchy-row:not(.hierarchy-row-last)::before {
+    content: "";
+    position: absolute;
+    top: 34px;
+    left: 16px;
+    width: 2px;
+    height: calc(100% - 18px);
+    background: #e9ecef;
+  }
+
+  .hierarchy-number {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    background: var(--pvsa-accent);
+    color: #fff;
+    font-weight: 800;
+    font-size: .85rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hierarchy-content {
+    flex: 1;
+    min-width: 0;
+    padding-top: .25rem;
+  }
+
+  .object-help {
+    background: #f8f9fa;
+    border: 1px solid rgba(0, 0, 0, .06);
+  }
+
+  .object-card {
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, .10);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, .035);
+  }
+
+  .object-number {
+    width: 31px;
+    height: 31px;
+    border-radius: 9px;
+    display: grid;
+    place-items: center;
+    background: rgba(6, 182, 185, .10);
+    color: var(--pvsa-accent);
+    font-weight: 800;
+    font-size: .82rem;
+  }
+
+  .object-step {
+    padding: 1rem;
+    border: 1px solid #e9ecef;
+    border-radius: .85rem;
+    background: #fafbfc;
+  }
+
+  .step-heading {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .86rem;
+    font-weight: 700;
+    margin-bottom: .9rem;
+  }
+
+  .step-heading > span {
+    width: 23px;
+    height: 23px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--pvsa-accent);
+    color: #fff;
+    font-size: .72rem;
+  }
+
+  .save-bar {
+    position: sticky;
+    bottom: 12px;
+    z-index: 1010;
+    border: 1px solid rgba(6, 182, 185, .18) !important;
+  }
+
+  .errorlist {
+    list-style: none;
+    padding-left: 0;
+    margin: .35rem 0 0;
+    color: #dc3545;
+    font-size: .82rem;
+  }
+
+  .name-warning {
+    margin-top: .45rem;
+    padding: .6rem .7rem;
+    border-radius: .7rem;
+    font-size: .8rem;
+    line-height: 1.4;
+  }
+
+  .name-warning-exact {
+    background: rgba(220, 53, 69, .08);
+    border: 1px solid rgba(220, 53, 69, .18);
+    color: #b02a37;
+  }
+
+  .name-warning-similar {
+    background: rgba(255, 193, 7, .12);
+    border: 1px solid rgba(255, 193, 7, .25);
+    color: #6f5600;
+  }
+
+  .choice-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .25rem .5rem;
+    border-radius: 999px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    font-size: .73rem;
+    color: #6c757d;
+  }
+
+  @media (max-width: 767.98px) {
+    .hierarchy-row {
+      gap: .7rem;
+    }
+
+    .object-step {
+      padding: .85rem;
+    }
+
+    .save-bar {
+      position: static;
+    }
+  }
+</style>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
@@ -633,19 +915,19 @@ document.addEventListener("DOMContentLoaded", function () {
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Objetos típicos del tipo de lugar</h5>
+        <h5 class="modal-title">Objetos habituales del tipo de lugar</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body">
-        <p class="text-muted mb-2">Marca los que quieres agregar. Se seleccionarán en los combobox.</p>
+        <p class="text-muted mb-2">Marca los objetos que quieres agregar al lugar.</p>
         <div id="lista-objetos-tipicos" class="d-flex flex-column gap-2"></div>
         <div id="tipicos-vacio" class="text-muted small mt-2" style="display:none;">
-          Este tipo de lugar no tiene lista de típicos configurada.
+          Este tipo de lugar no tiene objetos habituales configurados.
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-primary" id="btnAgregarTipicos">Agregar seleccionados</button>
+        <button type="button" class="btn btn-primary" id="btnAgregarTipicos">Agregar objetos</button>
       </div>
     </div>
   </div>
@@ -997,6 +1279,330 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   loadLugares();
+});
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const secondaryAddButton = document.getElementById("add-obj-btn-bottom");
+  const primaryAddButton = document.getElementById("add-obj-btn");
+
+  if (secondaryAddButton && primaryAddButton) {
+    secondaryAddButton.addEventListener("click", function () {
+      primaryAddButton.click();
+    });
+  }
+});
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  function leerJson(id, fallback) {
+    const el = document.getElementById(id);
+    if (!el) return fallback;
+    try {
+      return JSON.parse(el.textContent);
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  const sectores = leerJson("estructura-sectores-data", []);
+  const ubicaciones = leerJson("estructura-ubicaciones-data", []);
+  const pisos = leerJson("estructura-pisos-data", []);
+  const tiposLugar = leerJson("estructura-tipos-lugar-data", []);
+  const lugares = leerJson("estructura-lugares-data", []);
+  const categorias = leerJson("estructura-categorias-data", []);
+  const objetos = leerJson("estructura-objetos-data", []);
+
+  function normalizar(valor) {
+    return String(valor || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .replace(/\s+/g, " ")
+      .toLocaleLowerCase("es");
+  }
+
+  function distancia(a, b) {
+    a = normalizar(a);
+    b = normalizar(b);
+
+    const filas = a.length + 1;
+    const columnas = b.length + 1;
+    const matriz = Array.from({ length: filas }, function () {
+      return Array(columnas).fill(0);
+    });
+
+    for (let i = 0; i < filas; i++) matriz[i][0] = i;
+    for (let j = 0; j < columnas; j++) matriz[0][j] = j;
+
+    for (let i = 1; i < filas; i++) {
+      for (let j = 1; j < columnas; j++) {
+        const costo = a[i - 1] === b[j - 1] ? 0 : 1;
+        matriz[i][j] = Math.min(
+          matriz[i - 1][j] + 1,
+          matriz[i][j - 1] + 1,
+          matriz[i - 1][j - 1] + costo
+        );
+      }
+    }
+
+    return matriz[a.length][b.length];
+  }
+
+  function parecido(a, b) {
+    const x = normalizar(a);
+    const y = normalizar(b);
+
+    if (!x || !y || x === y) return false;
+    if (Math.min(x.length, y.length) < 4) return false;
+
+    const d = distancia(x, y);
+    const largo = Math.max(x.length, y.length);
+
+    if (largo <= 8) return d === 1;
+    if (largo <= 16) return d <= 2;
+    if (d <= 3) return true;
+
+    return Math.abs(x.length - y.length) <= 2 &&
+      (x.includes(y) || y.includes(x));
+  }
+
+  function mostrarAviso(input, exacto, similares, extraExacto) {
+    if (!input) return;
+
+    let box = input.parentElement.querySelector(".name-warning");
+    if (!box) {
+      box = document.createElement("div");
+      box.className = "name-warning d-none";
+      input.insertAdjacentElement("afterend", box);
+    }
+
+    if (exacto) {
+      box.className = "name-warning name-warning-exact";
+      box.innerHTML =
+        '<i class="bi bi-x-circle-fill me-1"></i>' +
+        (extraExacto || "Ya existe un registro con este nombre. Usa el existente.");
+      return;
+    }
+
+    if (similares && similares.length) {
+      box.className = "name-warning name-warning-similar";
+      box.innerHTML =
+        '<div class="fw-semibold">' +
+        '<i class="bi bi-exclamation-triangle-fill me-1"></i>' +
+        'Revisa el nombre antes de continuar.</div>' +
+        '<div class="mt-1">Ya existe algo muy parecido: <strong>' +
+        similares.slice(0, 2).join("</strong>, <strong>") +
+        '</strong>.</div>';
+      return;
+    }
+
+    box.className = "name-warning d-none";
+    box.innerHTML = "";
+  }
+
+  function validarNombreSimple(input, lista) {
+    if (!input) return;
+
+    const valor = normalizar(input.value);
+    if (!valor) {
+      mostrarAviso(input, null, []);
+      return;
+    }
+
+    const exacto = lista.find(function (nombre) {
+      return normalizar(nombre) === valor;
+    });
+
+    const similares = lista
+      .filter(function (nombre) {
+        return parecido(valor, nombre);
+      })
+      .slice(0, 2);
+
+    mostrarAviso(input, exacto, similares);
+  }
+
+  const sectorNuevo = document.getElementById("id_sector_nuevo");
+  const ubicacionNueva = document.getElementById("id_ubicacion_nueva");
+  const pisoNuevo = document.getElementById("id_piso_nuevo");
+  const ubicacionExistente = document.getElementById("id_ubicacion_existente");
+  const tipoLugarNuevo = document.getElementById("id_tipo_lugar_nuevo");
+  const lugarNuevo = document.getElementById("id_lugar_nuevo");
+  const pisoExistente = document.getElementById("id_piso_existente");
+
+  if (sectorNuevo) {
+    sectorNuevo.addEventListener("input", function () {
+      validarNombreSimple(sectorNuevo, sectores);
+    });
+    validarNombreSimple(sectorNuevo, sectores);
+  }
+
+  if (ubicacionNueva) {
+    ubicacionNueva.addEventListener("input", function () {
+      const valor = normalizar(ubicacionNueva.value);
+
+      const exacto = ubicaciones.find(function (item) {
+        return normalizar(item.ubicacion) === valor;
+      });
+
+      const similares = ubicaciones
+        .filter(function (item) {
+          return parecido(valor, item.ubicacion);
+        })
+        .slice(0, 2)
+        .map(function (item) {
+          return item.ubicacion + " · " + item.sector__sector;
+        });
+
+      mostrarAviso(
+        ubicacionNueva,
+        exacto,
+        similares,
+        exacto
+          ? "Ya existe <strong>" + exacto.ubicacion +
+            "</strong> en <strong>" + exacto.sector__sector +
+            "</strong>. Selecciona esa ubicación en vez de crearla de nuevo."
+          : ""
+      );
+    });
+    ubicacionNueva.dispatchEvent(new Event("input"));
+  }
+
+  function validarPiso() {
+    if (!pisoNuevo) return;
+
+    const valor = String(pisoNuevo.value || "").trim();
+    const ubicacionId = Number(ubicacionExistente?.value || 0);
+
+    if (!valor || !ubicacionId) {
+      mostrarAviso(pisoNuevo, null, []);
+      return;
+    }
+
+    const exacto = pisos.find(function (item) {
+      return Number(item.ubicacion_id) === ubicacionId &&
+        String(item.piso) === valor;
+    });
+
+    mostrarAviso(
+      pisoNuevo,
+      exacto,
+      [],
+      exacto
+        ? "Ese piso ya existe en la ubicación seleccionada. Usa el piso existente."
+        : ""
+    );
+  }
+
+  if (pisoNuevo) pisoNuevo.addEventListener("input", validarPiso);
+  if (ubicacionExistente) ubicacionExistente.addEventListener("change", validarPiso);
+  validarPiso();
+
+  if (tipoLugarNuevo) {
+    tipoLugarNuevo.addEventListener("input", function () {
+      validarNombreSimple(tipoLugarNuevo, tiposLugar);
+    });
+    validarNombreSimple(tipoLugarNuevo, tiposLugar);
+  }
+
+  function validarLugar() {
+    if (!lugarNuevo) return;
+
+    const valor = normalizar(lugarNuevo.value);
+    const pisoId = Number(pisoExistente?.value || 0);
+
+    if (!valor || !pisoId) {
+      mostrarAviso(lugarNuevo, null, []);
+      return;
+    }
+
+    const candidatos = lugares.filter(function (item) {
+      return Number(item.piso_id) === pisoId;
+    });
+
+    const exacto = candidatos.find(function (item) {
+      return normalizar(item.nombre_del_lugar) === valor;
+    });
+
+    const similares = candidatos
+      .filter(function (item) {
+        return parecido(valor, item.nombre_del_lugar);
+      })
+      .slice(0, 2)
+      .map(function (item) {
+        return item.nombre_del_lugar;
+      });
+
+    mostrarAviso(
+      lugarNuevo,
+      exacto,
+      similares,
+      exacto
+        ? "Ya existe <strong>" + exacto.nombre_del_lugar +
+          "</strong> en este piso. Selecciona ese lugar en vez de crear otro."
+        : ""
+    );
+  }
+
+  if (lugarNuevo) lugarNuevo.addEventListener("input", validarLugar);
+  if (pisoExistente) pisoExistente.addEventListener("change", validarLugar);
+  validarLugar();
+
+  const container = document.getElementById("objetos-container");
+
+  function validarFila(input) {
+    if (!input) return;
+
+    if (input.name && input.name.endsWith("-categoria_nueva")) {
+      validarNombreSimple(input, categorias);
+      return;
+    }
+
+    if (input.name && input.name.endsWith("-objeto_nuevo")) {
+      const valor = normalizar(input.value);
+
+      const exacto = objetos.find(function (item) {
+        return normalizar(item.nombre_del_objeto) === valor;
+      });
+
+      const similares = objetos
+        .filter(function (item) {
+          return parecido(valor, item.nombre_del_objeto);
+        })
+        .slice(0, 2)
+        .map(function (item) {
+          return item.nombre_del_objeto +
+            " · " + item.objeto_categoria__nombre_de_categoria;
+        });
+
+      mostrarAviso(
+        input,
+        exacto,
+        similares,
+        exacto
+          ? "Ya existe <strong>" + exacto.nombre_del_objeto +
+            "</strong> en <strong>" +
+            exacto.objeto_categoria__nombre_de_categoria +
+            "</strong>. Selecciónalo como objeto existente."
+          : ""
+      );
+    }
+  }
+
+  if (container) {
+    container.addEventListener("input", function (e) {
+      validarFila(e.target);
+    });
+
+    container.querySelectorAll(
+      'input[name$="-categoria_nueva"], input[name$="-objeto_nuevo"]'
+    ).forEach(validarFila);
+  }
 });
 </script>
 

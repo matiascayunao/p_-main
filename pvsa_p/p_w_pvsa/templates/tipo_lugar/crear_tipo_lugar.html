@@ -1,76 +1,247 @@
 {% extends "base.html" %}
+
+{% block title %}Crear tipo de lugar · PVSA{% endblock %}
+
 {% block content %}
-<div class="container-xxl py-4" style="max-width: 980px;">
+<div class="py-2 py-lg-3 form-page">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8 col-xl-6">
 
-  <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 mb-3">
-    <div>
-      <nav aria-label="breadcrumb" class="small">
-        <ol class="breadcrumb mb-2">
-          <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
-          <li class="breadcrumb-item"><a href="{% url 'lista_tipos_lugar' %}">Tipos de lugar</a></li>
-          <li class="breadcrumb-item active" aria-current="page">Crear</li>
-        </ol>
-      </nav>
-      <h2 class="h4 fw-bold mb-1">Crear tipo de lugar</h2>
-      <div class="text-muted">Ejemplos: Sala, Bodega, Oficina, Patio.</div>
-    </div>
+      <div class="mb-4">
+        <div class="mb-3">
+          <a href="{% url 'lista_tipos_lugar' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>
+            Volver a tipos de lugar
+          </a>
+        </div>
 
-    <a class="btn btn-outline-secondary" href="{% url 'lista_tipos_lugar' %}">Volver</a>
-  </div>
+        <div class="d-inline-flex align-items-center gap-2 pvsa-section-badge mb-2">
+          <i class="bi bi-door-open"></i>
+          Nuevo tipo de lugar
+        </div>
 
-  <div class="row g-3">
-    <div class="col-12 col-lg-4">
-      <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body p-3 p-md-4">
-          <div class="fw-semibold mb-1">Recomendación</div>
-          <div class="text-muted small">
-            Define tipos claros porque luego podrás asignar “objetos típicos” para acelerar cargas en cada lugar.
-          </div>
+        <h1 class="h3 fw-bold mb-1">Crear tipo de lugar</h1>
+
+        <div class="text-muted">
+          Crea una clasificación reutilizable para los espacios.
         </div>
       </div>
-    </div>
 
-    <div class="col-12 col-lg-8">
-      <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body p-3 p-md-4">
+      <form method="post" novalidate id="crearTipoLugarForm">
+        {% csrf_token %}
 
-          <form method="post" novalidate>
-            {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger rounded-4 shadow-sm">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
 
-            {% if form.non_field_errors %}
-              <div class="alert alert-danger rounded-4">{{ form.non_field_errors }}</div>
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+          <div class="card-body p-3 p-md-4">
+
+            <div class="d-flex align-items-center gap-3 mb-4">
+              <div class="section-icon">
+                <i class="bi bi-door-open"></i>
+              </div>
+
+              <div>
+                <h2 class="h5 fw-bold mb-1">Nombre del tipo de lugar</h2>
+                <div class="small text-muted">
+                  Usa un nombre que describa claramente el espacio.
+                </div>
+              </div>
+            </div>
+
+            <label class="form-label fw-semibold" for="{{ form.tipo_de_lugar.id_for_label }}">
+              Tipo de lugar
+            </label>
+
+            {{ form.tipo_de_lugar }}
+
+            {% if form.tipo_de_lugar.errors %}
+              <div class="text-danger small mt-1">
+                {{ form.tipo_de_lugar.errors|striptags }}
+              </div>
             {% endif %}
 
-            <div class="mb-3">
-              <label class="form-label small text-muted mb-1" for="{{ form.tipo_de_lugar.id_for_label }}">
-                Nombre del tipo de lugar
-              </label>
-              <input
-                type="text"
-                name="{{ form.tipo_de_lugar.name }}"
-                id="{{ form.tipo_de_lugar.id_for_label }}"
-                value="{{ form.tipo_de_lugar.value|default_if_none:'' }}"
-                class="form-control {% if form.tipo_de_lugar.errors %}is-invalid{% endif %}"
-                placeholder="Ej: Bodega"
-                required
-              >
-              {% if form.tipo_de_lugar.errors %}
-                <div class="invalid-feedback">{{ form.tipo_de_lugar.errors|striptags }}</div>
-              {% endif %}
+            <div id="tipoLugarDuplicateAlert" class="duplicate-alert d-none mt-2"></div>
+            <div id="tipoLugarSimilarAlert" class="similar-alert d-none mt-2"></div>
+
+            <div class="form-text">
+              Ejemplo: Baño, Oficina, Sala técnica, Bodega o Comedor.
             </div>
 
-            <hr class="my-4">
+          </div>
 
-            <div class="d-flex flex-wrap gap-2">
-              <button class="btn btn-primary" type="submit">Guardar</button>
-              <a class="btn btn-outline-secondary" href="{% url 'lista_tipos_lugar' %}">Cancelar</a>
+          <div class="card-footer bg-white border-top p-3 p-md-4">
+            <div class="d-flex justify-content-end gap-2">
+              <a href="{% url 'lista_tipos_lugar' %}" class="btn btn-outline-secondary">
+                Cancelar
+              </a>
+
+              <button id="crearTipoLugarBtn" type="submit" class="btn pvsa-btn px-4">
+                <i class="bi bi-check-circle me-1"></i>
+                Crear tipo
+              </button>
             </div>
-          </form>
-
+          </div>
         </div>
-      </div>
+      </form>
+
+      {{ tipos_existentes|json_script:"tipos-lugar-existentes-data" }}
+
     </div>
   </div>
-
 </div>
+
+<style>
+.form-page{max-width:1200px;margin:0 auto}
+.pvsa-section-badge{color:var(--pvsa-accent);background:rgba(6,182,185,.08);border:1px solid rgba(6,182,185,.20);border-radius:999px;padding:.35rem .7rem;font-size:.82rem;font-weight:700}
+.section-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:0 0 auto;background:rgba(6,182,185,.10);color:var(--pvsa-accent);font-size:1.05rem}
+form input,form select,form textarea{width:100%}
+.duplicate-alert,.similar-alert{padding:.7rem .8rem;border-radius:.8rem;font-size:.82rem;line-height:1.45}
+.duplicate-alert{background:rgba(220,53,69,.08);border:1px solid rgba(220,53,69,.20);color:#b02a37}
+.similar-alert{background:rgba(255,193,7,.12);border:1px solid rgba(255,193,7,.28);color:#6f5600}
+.similar-item{display:flex;align-items:flex-start;gap:.45rem;margin-top:.35rem}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const input = document.getElementById("{{ form.tipo_de_lugar.id_for_label }}");
+  const duplicateAlert = document.getElementById("tipoLugarDuplicateAlert");
+  const similarAlert = document.getElementById("tipoLugarSimilarAlert");
+  const submitBtn = document.getElementById("crearTipoLugarBtn");
+  const data = JSON.parse(
+    document.getElementById("tipos-lugar-existentes-data").textContent
+  );
+
+  function normalizar(valor) {
+    return String(valor || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .replace(/\s+/g, " ")
+      .toLocaleLowerCase("es");
+  }
+
+  function distanciaLevenshtein(a, b) {
+    a = normalizar(a);
+    b = normalizar(b);
+
+    const filas = a.length + 1;
+    const columnas = b.length + 1;
+    const matriz = Array.from({ length: filas }, function () {
+      return Array(columnas).fill(0);
+    });
+
+    for (let i = 0; i < filas; i++) matriz[i][0] = i;
+    for (let j = 0; j < columnas; j++) matriz[0][j] = j;
+
+    for (let i = 1; i < filas; i++) {
+      for (let j = 1; j < columnas; j++) {
+        const costo = a[i - 1] === b[j - 1] ? 0 : 1;
+
+        matriz[i][j] = Math.min(
+          matriz[i - 1][j] + 1,
+          matriz[i][j - 1] + 1,
+          matriz[i - 1][j - 1] + costo
+        );
+      }
+    }
+
+    return matriz[a.length][b.length];
+  }
+
+  function pareceDuplicado(nuevo, existente) {
+    const a = normalizar(nuevo);
+    const b = normalizar(existente);
+
+    if (!a || !b || a === b) return false;
+    if (Math.min(a.length, b.length) < 4) return false;
+
+    const distancia = distanciaLevenshtein(a, b);
+    const largoMayor = Math.max(a.length, b.length);
+
+    if (largoMayor <= 8) return distancia === 1;
+    if (largoMayor <= 16) return distancia <= 2;
+    if (distancia <= 3) return true;
+
+    return (
+      Math.abs(a.length - b.length) <= 2 &&
+      (a.includes(b) || b.includes(a))
+    );
+  }
+
+  function verificar() {
+    const valor = normalizar(input?.value);
+
+    const exacto = data.find(function (nombre) {
+      return normalizar(nombre) === valor;
+    });
+
+    const esDuplicadoExacto = Boolean(valor && exacto);
+
+    if (duplicateAlert) {
+      duplicateAlert.classList.toggle("d-none", !esDuplicadoExacto);
+      duplicateAlert.innerHTML = esDuplicadoExacto
+        ? '<i class="bi bi-x-circle-fill me-1"></i>' +
+          'Ya existe el tipo de lugar <strong>' + exacto +
+          '</strong>. Usa ese registro en vez de crear otro.'
+        : "";
+    }
+
+    if (input) input.classList.toggle("is-invalid", esDuplicadoExacto);
+    if (submitBtn) submitBtn.disabled = esDuplicadoExacto;
+
+    if (!similarAlert) return;
+
+    if (!valor || esDuplicadoExacto) {
+      similarAlert.classList.add("d-none");
+      similarAlert.innerHTML = "";
+      return;
+    }
+
+    const parecidos = data
+      .filter(function (nombre) {
+        return pareceDuplicado(valor, nombre);
+      })
+      .slice(0, 3);
+
+    if (!parecidos.length) {
+      similarAlert.classList.add("d-none");
+      similarAlert.innerHTML = "";
+      return;
+    }
+
+    let contenido =
+      '<div class="fw-semibold">' +
+      '<i class="bi bi-exclamation-triangle-fill me-1"></i>' +
+      'Revisa el nombre antes de crear el tipo.' +
+      '</div>' +
+      '<div class="mt-1">Ya existen nombres muy parecidos:</div>';
+
+    parecidos.forEach(function (nombre) {
+      contenido +=
+        '<div class="similar-item">' +
+        '<i class="bi bi-arrow-right-short"></i>' +
+        '<div><strong>' + nombre + '</strong></div>' +
+        '</div>';
+    });
+
+    contenido +=
+      '<div class="mt-2 small">' +
+      'Si realmente es un tipo distinto, puedes continuar y crearlo.' +
+      '</div>';
+
+    similarAlert.innerHTML = contenido;
+    similarAlert.classList.remove("d-none");
+  }
+
+  if (input) {
+    input.addEventListener("input", verificar);
+    input.addEventListener("blur", verificar);
+    verificar();
+  }
+});
+</script>
 {% endblock %}

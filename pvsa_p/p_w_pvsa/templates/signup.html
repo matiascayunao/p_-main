@@ -1,36 +1,290 @@
-{% extends  'base.html' %}
+{% extends "base.html" %}
+
+{% block title %}Crear usuario · PVSA{% endblock %}
 
 {% block content %}
+<div class="py-2 py-lg-3 auth-create-page">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8 col-xl-6">
 
-<main class="container">
-    <div class = "row">
-        <section class = "col-md-4 offset-md-4 mt-5">
-            <form method="post" class="card card-body">
-                {% csrf_token %}
+      <div class="mb-4">
+        <div class="mb-3">
+          <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>
+            Volver al inicio
+          </a>
+        </div>
 
-                <h1 class="text-center">Cree su cuenta</h1>
+        <div class="d-inline-flex align-items-center gap-2 pvsa-section-badge mb-2">
+          <i class="bi bi-person-plus"></i>
+          Administración
+        </div>
 
-                <div class="mb-3">
-                    <label for="username"> Usuario: </label>
-                    <input type="text" name="username" class="form-control" id="username" placeholder="Escriba su Usuario">     
+        <h1 class="h3 fw-bold mb-1">
+          Crear usuario
+        </h1>
+
+        <div class="text-muted">
+          Registra una nueva cuenta para acceder a PVSA.
+        </div>
+      </div>
+
+      {% if error %}
+        <div class="alert alert-danger d-flex gap-2 align-items-start">
+          <i class="bi bi-exclamation-circle-fill mt-1"></i>
+          <div>{{ error }}</div>
+        </div>
+      {% endif %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <form method="post" class="signup-form" novalidate>
+        {% csrf_token %}
+
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+
+          <div class="card-body p-3 p-md-4">
+
+            <div class="d-flex align-items-center gap-3 mb-4">
+              <div class="section-icon">
+                <i class="bi bi-person"></i>
+              </div>
+
+              <div>
+                <h2 class="h5 fw-bold mb-1">
+                  Datos de acceso
+                </h2>
+
+                <div class="small text-muted">
+                  Define el usuario y una contraseña segura.
                 </div>
-                <div class="mb-3">
-                    <label for="password1"> Contraseña: </label>
-                    <input type="password" name="password1" class="form-control" id="password1" placeholder="Escriba su Contraseña">
-                </div>
-                <div class="mb-3">
-                    <label for="password2"> Confirma la Contraseña: </label>
-                    <input type="password" name="password2" class="form-control" id="password2" placeholder="Confirme su Contraseña">
-                </div>
+              </div>
+            </div>
 
-                {{error}}
+            <div class="mb-3">
+              <label
+                for="{{ form.username.id_for_label }}"
+                class="form-label fw-semibold"
+              >
+                Nombre de usuario
+              </label>
 
-                <button class="btn btn-primary">
-                    Confirmar
+              {{ form.username }}
+
+              {% if form.username.help_text %}
+                <div class="form-text">
+                  {{ form.username.help_text|safe }}
+                </div>
+              {% endif %}
+
+              {% if form.username.errors %}
+                <div class="field-error mt-2">
+                  {{ form.username.errors|striptags }}
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="mb-3">
+              <label
+                for="{{ form.password1.id_for_label }}"
+                class="form-label fw-semibold"
+              >
+                Contraseña
+              </label>
+
+              <div class="input-group">
+                {{ form.password1 }}
+
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary password-toggle"
+                  data-target="{{ form.password1.id_for_label }}"
+                  aria-label="Mostrar contraseña"
+                >
+                  <i class="bi bi-eye"></i>
                 </button>
-                
-            </form>
-        </section>
+              </div>
+
+              {% if form.password1.help_text %}
+                <div class="form-text password-help">
+                  {{ form.password1.help_text|safe }}
+                </div>
+              {% endif %}
+
+              {% if form.password1.errors %}
+                <div class="field-error mt-2">
+                  {{ form.password1.errors|striptags }}
+                </div>
+              {% endif %}
+            </div>
+
+            <div>
+              <label
+                for="{{ form.password2.id_for_label }}"
+                class="form-label fw-semibold"
+              >
+                Confirmar contraseña
+              </label>
+
+              <div class="input-group">
+                {{ form.password2 }}
+
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary password-toggle"
+                  data-target="{{ form.password2.id_for_label }}"
+                  aria-label="Mostrar contraseña"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+
+              {% if form.password2.help_text %}
+                <div class="form-text">
+                  {{ form.password2.help_text|safe }}
+                </div>
+              {% endif %}
+
+              {% if form.password2.errors %}
+                <div class="field-error mt-2">
+                  {{ form.password2.errors|striptags }}
+                </div>
+              {% endif %}
+            </div>
+
+          </div>
+
+          <div class="card-footer bg-white border-top p-3 p-md-4">
+            <div class="d-flex flex-column-reverse flex-sm-row justify-content-end gap-2">
+
+              <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                Cancelar
+              </a>
+
+              <button type="submit" class="btn pvsa-btn px-4">
+                <i class="bi bi-person-check me-1"></i>
+                Crear usuario
+              </button>
+
+            </div>
+          </div>
+
+        </div>
+      </form>
+
     </div>
-</main>
+  </div>
+</div>
+
+<style>
+.auth-create-page{
+  max-width:1200px;
+  margin:0 auto;
+}
+
+.pvsa-section-badge{
+  color:var(--pvsa-accent);
+  background:rgba(6,182,185,.08);
+  border:1px solid rgba(6,182,185,.20);
+  border-radius:999px;
+  padding:.35rem .7rem;
+  font-size:.82rem;
+  font-weight:700;
+}
+
+.section-icon{
+  width:42px;
+  height:42px;
+  border-radius:12px;
+  display:grid;
+  place-items:center;
+  flex:0 0 auto;
+  background:rgba(6,182,185,.10);
+  color:var(--pvsa-accent);
+  font-size:1.05rem;
+}
+
+.signup-form input{
+  display:block;
+  width:100%;
+  min-height:40px;
+  padding:.5rem .75rem;
+  border:1px solid #dee2e6;
+  border-radius:.6rem;
+  background:#fff;
+}
+
+.signup-form .input-group{
+  flex-wrap:nowrap;
+}
+
+.signup-form .input-group > input{
+  position:relative;
+  flex:1 1 auto;
+  width:1%;
+  min-width:0;
+  border-radius:.6rem 0 0 .6rem;
+}
+
+.signup-form input:focus{
+  outline:0;
+  border-color:rgba(6,182,185,.55);
+  box-shadow:0 0 0 .2rem rgba(6,182,185,.14);
+}
+
+.password-toggle{
+  flex:0 0 auto;
+  border-left:0;
+}
+
+.password-help ul{
+  margin-top:.35rem;
+  margin-bottom:0;
+  padding-left:1.2rem;
+}
+
+.field-error{
+  padding:.55rem .7rem;
+  border-radius:.65rem;
+  background:rgba(220,53,69,.08);
+  border:1px solid rgba(220,53,69,.18);
+  color:#b02a37;
+  font-size:.8rem;
+}
+
+@media (max-width:575.98px){
+  .card-footer .btn{
+    width:100%;
+  }
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll(".password-toggle").forEach(function (button) {
+    button.addEventListener("click", function () {
+      const input = document.getElementById(button.dataset.target);
+      const icon = button.querySelector("i");
+
+      if (!input) return;
+
+      const mostrar = input.type === "password";
+      input.type = mostrar ? "text" : "password";
+
+      if (icon) {
+        icon.className = mostrar ? "bi bi-eye-slash" : "bi bi-eye";
+      }
+
+      button.setAttribute(
+        "aria-label",
+        mostrar ? "Ocultar contraseña" : "Mostrar contraseña"
+      );
+    });
+  });
+});
+</script>
 {% endblock %}

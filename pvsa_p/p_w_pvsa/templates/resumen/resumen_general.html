@@ -1,571 +1,1000 @@
 {% extends "base.html" %}
+
+{% block title %}Resumen general · PVSA{% endblock %}
+
 {% block content %}
+<div class="py-2 py-lg-3 resumen-page">
+
+  <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3 mb-4">
+    <div>
+      <div class="d-inline-flex align-items-center gap-2 pvsa-section-badge mb-2">
+        <i class="bi bi-bar-chart-fill"></i>
+        Estado general
+      </div>
+      <h1 class="h3 fw-bold mb-1">Resumen general</h1>
+      <div class="text-muted">
+        Revisa el estado de funcionamiento por sector y ubicación, y detecta rápidamente qué necesita atención.
+      </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+      <span class="status-chip"><span class="status-dot bg-success"></span>Operativo</span>
+      <span class="status-chip"><span class="status-dot bg-warning"></span>Requiere atención</span>
+      <span class="status-chip"><span class="status-dot bg-danger"></span>Crítico</span>
+
+      <button
+        type="button"
+        class="btn pvsa-btn"
+        data-bs-toggle="modal"
+        data-bs-target="#filtrosModal"
+      >
+        <i class="bi bi-funnel-fill me-1"></i>
+        Filtros
+        <span id="filterCountBadge" class="badge rounded-pill bg-white text-dark ms-1 d-none">0</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="activeFilters" class="d-flex flex-wrap gap-2 mb-4"></div>
+
+  <div class="row g-4">
+    <div class="col-12">
+      <div id="sectionSector" class="summary-section card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="card-header bg-white border-0 p-3 p-md-4">
+          <div class="d-flex align-items-center gap-3">
+            <div class="section-icon"><i class="bi bi-grid-3x3-gap"></i></div>
+            <div>
+              <h2 class="h5 fw-bold mb-1">Estado por sector</h2>
+              <div class="text-muted small">Muestra qué tan bien está funcionando cada sector y cómo se distribuyen sus unidades.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body p-0">
+          {% if resumen_sector %}
+            <div class="d-none d-md-block">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 resumen-table">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Sector</th>
+                      <th class="text-end">Total registrado</th>
+                      <th>Estado general</th>
+                      <th style="min-width: 330px;">Condición de las unidades</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for r in resumen_sector %}
+                      <tr class="summary-sort-item"
+                          data-name="{{ r.lugar__piso__ubicacion__sector__sector|escape }}"
+                          data-operativity="{{ r.operatividad }}"
+                          data-total="{{ r.total|default:0 }}"
+                          data-bad="{{ r.pct_malas }}"
+                          data-pending="{{ r.pct_pendientes }}"
+                          data-affected="0">
+                        <td class="fw-semibold">{{ r.lugar__piso__ubicacion__sector__sector }}</td>
+                        <td class="text-end fw-semibold">{{ r.total|default:0 }}</td>
+                        <td>
+                          <span class="estado-operativo" data-operatividad="{{ r.operatividad }}"></span>
+                        </td>
+                        <td>
+                          <div class="distribution-wrap"
+                               data-good="{{ r.pct_buenas }}"
+                               data-pending="{{ r.pct_pendientes }}"
+                               data-bad="{{ r.pct_malas }}">
+                            <div class="distribution-bar" aria-label="Distribución de unidades">
+                              <span class="distribution-segment segment-good"></span>
+                              <span class="distribution-segment segment-pending"></span>
+                              <span class="distribution-segment segment-bad"></span>
+                            </div>
+                            <div class="distribution-labels">
+                              <span><i class="bi bi-check-circle-fill text-success"></i> Funcionando <strong>{{ r.pct_buenas }}%</strong></span>
+                              <span><i class="bi bi-clock-fill text-warning"></i> Por revisar <strong>{{ r.pct_pendientes }}%</strong></span>
+                              <span><i class="bi bi-x-circle-fill text-danger"></i> Con falla <strong>{{ r.pct_malas }}%</strong></span>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="d-md-none p-3">
+              <div class="d-grid gap-3">
+                {% for r in resumen_sector %}
+                  <div class="summary-mobile-card summary-sort-item rounded-4 p-3"
+                       data-name="{{ r.lugar__piso__ubicacion__sector__sector|escape }}"
+                       data-operativity="{{ r.operatividad }}"
+                       data-total="{{ r.total|default:0 }}"
+                       data-bad="{{ r.pct_malas }}"
+                       data-pending="{{ r.pct_pendientes }}"
+                       data-affected="0">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                      <div>
+                        <div class="info-label">Sector</div>
+                        <div class="fw-bold">{{ r.lugar__piso__ubicacion__sector__sector }}</div>
+                      </div>
+                      <span class="estado-operativo estado-operativo-compact" data-operatividad="{{ r.operatividad }}"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <span class="small text-muted">Total registrado</span>
+                      <span class="fw-bold">{{ r.total|default:0 }}</span>
+                    </div>
+
+                    <div class="distribution-wrap"
+                         data-good="{{ r.pct_buenas }}"
+                         data-pending="{{ r.pct_pendientes }}"
+                         data-bad="{{ r.pct_malas }}">
+                      <div class="distribution-bar mb-3">
+                        <span class="distribution-segment segment-good"></span>
+                        <span class="distribution-segment segment-pending"></span>
+                        <span class="distribution-segment segment-bad"></span>
+                      </div>
+
+                      <div class="row g-2 text-center">
+                        <div class="col-4">
+                          <div class="mobile-metric">
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            <div class="info-label mt-1">Funcionando</div>
+                            <div class="fw-bold text-success">{{ r.pct_buenas }}%</div>
+                          </div>
+                        </div>
+                        <div class="col-4">
+                          <div class="mobile-metric">
+                            <i class="bi bi-clock-fill text-warning"></i>
+                            <div class="info-label mt-1">Por revisar</div>
+                            <div class="fw-bold text-warning">{{ r.pct_pendientes }}%</div>
+                          </div>
+                        </div>
+                        <div class="col-4">
+                          <div class="mobile-metric">
+                            <i class="bi bi-x-circle-fill text-danger"></i>
+                            <div class="info-label mt-1">Con falla</div>
+                            <div class="fw-bold text-danger">{{ r.pct_malas }}%</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% else %}
+            <div class="empty-state"><i class="bi bi-bar-chart fs-2 text-muted"></i><div class="fw-semibold mt-2">Sin datos por sector</div><div class="text-muted small">No hay información para calcular este resumen.</div></div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div id="sectionUbicacion" class="summary-section card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="card-header bg-white border-0 p-3 p-md-4">
+          <div class="d-flex align-items-center gap-3">
+            <div class="section-icon"><i class="bi bi-geo-alt"></i></div>
+            <div>
+              <h2 class="h5 fw-bold mb-1">Estado por ubicación</h2>
+              <div class="text-muted small">Permite reconocer de inmediato qué ubicación está bien y cuál necesita revisión.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body p-0">
+          {% if resumen_ubic %}
+            <div class="d-none d-md-block">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 resumen-table">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Sector</th>
+                      <th>Ubicación</th>
+                      <th class="text-end">Total registrado</th>
+                      <th>Estado general</th>
+                      <th class="text-end">Con falla</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for r in resumen_ubic %}
+                      <tr class="summary-sort-item"
+                          data-name="{{ r.lugar__piso__ubicacion__ubicacion|escape }}"
+                          data-operativity="{{ r.operatividad }}"
+                          data-total="{{ r.total|default:0 }}"
+                          data-bad="{{ r.malas }}"
+                          data-pending="0"
+                          data-affected="0">
+                        <td>{{ r.lugar__piso__ubicacion__sector__sector }}</td>
+                        <td class="fw-semibold">{{ r.lugar__piso__ubicacion__ubicacion }}</td>
+                        <td class="text-end fw-semibold">{{ r.total|default:0 }}</td>
+                        <td><span class="estado-operativo" data-operatividad="{{ r.operatividad }}"></span></td>
+                        <td class="text-end">
+                          {% if r.malas > 0 %}
+                            <span class="failure-count"><i class="bi bi-x-circle-fill"></i> {{ r.malas }}</span>
+                          {% else %}
+                            <span class="ok-count"><i class="bi bi-check-circle-fill"></i> 0</span>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="d-md-none p-3">
+              <div class="d-grid gap-3">
+                {% for r in resumen_ubic %}
+                  <div class="summary-mobile-card summary-sort-item rounded-4 p-3"
+                       data-name="{{ r.lugar__piso__ubicacion__ubicacion|escape }}"
+                       data-operativity="{{ r.operatividad }}"
+                       data-total="{{ r.total|default:0 }}"
+                       data-bad="{{ r.malas }}"
+                       data-pending="0"
+                       data-affected="0">
+                    <div class="mb-3">
+                      <div class="fw-bold">{{ r.lugar__piso__ubicacion__ubicacion }}</div>
+                      <div class="small text-muted">{{ r.lugar__piso__ubicacion__sector__sector }}</div>
+                    </div>
+
+                    <div class="estado-mobile-box mb-3">
+                      <div class="info-label">Estado general</div>
+                      <span class="estado-operativo" data-operatividad="{{ r.operatividad }}"></span>
+                    </div>
+
+                    <div class="row g-2">
+                      <div class="col-6">
+                        <div class="mobile-metric">
+                          <div class="info-label">Total registrado</div>
+                          <div class="fw-bold">{{ r.total|default:0 }}</div>
+                        </div>
+                      </div>
+                      <div class="col-6">
+                        <div class="mobile-metric">
+                          <div class="info-label">Con falla</div>
+                          <div class="fw-bold {% if r.malas > 0 %}text-danger{% else %}text-success{% endif %}">
+                            {{ r.malas }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% else %}
+            <div class="empty-state"><i class="bi bi-geo-alt fs-2 text-muted"></i><div class="fw-semibold mt-2">Sin datos por ubicación</div><div class="text-muted small">No hay información para calcular este resumen.</div></div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div id="sectionObjetos" class="summary-section card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-0 p-3 p-md-4">
+          <div class="d-flex align-items-center gap-3">
+            <div class="section-icon attention-icon"><i class="bi bi-exclamation-triangle"></i></div>
+            <div>
+              <h2 class="h5 fw-bold mb-1">Objetos que requieren atención</h2>
+              <div class="text-muted small">Prioriza fallas y unidades por revisar sin tener que interpretar varias columnas.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body p-0">
+          {% if resumen_objetos %}
+            <div class="d-none d-md-block">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 resumen-table">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Objeto</th>
+                      <th class="text-end">Total</th>
+                      <th>Estado general</th>
+                      <th class="text-end">Con falla</th>
+                      <th class="text-end">Por revisar</th>
+                      <th class="text-end">Lugares afectados</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for obj in resumen_objetos %}
+                      <tr class="summary-sort-item"
+                          data-group="obj-{{ forloop.counter }}"
+                          data-name="{{ obj.nombre|escape }}"
+                          data-operativity="{{ obj.operatividad }}"
+                          data-total="{{ obj.total }}"
+                          data-bad="{{ obj.malas }}"
+                          data-pending="{{ obj.pendientes }}"
+                          data-affected="{% if obj.malos %}{{ obj.malos|length }}{% else %}0{% endif %}">
+                        <td>
+                          <div class="fw-bold">{{ obj.nombre }}</div>
+                          {% if obj.malas > 0 %}
+                            <div class="small text-danger"><i class="bi bi-x-circle-fill me-1"></i>Tiene unidades con falla</div>
+                          {% elif obj.pendientes > 0 %}
+                            <div class="small text-warning"><i class="bi bi-clock-fill me-1"></i>Tiene unidades por revisar</div>
+                          {% else %}
+                            <div class="small text-success"><i class="bi bi-check-circle-fill me-1"></i>Sin fallas ni pendientes</div>
+                          {% endif %}
+                        </td>
+                        <td class="text-end fw-semibold">{{ obj.total }}</td>
+                        <td><span class="estado-operativo" data-operatividad="{{ obj.operatividad }}"></span></td>
+                        <td class="text-end">
+                          {% if obj.malas > 0 %}<span class="failure-count"><i class="bi bi-x-circle-fill"></i> {{ obj.malas }}</span>{% else %}<span class="ok-count">0</span>{% endif %}
+                        </td>
+                        <td class="text-end">
+                          {% if obj.pendientes > 0 %}<span class="pending-count"><i class="bi bi-clock-fill"></i> {{ obj.pendientes }}</span>{% else %}<span class="ok-count">0</span>{% endif %}
+                        </td>
+                        <td class="text-end">
+                          {% if obj.malos %}<span class="badge rounded-pill bg-danger">{{ obj.malos|length }}</span>{% else %}<span class="badge rounded-pill bg-success">0</span>{% endif %}
+                        </td>
+                      </tr>
+
+                      {% if obj.malos %}
+                        <tr class="affected-row" data-group="obj-{{ forloop.counter }}">
+                          <td colspan="6">
+                            <div class="small fw-semibold mb-2">Dónde están las fallas</div>
+                            <div class="d-grid gap-2">
+                              {% for ol in obj.malos %}
+                                <div class="affected-place">
+                                  <div class="fw-semibold">{{ ol.lugar.nombre_del_lugar }}</div>
+                                  <div class="small text-muted">{{ ol.lugar.piso.ubicacion.sector.sector }} · {{ ol.lugar.piso.ubicacion.ubicacion }} · Piso {{ ol.lugar.piso.piso }}</div>
+                                  <div class="small mt-1">Con falla: <span class="text-danger fw-semibold">{{ ol.cantidad_mala }}</span> · Estado operativo: <span class="fw-semibold">{{ ol.operatividad_objeto }}%</span></div>
+                                </div>
+                              {% endfor %}
+                            </div>
+                          </td>
+                        </tr>
+                      {% endif %}
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="d-md-none p-3">
+              <div class="d-grid gap-3">
+                {% for obj in resumen_objetos %}
+                  <div class="summary-mobile-card summary-sort-item rounded-4 p-3"
+                       data-name="{{ obj.nombre|escape }}"
+                       data-operativity="{{ obj.operatividad }}"
+                       data-total="{{ obj.total }}"
+                       data-bad="{{ obj.malas }}"
+                       data-pending="{{ obj.pendientes }}"
+                       data-affected="{% if obj.malos %}{{ obj.malos|length }}{% else %}0{% endif %}">
+                    <div class="mb-3">
+                      <div class="fw-bold">{{ obj.nombre }}</div>
+                      {% if obj.malas > 0 %}
+                        <div class="small text-danger">Tiene unidades con falla</div>
+                      {% elif obj.pendientes > 0 %}
+                        <div class="small text-warning">Tiene unidades por revisar</div>
+                      {% else %}
+                        <div class="small text-success">Sin fallas ni pendientes</div>
+                      {% endif %}
+                    </div>
+
+                    <div class="estado-mobile-box mb-3">
+                      <div class="info-label">Estado general</div>
+                      <span class="estado-operativo" data-operatividad="{{ obj.operatividad }}"></span>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                      <div class="col-6 col-sm-3"><div class="mobile-metric"><div class="info-label">Total</div><div class="fw-bold">{{ obj.total }}</div></div></div>
+                      <div class="col-6 col-sm-3"><div class="mobile-metric"><div class="info-label">Con falla</div><div class="fw-bold {% if obj.malas > 0 %}text-danger{% endif %}">{{ obj.malas }}</div></div></div>
+                      <div class="col-6 col-sm-3"><div class="mobile-metric"><div class="info-label">Por revisar</div><div class="fw-bold {% if obj.pendientes > 0 %}text-warning{% endif %}">{{ obj.pendientes }}</div></div></div>
+                      <div class="col-6 col-sm-3"><div class="mobile-metric"><div class="info-label">Lugares</div><div class="fw-bold">{% if obj.malos %}{{ obj.malos|length }}{% else %}0{% endif %}</div></div></div>
+                    </div>
+
+                    {% if obj.malos %}
+                      <div class="affected-mobile">
+                        <div class="small fw-semibold mb-2">Dónde están las fallas</div>
+                        <div class="d-grid gap-2">
+                          {% for ol in obj.malos %}
+                            <div class="affected-place">
+                              <div class="fw-semibold">{{ ol.lugar.nombre_del_lugar }}</div>
+                              <div class="small text-muted">{{ ol.lugar.piso.ubicacion.sector.sector }} · {{ ol.lugar.piso.ubicacion.ubicacion }} · Piso {{ ol.lugar.piso.piso }}</div>
+                              <div class="small mt-1">Con falla: <span class="text-danger fw-semibold">{{ ol.cantidad_mala }}</span> · Estado operativo: <span class="fw-semibold">{{ ol.operatividad_objeto }}%</span></div>
+                            </div>
+                          {% endfor %}
+                        </div>
+                      </div>
+                    {% endif %}
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% else %}
+            <div class="empty-state"><i class="bi bi-exclamation-triangle fs-2 text-muted"></i><div class="fw-semibold mt-2">Sin objetos para mostrar</div><div class="text-muted small">No hay datos para calcular este resumen.</div></div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div class="modal fade" id="filtrosModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
+      <div class="modal-content rounded-4">
+        <form method="get" id="filterForm">
+          <div class="modal-header">
+            <div>
+              <h5 class="modal-title fw-bold">
+                <i class="bi bi-funnel-fill me-2 pvsa-text"></i>
+                Filtros y vista
+              </h5>
+              <div class="text-muted small">
+                Filtra los datos y elige qué bloques quieres ver.
+              </div>
+            </div>
+
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+
+          <div class="modal-body">
+            <div class="mb-4">
+              <div class="fw-bold mb-3">Filtrar información</div>
+
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="id_filtro_sector" class="form-label small fw-semibold mb-1">Sector</label>
+                  <select id="id_filtro_sector" name="sector" class="form-select">
+                    <option value="">Todos los sectores</option>
+                    {% for s in sectores %}
+                      <option value="{{ s.id }}" {% if sector_actual == s.id|stringformat:'s' %}selected{% endif %}>{{ s.sector }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="id_filtro_ubicacion" class="form-label small fw-semibold mb-1">Ubicación</label>
+                  <select id="id_filtro_ubicacion" name="ubicacion" class="form-select">
+                    <option value="">Todas las ubicaciones</option>
+                    {% for u in ubicaciones %}
+                      <option value="{{ u.id }}" {% if ubicacion_actual == u.id|stringformat:'s' %}selected{% endif %}>{{ u.ubicacion }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="id_filtro_piso" class="form-label small fw-semibold mb-1">Piso</label>
+                  <select id="id_filtro_piso" name="piso" class="form-select">
+                    <option value="">Todos los pisos</option>
+                    {% for p in pisos %}
+                      <option value="{{ p.id }}" {% if piso_actual == p.id|stringformat:'s' %}selected{% endif %}>Piso {{ p.piso }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="id_filtro_tipo_lugar" class="form-label small fw-semibold mb-1">Tipo de lugar</label>
+                  <select id="id_filtro_tipo_lugar" name="tipo_lugar" class="form-select">
+                    <option value="">Todos los tipos</option>
+                    {% for tl in tipos_lugar %}
+                      <option value="{{ tl.id }}" {% if tipo_lugar_actual == tl.id|stringformat:'s' %}selected{% endif %}>{{ tl.tipo_de_lugar }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="id_filtro_categoria" class="form-label small fw-semibold mb-1">Categoría</label>
+                  <select id="id_filtro_categoria" name="categoria" class="form-select">
+                    <option value="">Todas las categorías</option>
+                    {% for c in categorias %}
+                      <option value="{{ c.id }}" {% if categoria_actual == c.id|stringformat:'s' %}selected{% endif %}>{{ c.nombre_de_categoria }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="id_filtro_objeto" class="form-label small fw-semibold mb-1">Objeto</label>
+                  <select id="id_filtro_objeto" name="objeto" class="form-select">
+                    <option value="">Todos los objetos</option>
+                    {% for o in objetos_catalogo %}
+                      <option value="{{ o.id }}" {% if objeto_actual == o.id|stringformat:'s' %}selected{% endif %}>{{ o.nombre_del_objeto }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="id_filtro_tipo_objeto" class="form-label small fw-semibold mb-1">Variante</label>
+                  <select id="id_filtro_tipo_objeto" name="tipo_objeto" class="form-select">
+                    <option value="">Todas las variantes</option>
+                    {% for t in tipos_objeto %}
+                      <option value="{{ t.id }}" {% if tipo_objeto_actual == t.id|stringformat:'s' %}selected{% endif %}>{{ t.objeto.nombre_del_objeto }} - {{ t.marca }} {{ t.material }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="id_filtro_estado" class="form-label small fw-semibold mb-1">Condición de unidades</label>
+                  <select id="id_filtro_estado" name="estado" class="form-select">
+                    <option value="">Todas las condiciones</option>
+                    {% for value, label in estados %}
+                      <option value="{{ value }}" {% if estado_actual == value|stringformat:'s' %}selected{% endif %}>
+                        {% if value == "B" %}Sin fallas ni pendientes{% elif value == "P" %}Por revisar{% elif value == "M" %}Con falla{% else %}{{ label }}{% endif %}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="id_filtro_marca" class="form-label small fw-semibold mb-1">Marca</label>
+                  <select id="id_filtro_marca" name="marca" class="form-select">
+                    <option value="">Todas las marcas</option>
+                    {% for m in marcas %}
+                      {% if m %}<option value="{{ m }}" {% if marca_actual == m %}selected{% endif %}>{{ m }}</option>{% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="id_filtro_material" class="form-label small fw-semibold mb-1">Material</label>
+                  <select id="id_filtro_material" name="material" class="form-select">
+                    <option value="">Todos los materiales</option>
+                    {% for mat in materiales %}
+                      {% if mat %}<option value="{{ mat }}" {% if material_actual == mat %}selected{% endif %}>{{ mat }}</option>{% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="advanced-options rounded-4 p-3 p-md-4 mb-4">
+              <div class="d-flex align-items-center gap-2 mb-3">
+                <i class="bi bi-sort-down pvsa-text"></i>
+                <div>
+                  <div class="fw-bold">Orden y prioridad</div>
+                  <div class="small text-muted">Elige cómo quieres ver primero la información más importante.</div>
+                </div>
+              </div>
+
+              <div class="row g-3">
+                <div class="col-12 col-md-4">
+                  <label for="summarySort" class="form-label small fw-semibold mb-1">Ordenar por</label>
+                  <select id="summarySort" class="form-select">
+                    <option value="priority">Necesitan más atención primero</option>
+                    <option value="operativity_desc">Mejor estado primero</option>
+                    <option value="name_asc">Alfabético A → Z</option>
+                    <option value="name_desc">Alfabético Z → A</option>
+                    <option value="bad_desc">Más unidades con falla</option>
+                    <option value="pending_desc">Más por revisar</option>
+                    <option value="total_desc">Mayor cantidad registrada</option>
+                    <option value="affected_desc">Más lugares afectados</option>
+                  </select>
+                </div>
+
+                <div class="col-12 col-md-4">
+                  <label for="summaryStatus" class="form-label small fw-semibold mb-1">Estado operativo</label>
+                  <select id="summaryStatus" class="form-select">
+                    <option value="all">Todos</option>
+                    <option value="problematic">Solo los que requieren atención</option>
+                    <option value="critical">Solo críticos (&lt; 50%)</option>
+                    <option value="warning">Requieren atención (50–79%)</option>
+                    <option value="operational">Solo operativos (80% o más)</option>
+                  </select>
+                </div>
+
+                <div class="col-12 col-md-4">
+                  <label for="summaryIncidence" class="form-label small fw-semibold mb-1">Situación de objetos</label>
+                  <select id="summaryIncidence" class="form-select">
+                    <option value="all">Todas</option>
+                    <option value="any">Con fallas o pendientes</option>
+                    <option value="bad">Con fallas</option>
+                    <option value="pending">Con unidades por revisar</option>
+                    <option value="clean">Sin fallas ni pendientes</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="small text-muted mt-3">
+                <i class="bi bi-info-circle me-1"></i>
+                Estos criterios se aplican a los resultados visibles y quedan recordados en este navegador.
+              </div>
+            </div>
+
+            <div class="view-options rounded-4 p-3 p-md-4">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                <div>
+                  <div class="fw-bold">Qué mostrar</div>
+                  <div class="small text-muted">Oculta los bloques que no necesites.</div>
+                </div>
+
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="showAllSections">
+                  Mostrar todo
+                </button>
+              </div>
+
+              <div class="row g-2">
+                <div class="col-12 col-md-4">
+                  <label class="view-option">
+                    <input class="form-check-input me-2 section-toggle" type="checkbox" id="toggleSector" checked>
+                    <span>
+                      <strong>Por sector</strong>
+                      <small>Resumen general por zona.</small>
+                    </span>
+                  </label>
+                </div>
+
+                <div class="col-12 col-md-4">
+                  <label class="view-option">
+                    <input class="form-check-input me-2 section-toggle" type="checkbox" id="toggleUbicacion" checked>
+                    <span>
+                      <strong>Por ubicación</strong>
+                      <small>Detalle por instalación.</small>
+                    </span>
+                  </label>
+                </div>
+
+                <div class="col-12 col-md-4">
+                  <label class="view-option">
+                    <input class="form-check-input me-2 section-toggle" type="checkbox" id="toggleObjetos" checked>
+                    <span>
+                      <strong>Objetos que requieren atención</strong>
+                      <small>Fallas y unidades por revisar.</small>
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" id="resetSummaryConfig" class="btn btn-outline-danger me-auto">
+              <i class="bi bi-arrow-counterclockwise me-1"></i>
+              Restablecer todo
+            </button>
+
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              Cancelar
+            </button>
+
+            <button type="submit" class="btn pvsa-btn px-4">
+              <i class="bi bi-check-circle me-1"></i>
+              Aplicar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
 <style>
-    .resumen-page {
-        max-width: 1600px;
-        margin: 0 auto;
+  .resumen-page{max-width:1600px;margin:0 auto}.pvsa-section-badge{color:var(--pvsa-accent);background:rgba(6,182,185,.08);border:1px solid rgba(6,182,185,.20);border-radius:999px;padding:.35rem .7rem;font-size:.82rem;font-weight:700}.section-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:0 0 auto;background:rgba(6,182,185,.10);color:var(--pvsa-accent);font-size:1.05rem}.attention-icon{background:rgba(255,193,7,.13);color:#b78103}.status-chip{display:inline-flex;align-items:center;gap:.4rem;padding:.38rem .7rem;border:1px solid #dee2e6;background:#fff;border-radius:999px;font-size:.78rem;font-weight:600}.status-dot{width:8px;height:8px;border-radius:50%}.advanced-options{background:rgba(6,182,185,.045);border:1px solid rgba(6,182,185,.16)}.view-options{background:#f8f9fa;border:1px solid #e9ecef}.view-option{display:flex;align-items:flex-start;padding:.85rem;border:1px solid #e3e6e9;border-radius:.85rem;background:#fff;cursor:pointer;height:100%}.view-option strong,.view-option small{display:block}.view-option small{color:#6c757d;margin-top:.15rem}.active-filter-chip{display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .65rem;border-radius:999px;background:#fff;border:1px solid #dee2e6;font-size:.78rem}.summary-section.is-hidden{display:none!important}.summary-sort-item.client-hidden{display:none!important}.client-empty-note{display:none;padding:1rem;text-align:center;color:#6c757d;font-size:.86rem;border-top:1px dashed #dee2e6}.client-empty-note.show{display:block}.resumen-table th{font-size:.78rem;color:#6c757d;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;padding:.8rem 1rem}.resumen-table td{font-size:.88rem;padding:.85rem 1rem}.barra-wrap{display:flex;align-items:center;gap:.6rem}.barra-mini{height:10px;background:#e9ecef;border-radius:999px;overflow:hidden;flex:1;min-width:90px}.barra-mini-fill{height:100%;width:0%;border-radius:inherit}.badge-operatividad{min-width:64px}.info-label{color:#6c757d;font-size:.73rem;margin-bottom:.15rem}.summary-mobile-card{border:1px solid #e3e6e9;background:#fff}.mobile-metric{height:100%;padding:.65rem .5rem;background:#f8f9fa;border:1px solid #e9ecef;border-radius:.75rem}.affected-row td{background:#fafbfc}.affected-place{padding:.7rem .8rem;background:#fff;border:1px solid #e9ecef;border-radius:.75rem}.affected-mobile{padding-top:.8rem;border-top:1px solid #e9ecef}.empty-state{padding:2.5rem 1rem;text-align:center}.estado-operativo{display:inline-flex;align-items:center;gap:.45rem;border-radius:999px;padding:.42rem .72rem;font-size:.8rem;font-weight:700;white-space:nowrap}.estado-operativo small{font-weight:800;opacity:.9}.estado-operativo.status-ok{background:rgba(25,135,84,.10);color:#198754;border:1px solid rgba(25,135,84,.18)}.estado-operativo.status-warning{background:rgba(255,193,7,.15);color:#8a6500;border:1px solid rgba(255,193,7,.3)}.estado-operativo.status-critical{background:rgba(220,53,69,.10);color:#dc3545;border:1px solid rgba(220,53,69,.2)}.estado-operativo-compact{font-size:.75rem;padding:.35rem .55rem}.distribution-bar{display:flex;height:14px;border-radius:999px;overflow:hidden;background:#e9ecef}.distribution-segment{height:100%;width:0}.segment-good{background:#198754}.segment-pending{background:#ffc107}.segment-bad{background:#dc3545}.distribution-labels{display:flex;flex-wrap:wrap;gap:.4rem .9rem;margin-top:.55rem;font-size:.76rem;color:#6c757d}.distribution-labels span{display:inline-flex;align-items:center;gap:.3rem}.estado-mobile-box{padding:.75rem .85rem;background:#f8f9fa;border:1px solid #e9ecef;border-radius:.8rem}.failure-count,.pending-count,.ok-count{display:inline-flex;align-items:center;gap:.3rem;font-weight:700}.failure-count{color:#dc3545}.pending-count{color:#a97900}.ok-count{color:#198754}
+
+
+  @media (max-width: 575.98px) {
+    #filtrosModal .modal-dialog {
+      width: 100%;
+      max-width: none;
+      height: 100dvh;
+      margin: 0;
     }
 
-    .resumen-title {
-        font-weight: 700;
-        letter-spacing: -0.3px;
+    #filtrosModal .modal-content {
+      height: 100dvh;
+      max-height: 100dvh;
+      border: 0;
+      border-radius: 0 !important;
+      overflow: hidden;
     }
 
-    .resumen-subtitle {
-        color: #6c757d;
-        font-size: 0.95rem;
+    #filtrosModal form {
+      height: 100%;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
     }
 
-    .resumen-card {
-        border: 0;
-        border-radius: 18px;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-        overflow: hidden;
+    #filtrosModal .modal-header,
+    #filtrosModal .modal-footer {
+      flex: 0 0 auto;
+      background: #fff;
     }
 
-    .resumen-card .card-header {
-        background: #ffffff;
-        border-bottom: 1px solid #e9ecef;
-        padding: 0.9rem 1rem;
+    #filtrosModal .modal-body {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto !important;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 1.5rem;
     }
 
-    .resumen-card .card-body {
-        background: #ffffff;
+    #filtrosModal .modal-footer {
+      position: relative;
+      z-index: 2;
+      padding: .75rem;
+      gap: .5rem;
     }
 
-    .filtros-card {
-        position: sticky;
-        top: 80px;
+    #filtrosModal .modal-footer .btn {
+      margin: 0;
     }
 
-    .table-resumen th {
-        font-size: 0.82rem;
-        color: #495057;
-        white-space: nowrap;
+    #filtrosModal #resetSummaryConfig {
+      width: 100%;
+      order: 3;
     }
 
-    .table-resumen td {
-        font-size: 0.86rem;
-        vertical-align: middle;
+    #filtrosModal .modal-footer .btn[data-bs-dismiss="modal"],
+    #filtrosModal .modal-footer button[type="submit"] {
+      flex: 1 1 calc(50% - .25rem);
     }
 
-    .badge-operatividad {
-        min-width: 68px;
-        display: inline-block;
-        font-size: 0.78rem;
+    #filtrosModal .advanced-options,
+    #filtrosModal .view-options {
+      padding: 1rem !important;
     }
+  }
 
-    .barra-wrap {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        min-width: 145px;
-    }
-
-    .barra-mini {
-        height: 9px;
-        min-width: 80px;
-        background: #e9ecef;
-        border-radius: 999px;
-        overflow: hidden;
-        flex: 1;
-    }
-
-    .barra-mini-fill {
-        height: 100%;
-        width: 0%;
-        border-radius: 999px;
-    }
-
-    .estado-texto {
-        font-size: 0.78rem;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-
-    .fila-secundaria {
-        background: #fafafa;
-    }
-
-    .objeto-nombre {
-        font-weight: 700;
-    }
-
-    .objeto-detalle {
-        color: #6c757d;
-        font-size: 0.8rem;
-    }
-
-    .resumen-chip {
-        border-radius: 999px;
-        padding: 0.35rem 0.65rem;
-        font-size: 0.76rem;
-        font-weight: 600;
-        background: #f1f3f5;
-        border: 1px solid #dee2e6;
-        color: #343a40;
-    }
-
-    @media (max-width: 991px) {
-        .filtros-card {
-            position: static;
-        }
-    }
 </style>
-
-<div class="container-fluid py-4 resumen-page">
-
-    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
-        <div>
-            <h2 class="resumen-title mb-1">Resumen general</h2>
-            <div class="resumen-subtitle">
-                Vista ejecutiva de operatividad por sector, ubicación y objetos registrados.
-            </div>
-        </div>
-
-        <div class="d-flex flex-wrap gap-2">
-            <span class="resumen-chip">Verde: operativo</span>
-            <span class="resumen-chip">Amarillo: observación</span>
-            <span class="resumen-chip">Rojo: crítico</span>
-        </div>
-    </div>
-
-    <div class="row g-4">
-
-        <div class="col-12 col-xl-3 col-xxl-2">
-            <div class="card resumen-card filtros-card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span class="fw-bold">Filtros</span>
-                    <a href="{% url 'resumen_general' %}" class="small text-decoration-none">
-                        Limpiar
-                    </a>
-                </div>
-
-                <div class="card-body">
-                    <form method="get" class="vstack gap-3">
-
-                        <div>
-                            <label for="id_filtro_sector" class="form-label mb-1">Sector</label>
-                            <select id="id_filtro_sector" name="sector" class="form-select form-select-sm">
-                                <option value="">Todos los sectores</option>
-                                {% for s in sectores %}
-                                    <option value="{{ s.id }}" {% if sector_actual == s.id|stringformat:'s' %}selected{% endif %}>
-                                        {{ s.sector }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="id_filtro_ubicacion" class="form-label mb-1">Ubicación</label>
-                            <select id="id_filtro_ubicacion" name="ubicacion" class="form-select form-select-sm">
-                                <option value="">Todas las ubicaciones</option>
-                                {% for u in ubicaciones %}
-                                    <option value="{{ u.id }}" {% if ubicacion_actual == u.id|stringformat:'s' %}selected{% endif %}>
-                                        {{ u.ubicacion }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="id_filtro_piso" class="form-label mb-1">Piso</label>
-                            <select id="id_filtro_piso" name="piso" class="form-select form-select-sm">
-                                <option value="">Todos los pisos</option>
-                                {% for p in pisos %}
-                                    <option value="{{ p.id }}" {% if piso_actual == p.id|stringformat:'s' %}selected{% endif %}>
-                                        Piso {{ p.piso }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="id_filtro_tipo_lugar" class="form-label mb-1">Tipo de lugar</label>
-                            <select id="id_filtro_tipo_lugar" name="tipo_lugar" class="form-select form-select-sm">
-                                <option value="">Todos los tipos</option>
-                                {% for tl in tipos_lugar %}
-                                    <option value="{{ tl.id }}" {% if tipo_lugar_actual == tl.id|stringformat:'s' %}selected{% endif %}>
-                                        {{ tl.tipo_de_lugar }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <hr class="my-1">
-
-                        <div>
-                            <label for="id_filtro_categoria" class="form-label mb-1">Categoría</label>
-                            <select id="id_filtro_categoria" name="categoria" class="form-select form-select-sm">
-                                <option value="">Todas las categorías</option>
-                                {% for c in categorias %}
-                                    <option value="{{ c.id }}" {% if categoria_actual == c.id|stringformat:'s' %}selected{% endif %}>
-                                        {{ c.nombre_de_categoria }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="id_filtro_objeto" class="form-label mb-1">Objeto</label>
-                            <select id="id_filtro_objeto" name="objeto" class="form-select form-select-sm">
-                                <option value="">Todos los objetos</option>
-                                {% for o in objetos_catalogo %}
-                                    <option value="{{ o.id }}" {% if objeto_actual == o.id|stringformat:'s' %}selected{% endif %}>
-                                        {{ o.nombre_del_objeto }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="id_filtro_tipo_objeto" class="form-label mb-1">Tipo de objeto</label>
-                            <select id="id_filtro_tipo_objeto" name="tipo_objeto" class="form-select form-select-sm">
-                                <option value="">Todos los tipos</option>
-                                {% for t in tipos_objeto %}
-                                    <option value="{{ t.id }}" {% if tipo_objeto_actual == t.id|stringformat:'s' %}selected{% endif %}>
-                                        {{ t.objeto.nombre_del_objeto }} - {{ t.marca }} {{ t.material }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="id_filtro_estado" class="form-label mb-1">Condición de unidades</label>
-                            <select id="id_filtro_estado" name="estado" class="form-select form-select-sm">
-                                <option value="">Todas las condiciones</option>
-                                {% for value, label in estados %}
-                                    <option value="{{ value }}" {% if estado_actual == value|stringformat:'s' %}selected{% endif %}>
-                                        {{ label }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="id_filtro_marca" class="form-label mb-1">Marca</label>
-                            <select id="id_filtro_marca" name="marca" class="form-select form-select-sm">
-                                <option value="">Todas las marcas</option>
-                                {% for m in marcas %}
-                                    {% if m %}
-                                        <option value="{{ m }}" {% if marca_actual == m %}selected{% endif %}>
-                                            {{ m }}
-                                        </option>
-                                    {% endif %}
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="id_filtro_material" class="form-label mb-1">Material</label>
-                            <select id="id_filtro_material" name="material" class="form-select form-select-sm">
-                                <option value="">Todos los materiales</option>
-                                {% for mat in materiales %}
-                                    {% if mat %}
-                                        <option value="{{ mat }}" {% if material_actual == mat %}selected{% endif %}>
-                                            {{ mat }}
-                                        </option>
-                                    {% endif %}
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary btn-sm mt-2 w-100">
-                            Aplicar filtros
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-xl-9 col-xxl-10">
-
-            <div class="card resumen-card mb-4">
-                <div class="card-header">
-                    <div class="fw-bold">Operatividad por sector</div>
-                    <div class="small text-muted">Resumen principal para revisar el estado general por zona.</div>
-                </div>
-
-                <div class="card-body p-0">
-                    {% if resumen_sector %}
-                        <div class="table-responsive">
-                            <table class="table table-hover table-resumen align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Sector</th>
-                                        <th class="text-end">Cantidad</th>
-                                        <th style="width: 230px;">Operatividad</th>
-                                        <th class="text-end">Buenas</th>
-                                        <th class="text-end">Observación</th>
-                                        <th class="text-end">Malas</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    {% for r in resumen_sector %}
-                                        <tr>
-                                            <td class="fw-semibold">
-                                                {{ r.lugar__piso__ubicacion__sector__sector }}
-                                            </td>
-
-                                            <td class="text-end">
-                                                {{ r.total|default:0 }}
-                                            </td>
-
-                                            <td>
-                                                <div class="barra-wrap">
-                                                    <div class="barra-mini">
-                                                        <div class="barra-mini-fill barra-operatividad" data-operatividad="{{ r.operatividad }}"></div>
-                                                    </div>
-                                                    <span class="badge badge-operatividad rounded-pill bg-primary">
-                                                        {{ r.operatividad }}%
-                                                    </span>
-                                                </div>
-                                            </td>
-
-                                            <td class="text-end">{{ r.pct_buenas }}%</td>
-                                            <td class="text-end">{{ r.pct_pendientes }}%</td>
-                                            <td class="text-end">{{ r.pct_malas }}%</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <div class="p-4 text-muted">
-                            No hay datos para calcular el resumen por sector.
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="card resumen-card mb-4">
-                <div class="card-header">
-                    <div class="fw-bold">Operatividad por ubicación</div>
-                    <div class="small text-muted">Permite detectar rápidamente qué ubicación necesita revisión.</div>
-                </div>
-
-                <div class="card-body p-0">
-                    {% if resumen_ubic %}
-                        <div class="table-responsive">
-                            <table class="table table-hover table-resumen align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Sector</th>
-                                        <th>Ubicación</th>
-                                        <th class="text-end">Cantidad</th>
-                                        <th style="width: 230px;">Operatividad</th>
-                                        <th class="text-end">Malas</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    {% for r in resumen_ubic %}
-                                        <tr>
-                                            <td>{{ r.lugar__piso__ubicacion__sector__sector }}</td>
-                                            <td class="fw-semibold">{{ r.lugar__piso__ubicacion__ubicacion }}</td>
-                                            <td class="text-end">{{ r.total|default:0 }}</td>
-
-                                            <td>
-                                                <div class="barra-wrap">
-                                                    <div class="barra-mini">
-                                                        <div class="barra-mini-fill barra-operatividad" data-operatividad="{{ r.operatividad }}"></div>
-                                                    </div>
-                                                    <span class="badge badge-operatividad rounded-pill bg-primary">
-                                                        {{ r.operatividad }}%
-                                                    </span>
-                                                </div>
-                                            </td>
-
-                                            <td class="text-end">
-                                                {% if r.malas > 0 %}
-                                                    <span class="text-danger fw-semibold">{{ r.malas }}</span>
-                                                {% else %}
-                                                    <span class="text-muted">0</span>
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <div class="p-4 text-muted">
-                            No hay datos para calcular el resumen por ubicación.
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="card resumen-card mb-4">
-                <div class="card-header">
-                    <div class="fw-bold">Objetos con mayor atención</div>
-                    <div class="small text-muted">Listado resumido por objeto, mostrando solo datos útiles para decidir.</div>
-                </div>
-
-                <div class="card-body p-0">
-                    {% if resumen_objetos %}
-                        <div class="table-responsive">
-                            <table class="table table-hover table-resumen align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Objeto</th>
-                                        <th class="text-end">Cantidad</th>
-                                        <th style="width: 230px;">Operatividad</th>
-                                        <th class="text-end">Malas</th>
-                                        <th class="text-end">Pendientes</th>
-                                        <th class="text-end">Lugares afectados</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    {% for obj in resumen_objetos %}
-                                        <tr>
-                                            <td>
-                                                <div class="objeto-nombre">{{ obj.nombre }}</div>
-
-                                                {% if obj.malas > 0 %}
-                                                    <div class="objeto-detalle">
-                                                        Tiene unidades malas
-                                                    </div>
-                                                {% else %}
-                                                    <div class="objeto-detalle">
-                                                        Sin unidades malas registradas.
-                                                    </div>
-                                                {% endif %}
-                                            </td>
-
-                                            <td class="text-end">
-                                                {{ obj.total }}
-                                            </td>
-
-                                            <td>
-                                                <div class="barra-wrap">
-                                                    <div class="barra-mini">
-                                                        <div class="barra-mini-fill barra-operatividad" data-operatividad="{{ obj.operatividad }}"></div>
-                                                    </div>
-                                                    <span class="badge badge-operatividad rounded-pill bg-primary">
-                                                        {{ obj.operatividad }}%
-                                                    </span>
-                                                </div>
-                                            </td>
-
-                                            <td class="text-end">
-                                                {% if obj.malas > 0 %}
-                                                    <span class="text-danger fw-semibold">{{ obj.malas }}</span>
-                                                {% else %}
-                                                    <span class="text-muted">0</span>
-                                                {% endif %}
-                                            </td>
-
-                                            <td class="text-end">
-                                                {% if obj.pendientes > 0 %}
-                                                    <span class="text-warning fw-semibold">{{ obj.pendientes }}</span>
-                                                {% else %}
-                                                    <span class="text-muted">0</span>
-                                                {% endif %}
-                                            </td>
-
-                                            <td class="text-end">
-                                                {% if obj.malos %}
-                                                    <span class="badge rounded-pill bg-danger">
-                                                        {{ obj.malos|length }}
-                                                    </span>
-                                                {% else %}
-                                                    <span class="badge rounded-pill bg-success">
-                                                        0
-                                                    </span>
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-
-                                        {% if obj.malos %}
-                                            <tr class="fila-secundaria">
-                                                <td colspan="6">
-                                                    <div class="small text-muted mb-2">
-                                                        Lugares afectados:
-                                                    </div>
-
-                                                    <div class="d-flex flex-column gap-1">
-                                                        {% for ol in obj.malos %}
-                                                            <div class="small">
-                                                                <strong>{{ ol.lugar.nombre_del_lugar }}</strong>
-                                                                · {{ ol.lugar.piso.ubicacion.sector.sector }}
-                                                                · {{ ol.lugar.piso.ubicacion.ubicacion }}
-                                                                · Piso {{ ol.lugar.piso.piso }}
-                                                                · Malas: <span class="text-danger fw-semibold">{{ ol.cantidad_mala }}</span>
-                                                                · Operatividad: <span class="fw-semibold">{{ ol.operatividad_objeto }}%</span>
-                                                            </div>
-                                                        {% endfor %}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        {% endif %}
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <div class="p-4 text-muted">
-                            No hay datos para calcular el resumen por objeto.
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-
-        </div>
-    </div>
-</div>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    function pintarBarra(elemento) {
-        let valor = elemento.getAttribute("data-operatividad") || "0";
-        valor = String(valor).replace(",", ".");
-        valor = parseFloat(valor);
+  function numero(valor) {
+    valor = String(valor ?? "0").replace(",", ".");
+    const n = parseFloat(valor);
+    return isNaN(n) ? 0 : n;
+  }
 
-        if (isNaN(valor)) {
-            valor = 0;
-        }
+  function estadoInfo(valor) {
+    valor = Math.max(0, Math.min(100, numero(valor)));
 
-        if (valor < 0) {
-            valor = 0;
-        }
-
-        if (valor > 100) {
-            valor = 100;
-        }
-
-        elemento.style.width = valor + "%";
-
-        if (valor < 50) {
-            elemento.classList.add("bg-danger");
-        } else if (valor < 80) {
-            elemento.classList.add("bg-warning");
-        } else {
-            elemento.classList.add("bg-success");
-        }
-
-        const badge = elemento.closest(".barra-wrap")?.querySelector(".badge-operatividad");
-
-        if (badge) {
-            badge.classList.remove("bg-primary", "bg-success", "bg-warning", "bg-danger");
-
-            if (valor < 50) {
-                badge.classList.add("bg-danger");
-            } else if (valor < 80) {
-                badge.classList.add("bg-warning");
-                badge.classList.add("text-dark");
-            } else {
-                badge.classList.add("bg-success");
-            }
-        }
+    if (valor < 50) {
+      return {
+        clase: "status-critical",
+        icono: "bi-exclamation-octagon-fill",
+        texto: "Crítico"
+      };
     }
 
-    document.querySelectorAll(".barra-operatividad").forEach(function (elemento) {
-        pintarBarra(elemento);
+    if (valor < 80) {
+      return {
+        clase: "status-warning",
+        icono: "bi-exclamation-triangle-fill",
+        texto: "Requiere atención"
+      };
+    }
+
+    return {
+      clase: "status-ok",
+      icono: "bi-check-circle-fill",
+      texto: "Operativo"
+    };
+  }
+
+  function actualizarEstados() {
+    document.querySelectorAll(".estado-operativo").forEach(function (elemento) {
+      const valor = Math.max(0, Math.min(100, numero(elemento.dataset.operatividad)));
+      const info = estadoInfo(valor);
+
+      elemento.classList.remove("status-ok", "status-warning", "status-critical");
+      elemento.classList.add(info.clase);
+      elemento.innerHTML = '<i class="bi ' + info.icono + '"></i><span>' + info.texto + '</span><small>' + valor + '%</small>';
     });
+  }
+
+  function actualizarDistribuciones() {
+    document.querySelectorAll(".distribution-wrap").forEach(function (wrap) {
+      const good = Math.max(0, numero(wrap.dataset.good));
+      const pending = Math.max(0, numero(wrap.dataset.pending));
+      const bad = Math.max(0, numero(wrap.dataset.bad));
+      const total = good + pending + bad;
+      const base = total > 0 ? total : 100;
+
+      const goodEl = wrap.querySelector(".segment-good");
+      const pendingEl = wrap.querySelector(".segment-pending");
+      const badEl = wrap.querySelector(".segment-bad");
+
+      if (goodEl) goodEl.style.width = (good / base * 100) + "%";
+      if (pendingEl) pendingEl.style.width = (pending / base * 100) + "%";
+      if (badEl) badEl.style.width = (bad / base * 100) + "%";
+    });
+  }
+
+  actualizarEstados();
+  actualizarDistribuciones();
+
+  const filterForm = document.getElementById("filterForm");
+  const filterBadge = document.getElementById("filterCountBadge");
+  const activeFilters = document.getElementById("activeFilters");
+  const sortSelect = document.getElementById("summarySort");
+  const statusSelect = document.getElementById("summaryStatus");
+  const incidenceSelect = document.getElementById("summaryIncidence");
+
+  const filterSelects = filterForm ? Array.from(filterForm.querySelectorAll('select[name]')) : [];
+
+  const sectionSettings = [
+    ["toggleSector", "sectionSector", "pvsa_resumen_sector"],
+    ["toggleUbicacion", "sectionUbicacion", "pvsa_resumen_ubicacion"],
+    ["toggleObjetos", "sectionObjetos", "pvsa_resumen_objetos"]
+  ];
+
+  function cargarPreferencias() {
+    if (sortSelect) sortSelect.value = localStorage.getItem("pvsa_resumen_sort") || "priority";
+    if (statusSelect) statusSelect.value = localStorage.getItem("pvsa_resumen_status") || "all";
+    if (incidenceSelect) incidenceSelect.value = localStorage.getItem("pvsa_resumen_incidence") || "all";
+
+    sectionSettings.forEach(function ([toggleId, sectionId, storageKey]) {
+      const toggle = document.getElementById(toggleId);
+      const section = document.getElementById(sectionId);
+      if (!toggle || !section) return;
+      const saved = localStorage.getItem(storageKey);
+      const visible = saved === null ? true : saved === "1";
+      toggle.checked = visible;
+      section.classList.toggle("is-hidden", !visible);
+    });
+  }
+
+  function guardarPreferencias() {
+    if (sortSelect) localStorage.setItem("pvsa_resumen_sort", sortSelect.value);
+    if (statusSelect) localStorage.setItem("pvsa_resumen_status", statusSelect.value);
+    if (incidenceSelect) localStorage.setItem("pvsa_resumen_incidence", incidenceSelect.value);
+
+    sectionSettings.forEach(function ([toggleId, sectionId, storageKey]) {
+      const toggle = document.getElementById(toggleId);
+      if (toggle) localStorage.setItem(storageKey, toggle.checked ? "1" : "0");
+    });
+  }
+
+  function cumpleEstado(item) {
+    const op = numero(item.dataset.operativity);
+    const criterio = statusSelect?.value || "all";
+    if (criterio === "critical") return op < 50;
+    if (criterio === "warning") return op >= 50 && op < 80;
+    if (criterio === "operational") return op >= 80;
+    if (criterio === "problematic") return op < 80;
+    return true;
+  }
+
+  function cumpleIncidencia(item) {
+    const criterio = incidenceSelect?.value || "all";
+    if (criterio === "all") return true;
+
+    if (!item.closest("#sectionObjetos")) return true;
+
+    const bad = numero(item.dataset.bad);
+    const pending = numero(item.dataset.pending);
+    if (criterio === "bad") return bad > 0;
+    if (criterio === "pending") return pending > 0;
+    if (criterio === "any") return bad > 0 || pending > 0;
+    if (criterio === "clean") return bad <= 0 && pending <= 0;
+    return true;
+  }
+
+  function comparar(a, b) {
+    const criterio = sortSelect?.value || "priority";
+    const nombreA = (a.dataset.name || "").localeCompare(b.dataset.name || "", "es", {sensitivity: "base"});
+
+    if (criterio === "name_asc") return nombreA;
+    if (criterio === "name_desc") return -nombreA;
+    if (criterio === "operativity_desc") return numero(b.dataset.operativity) - numero(a.dataset.operativity) || nombreA;
+    if (criterio === "bad_desc") return numero(b.dataset.bad) - numero(a.dataset.bad) || numero(a.dataset.operativity) - numero(b.dataset.operativity) || nombreA;
+    if (criterio === "pending_desc") return numero(b.dataset.pending) - numero(a.dataset.pending) || numero(a.dataset.operativity) - numero(b.dataset.operativity) || nombreA;
+    if (criterio === "total_desc") return numero(b.dataset.total) - numero(a.dataset.total) || nombreA;
+    if (criterio === "affected_desc") return numero(b.dataset.affected) - numero(a.dataset.affected) || numero(a.dataset.operativity) - numero(b.dataset.operativity) || nombreA;
+
+    return numero(a.dataset.operativity) - numero(b.dataset.operativity) || numero(b.dataset.bad) - numero(a.dataset.bad) || nombreA;
+  }
+
+  function ordenarYFiltrarContenedor(contenedor, esTabla) {
+    if (!contenedor) return;
+    const items = Array.from(contenedor.querySelectorAll(":scope > .summary-sort-item"));
+    if (!items.length) return;
+
+    items.sort(comparar);
+
+    items.forEach(function (item) {
+      const visible = cumpleEstado(item) && cumpleIncidencia(item);
+      item.classList.toggle("client-hidden", !visible);
+
+      if (esTabla) {
+        const group = item.dataset.group;
+        if (group) {
+          const detail = contenedor.querySelector('.affected-row[data-group="' + group + '"]');
+          if (detail) detail.classList.toggle("client-hidden", !visible);
+        }
+      }
+    });
+
+    items.forEach(function (item) {
+      contenedor.appendChild(item);
+      if (esTabla && item.dataset.group) {
+        const detail = contenedor.querySelector('.affected-row[data-group="' + item.dataset.group + '"]');
+        if (detail) contenedor.appendChild(detail);
+      }
+    });
+  }
+
+  function aplicarOrdenYFiltros() {
+    document.querySelectorAll(".summary-section").forEach(function (section) {
+      const tbody = section.querySelector("tbody");
+      const mobileList = section.querySelector(".d-md-none .d-grid.gap-3");
+      ordenarYFiltrarContenedor(tbody, true);
+      ordenarYFiltrarContenedor(mobileList, false);
+    });
+  }
+
+  function actualizarFiltrosActivos() {
+    if (!activeFilters) return;
+    activeFilters.innerHTML = "";
+    let total = 0;
+
+    filterSelects.forEach(function (select) {
+      if (!select.value) return;
+      total += 1;
+      const label = filterForm.querySelector('label[for="' + select.id + '"]');
+      const option = select.options[select.selectedIndex];
+      const chip = document.createElement("span");
+      chip.className = "active-filter-chip";
+      chip.innerHTML = '<i class="bi bi-funnel"></i><strong>' + (label ? label.textContent.trim() : "Filtro") + ':</strong> ' + option.textContent.trim();
+      activeFilters.appendChild(chip);
+    });
+
+    if (sortSelect && sortSelect.value !== "priority") {
+      const chip = document.createElement("span");
+      chip.className = "active-filter-chip";
+      chip.innerHTML = '<i class="bi bi-sort-down"></i><strong>Orden:</strong> ' + sortSelect.options[sortSelect.selectedIndex].textContent.trim();
+      activeFilters.appendChild(chip);
+    }
+
+    if (statusSelect && statusSelect.value !== "all") {
+      const chip = document.createElement("span");
+      chip.className = "active-filter-chip";
+      chip.innerHTML = '<i class="bi bi-activity"></i><strong>Estado:</strong> ' + statusSelect.options[statusSelect.selectedIndex].textContent.trim();
+      activeFilters.appendChild(chip);
+    }
+
+    if (incidenceSelect && incidenceSelect.value !== "all") {
+      const chip = document.createElement("span");
+      chip.className = "active-filter-chip";
+      chip.innerHTML = '<i class="bi bi-exclamation-circle"></i><strong>Situación de objetos:</strong> ' + incidenceSelect.options[incidenceSelect.selectedIndex].textContent.trim();
+      activeFilters.appendChild(chip);
+    }
+
+    const clientExtra = (sortSelect && sortSelect.value !== "priority" ? 1 : 0) +
+                        (statusSelect && statusSelect.value !== "all" ? 1 : 0) +
+                        (incidenceSelect && incidenceSelect.value !== "all" ? 1 : 0);
+
+    if (filterBadge) {
+      filterBadge.textContent = total + clientExtra;
+      filterBadge.classList.toggle("d-none", total + clientExtra === 0);
+    }
+  }
+
+  sectionSettings.forEach(function ([toggleId, sectionId]) {
+    const toggle = document.getElementById(toggleId);
+    const section = document.getElementById(sectionId);
+    if (!toggle || !section) return;
+    toggle.addEventListener("change", function () {
+      section.classList.toggle("is-hidden", !toggle.checked);
+    });
+  });
+
+  document.getElementById("showAllSections")?.addEventListener("click", function () {
+    sectionSettings.forEach(function ([toggleId, sectionId]) {
+      const toggle = document.getElementById(toggleId);
+      const section = document.getElementById(sectionId);
+      if (toggle) toggle.checked = true;
+      if (section) section.classList.remove("is-hidden");
+    });
+  });
+
+  [sortSelect, statusSelect, incidenceSelect].forEach(function (control) {
+    control?.addEventListener("change", function () {
+      aplicarOrdenYFiltros();
+    });
+  });
+
+  filterForm?.addEventListener("submit", function () {
+    guardarPreferencias();
+  });
+
+  document.getElementById("resetSummaryConfig")?.addEventListener("click", function () {
+    ["pvsa_resumen_sort", "pvsa_resumen_status", "pvsa_resumen_incidence", "pvsa_resumen_sector", "pvsa_resumen_ubicacion", "pvsa_resumen_objetos"].forEach(function (key) {
+      localStorage.removeItem(key);
+    });
+    window.location.href = "{% url 'resumen_general' %}";
+  });
+
+  cargarPreferencias();
+  aplicarOrdenYFiltros();
+  actualizarFiltrosActivos();
 });
 </script>
 {% endblock %}
